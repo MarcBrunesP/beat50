@@ -3,6 +3,21 @@
 What changed in each version of beatcrate. The format follows [Keep a Changelog](https://keepachangelog.com/)
 and versions follow [Semantic Versioning](https://semver.org/). The version lives in `pyproject.toml`.
 
+## 2.12.0 — 2026-10-07
+
+### Added
+
+- A message when a selection is ready: the new selection opens with "Selection created successfully · N tracks".
+- A bin on each selection in the sidebar (shown on hover or focus) to delete it, besides the one by its title.
+- A Help button (?) beside the app's name in the sidebar; it replaces the Help link at the bottom.
+
+### Changed
+
+- While a selection is being made, the whole window waits under the progress card: no switching selections or
+  other actions until it ends.
+- The sidebar no longer shows an "In progress…" row.
+- The Help slides use Material icons, and the Help window keeps the same size on every slide.
+
 ## 2.11.0 — 2026-10-07
 
 ### Added

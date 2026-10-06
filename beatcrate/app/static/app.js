@@ -37,7 +37,7 @@ const ROUTES = {
   'revoke': () => '/api/consent',
   'save-playlist': (b) => '/api/playlist/' + document.body.dataset.selection + '/' + b.dataset.playlist,
   'forget-playlist': (b) => ROUTES['save-playlist'](b) + '/forget',
-  'delete-selection': () => '/api/selection/' + document.body.dataset.selection + '/delete',
+  'delete-selection': (b) => '/api/selection/' + b.dataset.selection + '/delete',
 };
 
 // Actions that read the Beatport session: the first time, the user has to accept.
@@ -77,7 +77,8 @@ const LOCKABLE = '[data-action], button.toggle, #pl-name';
 // Actions that talk to Beatport show a centred overlay while they run; the message depends on the action.
 const LOADING_TEXT = {'playlist': 'creating', 'save-playlist': 'saving', 'check': 'checking'};
 
-async function act(button, body) {
+// `next`: where to go once it worked, when the server does not say (by default, reload the page).
+async function act(button, body, next) {
   const locked = [...document.querySelectorAll(LOCKABLE)].filter((el) => !el.disabled);
   locked.forEach((el) => { el.disabled = true; });
   const key = LOADING_TEXT[button.dataset.action];
@@ -103,7 +104,7 @@ async function act(button, body) {
   } else if (data.message) {
     alert(data.message);
   }
-  if (r.ok && data.redirect) return location.assign(data.redirect);
+  if (r.ok && (data.redirect || next)) return location.assign(data.redirect || next);
   location.reload();
 }
 
@@ -217,13 +218,8 @@ function tickPick() {
   const [from, to, tau] = PICK_BANDS[Math.min(Math.max(pick.step, 1), PICK_BANDS.length) - 1];
   const t = Math.max(0, (Date.now() - Date.parse(pick.since)) / 1000) || 0;
   shown = Math.max(shown, from + (to - from) * (1 - Math.exp(-t / tau)));  // never backwards
-  // The card and the sidebar's running row show the same progress.
-  document.querySelectorAll('#progress .prog i, .sel.running .side-prog b').forEach((b) => {
-    b.style.width = shown.toFixed(1) + '%';
-  });
-  document.querySelectorAll('#progress .pct, .sel.running .pct').forEach((p) => {
-    p.textContent = Math.floor(shown) + '%';
-  });
+  progress.querySelector('.prog i').style.width = shown.toFixed(1) + '%';
+  progress.querySelector('.pct').textContent = Math.floor(shown) + '%';
 }
 
 if (progress) {
@@ -246,10 +242,28 @@ async function poll() {
       li.className = i + 1 < st.running.step ? 'done' : i + 1 === st.running.step ? 'now' : 'next';
     });
   } else if (running) {
+    // Done: open the new selection with a message; if it failed, the reloaded sidebar says why.
+    const last = st.last_run || {};
+    if (last.ok && last.id) return location.assign('/crate/' + encodeURIComponent(last.id) + '?created=1');
     location.reload();
   }
 }
 setInterval(poll, 2000);
+
+// "Selection created": shown once on arriving at the new selection, then the address loses its ?created=1.
+function toast(message) {
+  const el = document.getElementById('toast');
+  el.querySelector('.msg').textContent = message;
+  el.classList.remove('out');
+  el.hidden = false;
+  setTimeout(() => el.classList.add('out'), 4000);
+  setTimeout(() => { el.hidden = true; }, 4400);
+}
+
+if (new URLSearchParams(location.search).has('created')) {
+  toast(text('created', {n: document.querySelectorAll('.track').length}));
+  history.replaceState(null, '', location.pathname + location.hash);
+}
 
 // Player: one preview at a time, with the fixed progress bar at the bottom.
 const player = document.getElementById('player');
@@ -298,7 +312,9 @@ function run(button) {
   }
   if (action === 'revoke') return act(button, {on: false});
   if (action === 'delete-selection') {
-    if (confirm(text('js_delete', {name: button.dataset.name}))) act(button);
+    // Deleting the selection on screen goes home (the newest one left); any other just reloads this page.
+    const home = button.dataset.selection === document.body.dataset.selection ? '/' : null;
+    if (confirm(text('js_delete', {name: button.dataset.name}))) act(button, undefined, home);
     return;
   }
   if (action === 'save-playlist') {

@@ -88,15 +88,22 @@ sidebar, 88 px in the empty state.
 
 Filled shapes are the exception and say so in the drawing (play, pause) or in a rule (`.star.on .icon`,
 `.count .icon`). An icon never stands alone: a label beside it, or `aria-label` on its button. The moving
-icons are the `sync` glyph in the loading overlay and in the sidebar's running row, which spin (stopped under
-`prefers-reduced-motion`).
+icon is the `sync` glyph in the loading overlay, which spins (stopped under `prefers-reduced-motion`).
+
+The help slides are the exception to the sprite: they use Material Symbols (Outlined, Apache 2.0) from
+`views.MATERIAL`, filled paths on Google's `0 -960 960 960` grid — a 72 px main icon in `--accent-text`, a 44 px
+second one in `--star` and, between them when the slide is a step, a 26 px `--faint` arrow.
 
 ## Components
 
+- **Brand** (`.brand`): the 22 px app icon, the name, and on the right a 26 px icon-only Help button (`help` glyph,
+  `--soft`, `--line` on hover) that opens the help slides.
 - **Sidebar rows** (`.sel`, `.pl`): 32 px, radius 7, name left and count right; hover `--line` except on the selected
   row, which stays `--accent` with white text. A deleted playlist is struck through (the name only, not its tag).
+  Each selection row (`.sel-row`) has a 24 px bin (`.sel-del`) that replaces the count on hover or keyboard focus;
+  it turns red on a `--chip` tile when pointed at, and is hidden while beatcrate is busy.
 - **Session foot**: dot-style icon (green / red / grey) + text + a 24 px "Check" button; the sign-in button is red and
-  full width; language switch is a segmented control; "Help" and "Withdraw permission" are underlined links.
+  full width; language switch is a segmented control; "Withdraw permission" is an underlined link.
 - **Toolbar**: title + one-line detail on the left (on a selection, a 30 px bordered bin button beside it that
   turns red on hover, to delete it), the period group (one bordered box with two date inputs) and the
   primary button on the right. The editor's toolbar swaps them for back, name input, "Private on Beatport" and Save.
@@ -109,11 +116,9 @@ icons are the `sync` glyph in the loading overlay and in the sidebar's running r
   1100 px the genre name is dropped from the row (it is already in the filter row).
 - **Editor toggles**: 32 px circles; on = red (remove) or green (add) fill with white icon. A row marked to remove
   dims to 60 % and strikes the name; a row marked to add tints `--green-soft`.
-- **Running row** (`.sel.running`): the sidebar's first row while a selection runs — `--accent-soft` fill,
-  `--accent-text` text, the `sync` icon spinning, its percentage on the right and a 2 px bar along the bottom
-  (`--border` track, `--accent-text` fill) that app.js moves with the card's.
-- **Picking card** (`#picking` › `#progress`): while a selection runs, an `--overlay` scrim over the content column
-  (the sidebar stays usable, like the loading overlay) with a centred 380 px raised card, radius 14, dialog shadow:
+- **Picking card** (`#picking` › `#progress`): while a selection runs, an `--overlay` scrim over the whole window
+  (the app underneath is `inert`: no navigating or other actions until it ends) with a centred 380 px raised card,
+  radius 14, dialog shadow:
   the record (`PICK_DISC`, 52 px) spinning next to the 14 / 600 step line; a 6 px bar with its percentage, which
   app.js moves little by little inside each phase's stretch (`PICK_BANDS`, never backwards); and, under a `--line`
   divider, the three phases as a vertical stepper with 18 px markers — done: green disc with a white check; now:
@@ -121,9 +126,13 @@ icons are the `sync` glyph in the loading overlay and in the sidebar's running r
   under `prefers-reduced-motion`.
 - **Empty state**: the 88 px app icon, 20 px title, one paragraph, three numbered steps.
 - **Consent sheet**: 520 px dialog, radius 14, accent icon tile, four points each with an icon, buttons right-aligned.
-- **Help** (`#help`): the onboarding, a 460 px dialog with six slides — a line illustration on a `--side` tile
-  (2 px stroke in the accent, `.amber` parts in `--star`), a title and a line of text — plus dots and Back /
-  Next / Got it. It auto-opens on first launch (then `/api/help-seen` records it) and reopens from the Help link.
+- **Help** (`#help`): the onboarding, a 460 px dialog with six slides — Material icons on a 132 px `--side` tile, a
+  title and a line of text — plus dots and Back / Next / Got it. All slides share one grid cell (the hidden ones
+  invisible), so the dialog always has the tallest slide's size and never jumps. It auto-opens on first launch
+  (then `/api/help-seen` records it) and reopens from the Help button beside the app's name.
+- **Toast** (`#toast`): a raised box with a 1 px `--line` border and the loading box's shadow, centred at the
+  bottom of the content column: a green `check_circle` and a 13 / 500 message. It slides in, stays 4 s and fades
+  out; app.js shows "Selection created successfully · N tracks" on arriving at a new selection.
 - **Player** (`#player-bar`): the page moves it into the playing row's card, on its own full-width line below
   the track's content (a `--line` divider above it) — the progress bar (click to seek) and the time, nothing
   else. Play / pause is the ▶ on the row's cover; the whole card stays highlighted.

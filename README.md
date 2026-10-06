@@ -23,7 +23,7 @@ To update, replace the app with the one from the new DMG. Your data is kept.
 ## Use
 
 beatcrate opens in a window of its own and quits when you close it. The first time, a few slides explain how
-it works; you can reopen them anytime with **Help** in the sidebar.
+it works; you can reopen them anytime with the **?** button beside the app's name.
 
 1. **Allow reading your session** (the first time): before anything that reads your Beatport session,
    beatcrate explains what it does and asks for your permission. It is remembered until you click
@@ -31,7 +31,8 @@ it works; you can reopen them anytime with **Help** in the sidebar.
 2. **Sign in** (the first time, or when the session expires): a Beatport window opens; sign in and it
    closes by itself.
 3. Choose the period (**From / To**, the last 31 days by default) and click **New selection**. A card
-   shows each step as it goes; it takes about a minute.
+   shows each step as it goes and the app waits until it ends (about a minute); then the new selection opens
+   with a "Selection created successfully" message.
 4. Each selection is saved with a code `YYYYMMDD_HHMMSS` and listed in the sidebar. Play the previews (▶ on
    the cover; the player with the progress bar opens under the track) and filter by genre.
 5. Star (★) what you like and click **Create Beatport playlist**: it creates an **always private**
@@ -41,7 +42,7 @@ it works; you can reopen them anytime with **Help** in the sidebar.
    on Beatport until you save. When it opens, beatcrate checks the playlist on Beatport first, so a new
    name, tracks added on beatport.com (shown with their title, and removable) and edits made there are
    kept. A playlist deleted on Beatport shows as such and can be removed from the list.
-7. To delete a selection, click the bin next to its title and confirm. It goes to the Trash (Finder's
+7. To delete a selection, click its bin (in the sidebar, on hover, or next to its title) and confirm. It goes to the Trash (Finder's
    **Put Back** restores it) with its stars and the record of its playlists; the playlists stay on
    Beatport, and its tracks may show up again in new selections.
 

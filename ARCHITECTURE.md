@@ -124,7 +124,8 @@ clicks never lose a star.
 
 Deleting a selection (`POST /api/selection/<code>/delete`) moves `crates/<code>.json` and, if any,
 `marks/<code>.json` to the Trash (`NSFileManager`, so Finder can put them back). It is local only (no consent),
-waits while beatcrate is busy (409) and leaves the playlists on Beatport untouched. Since earlier selections are
+waits while beatcrate is busy (409) and leaves the playlists on Beatport untouched. The page then goes home if it
+was showing that selection, or reloads. Since earlier selections are
 read from `crates/`, its tracks may be picked again.
 
 ## The local app
@@ -144,6 +145,9 @@ read from `crates/`, its tracks may be picked again.
   session. A `consent.json` from version 1.1 (`"chrome": true`) is asked again. The command line does not
   ask.
 - Period rules: `until` not after today, `since` not after `until`, at most a year.
+- While a selection runs, every page renders the app `inert` under the picking card, so nothing can be clicked
+  or reached with the keyboard; the page polls `/api/state` and, when it ends well, opens `/crate/<id>?created=1`,
+  which shows a "created" message once and drops the query. If it failed, the page reloads and the sidebar says why.
 - Lifecycle: `run_app` serves in a thread and shows the page in the app's window (`webkit.show_app`);
   when the window closes, the server stops and any sign-in window closes. Closing it (or quitting) while
   a selection, a session check or a playlist is under way asks for confirmation first. While the sign-in

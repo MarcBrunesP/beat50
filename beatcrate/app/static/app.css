@@ -30,6 +30,11 @@ button:disabled { opacity: .45; cursor: default; }
 .brand { display: flex; align-items: center; gap: 8px; padding: 4px 8px 14px; font-size: 15px; font-weight: 700;
          letter-spacing: -.2px; }
 .brand .mark { width: 22px; height: 22px; flex: none; }
+.brand span { flex: 1; }
+.brand-help { width: 26px; height: 26px; flex: none; padding: 0; border: 0; border-radius: 7px; background: transparent;
+              color: var(--soft); }
+.brand-help:hover { background: var(--line); color: var(--text); }
+.brand-help .icon { width: 18px; height: 18px; }
 .side-h, .playlists h2 { margin: 0; padding: 6px 8px 4px; font-size: 11px; font-weight: 600; color: var(--faint);
                          text-transform: uppercase; letter-spacing: .4px; }
 .playlists { margin-top: 14px; }
@@ -39,14 +44,16 @@ button:disabled { opacity: .45; cursor: default; }
 .playlists a.pl span { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 a.sel:hover:not(.on), .playlists a.pl:hover:not(.on) { background: var(--line); }
 .sel.on, .playlists a.pl.on { background: var(--accent); color: var(--accent-ink); }
-/* The selection under way: tinted, a spinning icon, its percentage and a thin bar along the bottom of the row. */
-.sel.running { position: relative; background: var(--accent-soft); color: var(--accent-text); }
-.sel.running .icon { width: 16px; height: 16px; animation: spin 1.2s linear infinite; }
-.sel.running .lbl { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-weight: 500; }
-.sels .sel.running small { color: var(--accent-text); }
-.side-prog { position: absolute; left: 10px; right: 10px; bottom: 3px; height: 2px; border-radius: 1px; background: var(--border); }
-.side-prog b { display: block; height: 100%; border-radius: 1px; background: var(--accent-text); transition: width .4s linear; }
-@media (prefers-reduced-motion: reduce) { .sel.running .icon { animation: none; } }
+/* Each selection's row: the link, and its bin over the count on hover or focus (hidden while the app is busy). */
+.sel-row { position: relative; }
+.sel-del { position: absolute; top: 4px; right: 4px; width: 24px; height: 24px; padding: 0; border: 0; border-radius: 6px;
+           background: transparent; color: var(--soft); opacity: 0; }
+.sel.on + .sel-del { color: var(--accent-ink); }
+.sel-row:hover .sel-del, .sel-del:focus-visible { opacity: 1; }
+.sel-del:hover:not(:disabled) { background: var(--chip); color: var(--red); }
+.sel-del:disabled { display: none; }
+.sel-del .icon { width: 14px; height: 14px; }
+.sel-row:has(.sel-del:not(:disabled)):hover small, .sel-row:has(.sel-del:focus-visible) small { visibility: hidden; }
 .sels small, .playlists small { flex: none; font-size: 11px; color: var(--faint); font-variant-numeric: tabular-nums; }
 .on small { color: inherit; opacity: .85; }
 .playlists a.pl.gone { color: var(--soft); }
@@ -115,13 +122,24 @@ a.sel:hover:not(.on), .playlists a.pl:hover:not(.on) { background: var(--line); 
 @keyframes spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .loading .box .icon { animation: none; } }
 .loading[hidden] { display: none; }
+/* A short message at the bottom of the content column (e.g. "Selection created"); app.js hides it after a while. */
+.toast { position: fixed; left: 240px; right: 0; bottom: 24px; z-index: 6; display: flex; justify-content: center;
+         pointer-events: none; }
+.toast[hidden] { display: none; }
+.toast .box { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border: 1px solid var(--line);
+              border-radius: 10px; background: var(--raised); font-weight: 500; box-shadow: 0 8px 24px var(--shadow);
+              animation: toast-in .25s ease-out; transition: opacity .3s, transform .3s; }
+.toast .icon { color: var(--green); }
+.toast.out .box { opacity: 0; transform: translateY(8px); }
+@keyframes toast-in { from { opacity: 0; transform: translateY(8px); } }
+@media (prefers-reduced-motion: reduce) { .toast .box { animation: none; transition: none; } }
 .section { margin: 16px 20px 6px; font-size: 11px; font-weight: 600; color: var(--faint); text-transform: uppercase;
            letter-spacing: .4px; }
 #closed { position: fixed; top: 0; left: 0; right: 0; z-index: 10; padding: 10px 16px; background: var(--red); color: #FFFFFF; }
 
-/* A selection under way: a scrim over the content column (the sidebar stays usable) with a centred card — the
-   record spinning, the step, a bar app.js moves little by little, and the phases as a vertical stepper. */
-#picking { position: fixed; top: 0; left: 240px; right: 0; bottom: 0; z-index: 5; display: flex; align-items: center;
+/* A selection under way: a scrim over the whole window (the app underneath is inert until it ends) with a
+   centred card — the record spinning, the step, a bar app.js moves little by little, and the phases. */
+#picking { position: fixed; inset: 0; z-index: 5; display: flex; align-items: center;
            justify-content: center; padding: 20px; background: var(--overlay); }
 #progress { width: 380px; max-width: 100%; padding: 20px; border-radius: 14px; background: var(--raised);
             box-shadow: 0 16px 40px var(--shadow); }
@@ -226,12 +244,17 @@ a.sel:hover:not(.on), .playlists a.pl:hover:not(.on) { background: var(--line); 
 #help { width: 460px; max-width: calc(100vw - 40px); padding: 0; border: 0; border-radius: 14px;
         background: var(--raised); color: var(--text); box-shadow: 0 16px 40px var(--shadow); }
 #help::backdrop { background: rgba(0, 0, 0, .45); }
-.help-slide { padding: 32px 32px 4px; text-align: center; }
-.help-slide[hidden] { display: none; }
-.help-art { height: 132px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px;
+/* Every slide sits in the same grid cell, the hidden ones invisible: the dialog always has the size of the
+   tallest slide, so it never jumps from one to the next. */
+.help-slides { display: grid; }
+.help-slide { grid-area: 1 / 1; padding: 32px 32px 4px; text-align: center; }
+.help-slide[hidden] { display: block; visibility: hidden; }
+.help-art { height: 132px; display: flex; align-items: center; justify-content: center; gap: 14px; margin-bottom: 20px;
             border-radius: 10px; background: var(--side); color: var(--accent-text); }
-.help-art svg { width: 200px; height: 120px; }
-.help-art .amber { color: var(--star); stroke: var(--star); }
+.help-art .mi { fill: currentColor; flex: none; }
+.help-art .mi-main { width: 72px; height: 72px; }
+.help-art .mi-amber { width: 44px; height: 44px; color: var(--star); }
+.help-art .mi-arrow { width: 26px; height: 26px; color: var(--faint); }
 .help-slide h2 { margin: 0 0 8px; font-size: 18px; font-weight: 700; letter-spacing: -.2px; }
 .help-slide p { margin: 0 auto; max-width: 340px; font-size: 13px; color: var(--soft); line-height: 1.5; }
 .help-nav { display: flex; align-items: center; gap: 12px; padding: 16px 20px 20px; }

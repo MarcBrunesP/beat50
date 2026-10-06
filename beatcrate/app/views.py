@@ -89,6 +89,20 @@ def _player():
             '<span id="player-time">0:00 / 0:00</span></div></div>')
 
 
+def _toast():
+    # A message the JS shows for a few seconds at the bottom of the content column: "Selection created".
+    return ('<div class="toast" id="toast" role="status" aria-live="polite" hidden>'
+            f'<span class="box">{_icon("check_circle")}<span class="msg"></span></span></div>')
+
+
+def _delete_button(selection, lang, off, cls, label_key):
+    """The bin that deletes a selection, in its toolbar (`delete`) and on its sidebar row (`sel-del`)."""
+    name = i18n.title(selection, lang)
+    return (f'<button class="{cls}" data-action="delete-selection" data-selection="{escape(selection)}" '
+            f'data-name="{escape(name)}" aria-label="{escape(i18n.t(lang, label_key, name=name))}" '
+            f'title="{i18n.t(lang, "delete_selection")}"{off}>{_icon("trash")}</button>')
+
+
 def _action_loading():
     # A centred overlay the JS shows while an action talks to Beatport; the JS sets its message (creating,
     # saving, checking the session). Rendered once per page, so it is there wherever those actions are.
@@ -96,39 +110,49 @@ def _action_loading():
             f'<span class="box">{_icon("sync")}<span class="msg"></span></span></div>')
 
 
-# One line drawing per help slide, 2 px stroke in the accent colour; `.amber` parts take the star colour.
-_SVG = ('<svg viewBox="0 0 120 72" fill="none" stroke="currentColor" stroke-width="2.5" '
-        'stroke-linecap="round" stroke-linejoin="round">')
+# Material Symbols (Outlined, 24 px, © Google, Apache License 2.0) for the help slides: filled paths on the
+# 0 -960 960 960 grid, drawn in the current colour. Only the help slides use them; the rest of the page uses ICONS.
+MATERIAL = {
+    "album": "M480-300q75 0 127.5-52.5T660-480q0-75-52.5-127.5T480-660q-75 0-127.5 52.5T300-480q0 75 52.5 127.5T480-300Zm-28.5-151.5Q440-463 440-480t11.5-28.5Q463-520 480-520t28.5 11.5Q520-497 520-480t-11.5 28.5Q497-440 480-440t-28.5-11.5ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z",
+    "arrow_forward": "M647-440H160v-80h487L423-744l57-56 320 320-320 320-57-56 224-224Z",
+    "auto_awesome": "m760-600-50-110-110-50 110-50 50-110 50 110 110 50-110 50-50 110Zm0 560-50-110-110-50 110-50 50-110 50 110 110 50-110 50-50 110ZM360-160 260-380 40-480l220-100 100-220 100 220 220 100-220 100-100 220Zm0-194 40-86 86-40-86-40-40-86-40 86-86 40 86 40 40 86Zm0-126Z",
+    "date_range": "M291.5-411.5Q280-423 280-440t11.5-28.5Q303-480 320-480t28.5 11.5Q360-457 360-440t-11.5 28.5Q337-400 320-400t-28.5-11.5Zm160 0Q440-423 440-440t11.5-28.5Q463-480 480-480t28.5 11.5Q520-457 520-440t-11.5 28.5Q497-400 480-400t-28.5-11.5Zm160 0Q600-423 600-440t11.5-28.5Q623-480 640-480t28.5 11.5Q680-457 680-440t-11.5 28.5Q657-400 640-400t-28.5-11.5ZM200-80q-33 0-56.5-23.5T120-160v-560q0-33 23.5-56.5T200-800h40v-80h80v80h320v-80h80v80h40q33 0 56.5 23.5T840-720v560q0 33-23.5 56.5T760-80H200Zm0-80h560v-400H200v400Zm0-480h560v-80H200v80Zm0 0v-80 80Z",
+    "delete": "M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z",
+    "lock": "M240-80q-33 0-56.5-23.5T160-160v-400q0-33 23.5-56.5T240-640h40v-80q0-83 58.5-141.5T480-920q83 0 141.5 58.5T680-720v80h40q33 0 56.5 23.5T800-560v400q0 33-23.5 56.5T720-80H240Zm0-80h480v-400H240v400Zm296.5-143.5Q560-327 560-360t-23.5-56.5Q513-440 480-440t-56.5 23.5Q400-393 400-360t23.5 56.5Q447-280 480-280t56.5-23.5ZM360-640h240v-80q0-50-35-85t-85-35q-50 0-85 35t-35 85v80ZM240-160v-400 400Z",
+    "login": "M480-120v-80h280v-560H480v-80h280q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H480Zm-80-160-55-58 102-102H120v-80h327L345-622l55-58 200 200-200 200Z",
+    "play_circle": "m380-300 280-180-280-180v360ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z",
+    "playlist_add": "M120-320v-80h280v80H120Zm0-160v-80h440v80H120Zm0-160v-80h440v80H120Zm520 480v-160H480v-80h160v-160h80v160h160v80H720v160h-80Z",
+    "queue_music": "M640-160q-50 0-85-35t-35-85q0-50 35-85t85-35q11 0 21 1.5t19 6.5v-328h200v80H760v360q0 50-35 85t-85 35ZM120-320v-80h320v80H120Zm0-160v-80h480v80H120Zm0-160v-80h480v80H120Z",
+    "star": "m354-287 126-76 126 77-33-144 111-96-146-13-58-136-58 135-146 13 111 97-33 143ZM233-120l65-281L80-590l288-25 112-265 112 265 288 25-218 189 65 281-247-149-247 149Zm247-350Z",
+    "verified_user": "m438-338 226-226-57-57-169 169-84-84-57 57 141 141Zm42 258q-139-35-229.5-159.5T160-516v-244l320-120 320 120v244q0 152-90.5 276.5T480-80Zm0-84q104-33 172-132t68-220v-189l-240-90-240 90v189q0 121 68 220t172 132Zm0-316Z",
+}
+
+# Each help slide's picture: a main icon in the accent and a second one in amber, joined by an arrow when the
+# slide is a step from one thing to the other.
 HELP_ART = [
-    _SVG + '<circle cx="46" cy="36" r="24"/><circle cx="46" cy="36" r="13"/>'
-           '<circle cx="46" cy="36" r="3" fill="currentColor" stroke="none"/>'
-           '<path class="amber" d="M88 20 l3.2 7.8 7.8 3.2 -7.8 3.2 -3.2 7.8 -3.2 -7.8 -7.8 -3.2 7.8 -3.2 z"/></svg>',
-    _SVG + '<rect x="16" y="18" width="50" height="36" rx="4"/><line x1="16" y1="28" x2="66" y2="28"/>'
-           '<rect x="80" y="34" width="24" height="18" rx="3"/><path d="M85 34 v-5 a7 7 0 0 1 14 0 v5"/>'
-           '<circle cx="92" cy="43" r="2.5"/></svg>',
-    _SVG + '<rect x="14" y="20" width="32" height="32" rx="4"/><line x1="14" y1="29" x2="46" y2="29"/>'
-           '<line x1="22" y1="15" x2="22" y2="24"/><line x1="38" y1="15" x2="38" y2="24"/>'
-           '<path d="M52 36 h14"/><path d="M61 31 l5 5 -5 5"/>'
-           '<line x1="74" y1="26" x2="104" y2="26"/><line x1="74" y1="36" x2="104" y2="36"/>'
-           '<line x1="74" y1="46" x2="96" y2="46"/></svg>',
-    _SVG + '<circle cx="40" cy="36" r="18"/><path d="M35 27 l13 9 -13 9 z" fill="currentColor" stroke="none"/>'
-           '<path class="amber" d="M86 22 l3.5 8.5 9 0.6 -7 5.8 2.3 8.7 -7.8 -4.8 -7.8 4.8 2.3 -8.7 -7 -5.8 9 -0.6 z"/></svg>',
-    _SVG + '<rect x="20" y="16" width="52" height="40" rx="4"/><line x1="28" y1="27" x2="64" y2="27"/>'
-           '<line x1="28" y1="36" x2="64" y2="36"/><line x1="28" y1="45" x2="52" y2="45"/>'
-           '<rect x="82" y="22" width="18" height="13" rx="2"/><path d="M85.5 22 v-3 a5.5 5.5 0 0 1 11 0 v3"/>'
-           '<path class="amber" d="M91 44 v12 M85 50 h12"/></svg>',
-    _SVG + '<rect x="14" y="16" width="48" height="40" rx="4"/><line x1="22" y1="27" x2="54" y2="27"/>'
-           '<line x1="22" y1="36" x2="54" y2="36"/><line x1="22" y1="45" x2="42" y2="45"/>'
-           '<path d="M68 36 h10"/><path d="M74 32 l4 4 -4 4"/>'
-           '<path d="M84 26 h22"/><path d="M88 26 l1.5 24 a2 2 0 0 0 2 2 h7 a2 2 0 0 0 2 -2 l1.5 -24"/>'
-           '<path d="M91 26 v-4 h8 v4"/><path class="amber" d="M93 32 v14 M97 32 v14"/></svg>',
+    ("album", "auto_awesome"),
+    ("verified_user", "login"),
+    ("date_range", "arrow_forward", "queue_music"),
+    ("play_circle", "star"),
+    ("playlist_add", "lock"),
+    ("queue_music", "arrow_forward", "delete"),
 ]
+
+
+def _material(name, cls):
+    return f'<svg class="mi {cls}" viewBox="0 -960 960 960" aria-hidden="true"><path d="{MATERIAL[name]}"/></svg>'
+
+
+def _help_art(names):
+    main, *rest = names
+    return _material(main, "mi-main") + "".join(
+        _material(n, "mi-arrow" if n == "arrow_forward" else "mi-amber") for n in rest)
 
 
 def _help(lang):
     """The onboarding: graphical slides on how the app works. Auto-opened on first launch, reopened with Help."""
     slides = "".join(
-        f'<section class="help-slide"{" hidden" if n > 1 else ""}><div class="help-art">{art}</div>'
+        f'<section class="help-slide"{" hidden" if n > 1 else ""}><div class="help-art">{_help_art(art)}</div>'
         f'<h2>{i18n.t(lang, f"help_s{n}_t")}</h2><p>{i18n.t(lang, f"help_s{n}_b")}</p></section>'
         for n, art in enumerate(HELP_ART, 1))
     dots = "".join(f'<button class="dot{" on" if k == 0 else ""}" data-help-go="{k}" aria-label="{k + 1}"></button>'
@@ -248,19 +272,16 @@ def _status(state, lang):
         parts.append(f'<button class="warn" data-action="login-start"{off}>{_icon("login")}{i18n.t(lang, "login")}</button>')
     revoke = (f'<button class="link" data-action="revoke">{_icon("remove_moderator")}{i18n.t(lang, "consent_revoke")}</button>'
               if state.get("consent") else "")
-    help_btn = f'<button class="link" data-help-open>{_icon("help")}{i18n.t(lang, "help_open")}</button>'
-    parts.append(f'<div class="side-foot">{_language_switch(lang)}{help_btn}{revoke}</div>')
+    parts.append(f'<div class="side-foot">{_language_switch(lang)}{revoke}</div>')
     return f'<section class="status">{"".join(parts)}</section>'
 
 
-def _toolbar(title, detail, state, today, lang, deletable=False):
+def _toolbar(title, detail, state, today, lang, selection=None):
     """The top of the main column: the title (with a delete button on a selection), the period and the action that
     makes a new selection."""
     off = " disabled" if state.get("running") or state.get("login_pending") else ""
     since = (today - timedelta(days=config.WINDOW_DAYS)).isoformat()
-    delete = (f'<button class="delete" data-action="delete-selection" data-name="{escape(title)}" '
-              f'aria-label="{i18n.t(lang, "delete_selection")}" title="{i18n.t(lang, "delete_selection")}"{off}>'
-              f'{_icon("trash")}</button>' if deletable else "")
+    delete = _delete_button(selection, lang, off, "delete", "delete_selection") if selection else ""
     return (f'<header class="head"><div class="title"><h1>{title}</h1><span class="detail">{detail}</span></div>{delete}'
             f'<div class="period"><label>{i18n.t(lang, "since")} '
             f'<input type="date" id="since" value="{since}" max="{today}"></label>'
@@ -287,29 +308,15 @@ PICK_DISC = ('<svg class="disc" viewBox="0 0 120 120" aria-hidden="true">'
 _PICK_FROM = (2, 35, 85)
 
 
-def _pick_from(running):
-    return _PICK_FROM[min(max(running["step"], 1), len(_PICK_FROM)) - 1]
-
-
-def _running_row(state, lang):
-    """The selection under way at the top of the sidebar: a spinning icon, its percentage and a thin bar that
-    app.js moves together with the card's."""
-    running = state.get("running")
-    if not running:
-        return ""
-    pct = _pick_from(running)
-    return (f'<span class="sel running">{_icon("sync")}<span class="lbl">{i18n.t(lang, "running")}</span>'
-            f'<small class="pct">{pct}%</small><i class="side-prog"><b style="width:{pct}%"></b></i></span>')
-
-
 def _progress(state, lang):
-    """The selection under way: a centred card over the content column with the record spinning, the step, a
-    bar and the three phases. app.js moves the bar little by little, updates the phases and reloads at the end."""
+    """The selection under way: a centred card over the whole window with the record spinning, the step, a bar
+    and the three phases. app.js moves the bar little by little, updates the phases and, at the end, opens the
+    new selection with a "created" message."""
     running = state.get("running")
     if not running:
         return ""
     step = running["step"]
-    pct = _pick_from(running)
+    pct = _PICK_FROM[min(max(step, 1), len(_PICK_FROM)) - 1]
     phase = i18n.t(lang, f"phase_{running.get('phase', 'library')}")
     phases = "".join(
         f'<li class="{"done" if n < step else "now" if n == step else "next"}">'
@@ -363,13 +370,16 @@ def _editor(selection, crate, playlist, starred, lang, refresh):
 
 def render_page(selection, crate, selections, state, token, today, marks=None, lang="en", playlist=None):
     marks = marks or {"starred": [], "playlists": []}
-    running = _running_row(state, lang)
+    off = " disabled" if state.get("running") or state.get("login_pending") else ""
     links = "".join(
-        f'<a class="sel{" on" if s == selection else ""}" href="/crate/{escape(s)}">'
+        f'<div class="sel-row"><a class="sel{" on" if s == selection else ""}" href="/crate/{escape(s)}">'
         f'{i18n.short_title(s, lang)} <small>{n}</small></a>'
+        f'{_delete_button(s, lang, off, "sel-del", "delete_named")}</div>'
         for s, n in selections)
-    side = (f'<aside class="side"><div class="brand">{BRAND_MARK}beatcrate</div>'
-            f'<h2 class="side-h">{i18n.t(lang, "selections")}</h2><nav class="sels">{running}{links}</nav>'
+    help_btn = (f'<button class="brand-help" data-help-open aria-label="{i18n.t(lang, "help_open")}" '
+                f'title="{i18n.t(lang, "help_open")}">{_icon("help")}</button>')
+    side = (f'<aside class="side"><div class="brand">{BRAND_MARK}<span>beatcrate</span>{help_btn}</div>'
+            f'<h2 class="side-h">{i18n.t(lang, "selections")}</h2><nav class="sels">{links}</nav>'
             f'{_playlists(marks, lang, selection, playlist)}{_status(state, lang)}</aside>')
     marker = player = ""
     if playlist is not None:
@@ -409,11 +419,13 @@ def render_page(selection, crate, selections, state, token, today, marks=None, l
                   f'{i18n.t(lang, "create_playlist", count=count)}</button>')
         rows = "".join(_row(i, t, lang, t["id"] in starred, in_playlists.get(t["id"], ()))
                        for i, t in enumerate(crate["tracks"], 1))
-        inner = (_toolbar(i18n.title(selection, lang), detail, state, today, lang, deletable=True)
+        inner = (_toolbar(i18n.title(selection, lang), detail, state, today, lang, selection)
                  + f'<div class="filters">{_genres(crate, lang)}{create}</div>{notice}<ol class="tracks">{rows}</ol>'
                  '<audio id="player" preload="none"></audio>')
         player = _player()
-    main = f'<main class="list"{marker}>{_progress(state, lang)}{inner}</main>{player}'
+    main = f'<main class="list"{marker}>{inner}</main>{player}'
+    # While a selection is made the whole window waits: the app underneath is inert and the card sits on top.
+    inert = " inert" if state.get("running") else ""
     texts = json.dumps(i18n.js_texts(lang), ensure_ascii=False).replace("</", "<\\/")
     return (f'<!doctype html><html lang="{lang}"><head><meta charset="utf-8">'
             '<meta name="viewport" content="width=device-width, initial-scale=1">'
@@ -422,6 +434,7 @@ def render_page(selection, crate, selections, state, token, today, marks=None, l
             f'<body data-selection="{escape(selection or "")}" data-running="{"1" if state.get("running") else "0"}"'
             f' data-consent="{"1" if state.get("consent") else "0"}" data-login="{"1" if state.get("login_pending") else "0"}"'
             f' data-help="{"0" if state.get("help_seen") else "1"}">'
-            f'{_sprite()}<div class="app">{side}{main}</div>{_action_loading()}{_help(lang)}{_consent(lang)}'
+            f'{_sprite()}<div class="app"{inert}>{side}{main}</div>{_progress(state, lang)}{_action_loading()}{_toast()}'
+            f'{_help(lang)}{_consent(lang)}'
             f'<script id="texts" type="application/json">{texts}</script>'
             '<script src="/static/app.js"></script></body></html>')

@@ -217,7 +217,7 @@ class Handler(BaseHTTPRequestHandler):
             if jobs.busy() or state.lock_owner():
                 raise state.Busy("busy", "beatcrate is already busy.")
             _delete(selection)
-            return self._json(200, {"ok": True, "redirect": "/"})
+            return self._json(200, {"ok": True})  # the page knows where to go: home if it was showing it
         return self._fail(404, "not_found")
 
     def _playlist_action(self, selection, playlist_id, action, body):

@@ -48,7 +48,7 @@ TEXTS = {
         "help_s5_t": "Create a private playlist",
         "help_s5_b": "Turn your starred tracks into an always-private Beatport playlist, and edit it whenever you want.",
         "help_s6_t": "Tidy up your selections",
-        "help_s6_b": "Delete a selection you no longer need with the bin next to its title. It goes to the Trash, its playlists stay on Beatport and its tracks may come back in new selections.",
+        "help_s6_b": "Delete a selection you no longer need with its bin, in the sidebar or next to its title. It goes to the Trash, its playlists stay on Beatport and its tracks may come back in new selections.",
         "login": "Sign in",
         "login_hint": "Sign in to Beatport in the window that opened. It closes by itself once you are in.",
         "playlists_here": "Playlists from this selection",
@@ -60,8 +60,9 @@ TEXTS = {
         "step_wait": "About a minute and it is ready",
         "tagline": "Beatport new releases picked for your taste",
         "selections": "Selections",
-        "running": "In progress…",
         "delete_selection": "Delete selection",
+        "delete_named": "Delete the selection of {name}",
+        "created": "Selection created successfully · {n} tracks",
         "js_delete": "Delete the selection of {name}?\n\nIt goes to the Trash with its stars and the record of its "
                      "playlists. The playlists stay on Beatport, and its tracks may show up again in new selections.",
         "picked_for": "Picked for {reasons}",
@@ -176,7 +177,7 @@ TEXTS = {
         "help_s5_t": "Crea una playlist privada",
         "help_s5_b": "Convierte tus favoritos en una playlist de Beatport siempre privada, y edítala cuando quieras.",
         "help_s6_t": "Ordena tus selecciones",
-        "help_s6_b": "Elimina una selección que ya no necesites con la papelera junto a su título. Va a la Papelera, sus playlists siguen en Beatport y sus temas podrán volver a salir en nuevas selecciones.",
+        "help_s6_b": "Elimina una selección que ya no necesites con su papelera, en la barra lateral o junto a su título. Va a la Papelera, sus playlists siguen en Beatport y sus temas podrán volver a salir en nuevas selecciones.",
         "login": "Iniciar sesión",
         "login_hint": "Inicia sesión en Beatport en la ventana que se ha abierto. Se cierra sola cuando entras.",
         "playlists_here": "Playlists de esta selección",
@@ -188,8 +189,9 @@ TEXTS = {
         "step_wait": "Un minuto y lista",
         "tagline": "Novedades de Beatport elegidas para tu gusto",
         "selections": "Selecciones",
-        "running": "En curso…",
         "delete_selection": "Eliminar selección",
+        "delete_named": "Eliminar la selección del {name}",
+        "created": "Selección creada con éxito · {n} temas",
         "js_delete": "¿Eliminar la selección del {name}?\n\nVa a la Papelera con sus estrellas y el registro de sus "
                      "playlists. Las playlists siguen en Beatport y sus tracks podrán volver a salir en nuevas selecciones.",
         "picked_for": "Elegido por {reasons}",
@@ -277,7 +279,7 @@ TEXTS = {
 }
 
 JS_KEYS = ("making", "phase_library", "phase_discover", "phase_rank", "js_closed", "js_prompt", "js_error",
-           "listen", "pause", "creating", "saving", "checking", "js_delete")
+           "listen", "pause", "creating", "saving", "checking", "js_delete", "created")
 
 
 def pick(cookie_header, accept_language):
