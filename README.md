@@ -30,8 +30,8 @@ it works; you can reopen them anytime with **Help** in the sidebar.
    **Withdraw permission**.
 2. **Sign in** (the first time, or when the session expires): a Beatport window opens; sign in and it
    closes by itself.
-3. Choose the period (**From / To**, the last 31 days by default) and click **New selection**. It takes
-   about a minute.
+3. Choose the period (**From / To**, the last 31 days by default) and click **New selection**. A card
+   shows each step as it goes; it takes about a minute.
 4. Each selection is saved with a code `YYYYMMDD_HHMMSS` and listed in the sidebar. Play the previews (▶ on
    the cover; the player with the progress bar opens under the track) and filter by genre.
 5. Star (★) what you like and click **Create Beatport playlist**: it creates an **always private**
@@ -41,6 +41,9 @@ it works; you can reopen them anytime with **Help** in the sidebar.
    on Beatport until you save. When it opens, beatcrate checks the playlist on Beatport first, so a new
    name, tracks added on beatport.com (shown with their title, and removable) and edits made there are
    kept. A playlist deleted on Beatport shows as such and can be removed from the list.
+7. To delete a selection, click the bin next to its title and confirm. It goes to the Trash (Finder's
+   **Put Back** restores it) with its stars and the record of its playlists; the playlists stay on
+   Beatport, and its tracks may show up again in new selections.
 
 Creating and editing its own playlists is all beatcrate writes to your account. It never deletes a
 playlist, never touches the others and never makes one public.

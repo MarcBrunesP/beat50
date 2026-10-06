@@ -10,7 +10,7 @@ from pathlib import Path
 
 from .. import config, webkit
 from ..errors import BeatcrateError
-from . import consent, i18n, jobs, marks, state, views
+from . import consent, i18n, jobs, marks, state, trash, views
 
 STATIC = Path(__file__).parent / "static"
 STATIC_FILES = {"app.css": "text/css; charset=utf-8", "app.js": "text/javascript; charset=utf-8"}
@@ -50,6 +50,15 @@ def _selections():
 def _crate(selection):
     path = config.CRATES_DIR / f"{selection}.json"
     return json.loads(path.read_text()) if SELECTION.match(selection) and path.exists() else None
+
+
+def _delete(selection):
+    """Moves a selection and its marks (stars, record of its playlists) to the Trash. Its tracks may then show up
+    in new selections again; the playlists on Beatport are left as they are."""
+    trash.move(config.CRATES_DIR / f"{selection}.json")
+    marks_file = config.MARKS_DIR / f"{selection}.json"
+    if marks_file.exists():
+        trash.move(marks_file)
 
 
 class App(ThreadingHTTPServer):
@@ -201,6 +210,14 @@ class Handler(BaseHTTPRequestHandler):
                 raise BeatcrateError("bad_request", "\"genres\" must be a list of strings.")
             r = jobs.create_playlist(selection, body["name"], genres=genres or None)
             return self._json(200, {"ok": True, "message": _playlist_message(self._lang(), r)})
+        if path.startswith("/api/selection/") and path.endswith("/delete"):  # only local: no permission needed
+            selection = path[len("/api/selection/"):-len("/delete")]
+            if _crate(selection) is None:
+                return self._fail(404, "not_found")
+            if jobs.busy() or state.lock_owner():
+                raise state.Busy("busy", "beatcrate is already busy.")
+            _delete(selection)
+            return self._json(200, {"ok": True, "redirect": "/"})
         return self._fail(404, "not_found")
 
     def _playlist_action(self, selection, playlist_id, action, body):

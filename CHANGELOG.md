@@ -3,6 +3,19 @@
 What changed in each version of beatcrate. The format follows [Keep a Changelog](https://keepachangelog.com/)
 and versions follow [Semantic Versioning](https://semver.org/). The version lives in `pyproject.toml`.
 
+## 2.11.0 — 2026-10-07
+
+### Added
+
+- Delete a selection with the bin next to its title. It goes to the Trash with its stars and the record of its
+  playlists; the playlists stay on Beatport and its tracks may show up again in new selections.
+- A Help slide on deleting selections.
+
+### Changed
+
+- The sidebar's "In progress…" row is tinted, its icon spins and it shows the same percentage and bar as the card.
+- The Help slide on making a selection mentions the progress card.
+
 ## 2.10.1 — 2026-10-07
 
 ### Changed

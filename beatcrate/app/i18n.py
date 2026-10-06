@@ -42,11 +42,13 @@ TEXTS = {
         "help_s2_t": "Permission and sign in",
         "help_s2_b": "The first time, beatcrate asks permission to read your Beatport session and opens a window to sign in. Nothing is shared.",
         "help_s3_t": "Make a selection",
-        "help_s3_b": "Choose a period and click New selection. In about a minute you get 50 tracks, each with the reason it was picked.",
+        "help_s3_b": "Choose a period and click New selection. A card shows how it goes, step by step; in about a minute you get 50 tracks, each with the reason it was picked.",
         "help_s4_t": "Listen and star",
         "help_s4_b": "Play the previews (▶) and star (★) the ones you like. Filter by genre to focus.",
         "help_s5_t": "Create a private playlist",
         "help_s5_b": "Turn your starred tracks into an always-private Beatport playlist, and edit it whenever you want.",
+        "help_s6_t": "Tidy up your selections",
+        "help_s6_b": "Delete a selection you no longer need with the bin next to its title. It goes to the Trash, its playlists stay on Beatport and its tracks may come back in new selections.",
         "login": "Sign in",
         "login_hint": "Sign in to Beatport in the window that opened. It closes by itself once you are in.",
         "playlists_here": "Playlists from this selection",
@@ -59,6 +61,9 @@ TEXTS = {
         "tagline": "Beatport new releases picked for your taste",
         "selections": "Selections",
         "running": "In progress…",
+        "delete_selection": "Delete selection",
+        "js_delete": "Delete the selection of {name}?\n\nIt goes to the Trash with its stars and the record of its "
+                     "playlists. The playlists stay on Beatport, and its tracks may show up again in new selections.",
         "picked_for": "Picked for {reasons}",
         "private_tag": "Private on Beatport",
         "tracks": "{n} tracks",
@@ -125,6 +130,7 @@ TEXTS = {
         "error_not_found": "Not found.",
         "error_consent_required": "beatcrate needs your permission to read your Beatport session.",
         "error_interrupted": "beatcrate closed before it finished.",
+        "error_trash_failed": "The selection could not be moved to the Trash: {detail}",
         "consent_title": "Before reading your Beatport session",
         "consent_window": "beatcrate opens Beatport in a window of its own, hidden except when you sign in, "
                           "and closes it when done.",
@@ -164,11 +170,13 @@ TEXTS = {
         "help_s2_t": "Permiso e inicio de sesión",
         "help_s2_b": "La primera vez, beatcrate te pide permiso para leer tu sesión de Beatport y abre una ventana para iniciar sesión. No se comparte nada.",
         "help_s3_t": "Haz una selección",
-        "help_s3_b": "Elige un periodo y pulsa Nueva selección. En aproximadamente un minuto tienes 50 temas, cada uno con su motivo.",
+        "help_s3_b": "Elige un periodo y pulsa Nueva selección. Una tarjeta te muestra el avance paso a paso; en aproximadamente un minuto tienes 50 temas, cada uno con su motivo.",
         "help_s4_t": "Escucha y marca",
         "help_s4_b": "Escucha las previews (▶) y marca (★) las que te gusten. Filtra por género para centrarte.",
         "help_s5_t": "Crea una playlist privada",
         "help_s5_b": "Convierte tus favoritos en una playlist de Beatport siempre privada, y edítala cuando quieras.",
+        "help_s6_t": "Ordena tus selecciones",
+        "help_s6_b": "Elimina una selección que ya no necesites con la papelera junto a su título. Va a la Papelera, sus playlists siguen en Beatport y sus temas podrán volver a salir en nuevas selecciones.",
         "login": "Iniciar sesión",
         "login_hint": "Inicia sesión en Beatport en la ventana que se ha abierto. Se cierra sola cuando entras.",
         "playlists_here": "Playlists de esta selección",
@@ -181,6 +189,9 @@ TEXTS = {
         "tagline": "Novedades de Beatport elegidas para tu gusto",
         "selections": "Selecciones",
         "running": "En curso…",
+        "delete_selection": "Eliminar selección",
+        "js_delete": "¿Eliminar la selección del {name}?\n\nVa a la Papelera con sus estrellas y el registro de sus "
+                     "playlists. Las playlists siguen en Beatport y sus tracks podrán volver a salir en nuevas selecciones.",
         "picked_for": "Elegido por {reasons}",
         "private_tag": "Privada en Beatport",
         "tracks": "{n} tracks",
@@ -247,6 +258,7 @@ TEXTS = {
         "error_not_found": "No existe.",
         "error_consent_required": "Falta tu permiso para leer tu sesión de Beatport.",
         "error_interrupted": "beatcrate se cerró antes de terminar.",
+        "error_trash_failed": "No se pudo mover la selección a la Papelera: {detail}",
         "consent_title": "Antes de leer tu sesión de Beatport",
         "consent_window": "beatcrate abre Beatport en una ventana propia, oculta salvo al iniciar sesión, "
                           "y la cierra al terminar.",
@@ -265,7 +277,7 @@ TEXTS = {
 }
 
 JS_KEYS = ("making", "phase_library", "phase_discover", "phase_rank", "js_closed", "js_prompt", "js_error",
-           "listen", "pause", "creating", "saving", "checking")
+           "listen", "pause", "creating", "saving", "checking", "js_delete")
 
 
 def pick(cookie_header, accept_language):

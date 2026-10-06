@@ -39,8 +39,14 @@ button:disabled { opacity: .45; cursor: default; }
 .playlists a.pl span { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 a.sel:hover:not(.on), .playlists a.pl:hover:not(.on) { background: var(--line); }
 .sel.on, .playlists a.pl.on { background: var(--accent); color: var(--accent-ink); }
-.sel.running { justify-content: flex-start; color: var(--soft); background: var(--line); }
-.sel.running .icon { color: var(--accent); }
+/* The selection under way: tinted, a spinning icon, its percentage and a thin bar along the bottom of the row. */
+.sel.running { position: relative; background: var(--accent-soft); color: var(--accent-text); }
+.sel.running .icon { width: 16px; height: 16px; animation: spin 1.2s linear infinite; }
+.sel.running .lbl { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-weight: 500; }
+.sels .sel.running small { color: var(--accent-text); }
+.side-prog { position: absolute; left: 10px; right: 10px; bottom: 3px; height: 2px; border-radius: 1px; background: var(--border); }
+.side-prog b { display: block; height: 100%; border-radius: 1px; background: var(--accent-text); transition: width .4s linear; }
+@media (prefers-reduced-motion: reduce) { .sel.running .icon { animation: none; } }
 .sels small, .playlists small { flex: none; font-size: 11px; color: var(--faint); font-variant-numeric: tabular-nums; }
 .on small { color: inherit; opacity: .85; }
 .playlists a.pl.gone { color: var(--soft); }
@@ -77,6 +83,11 @@ a.sel:hover:not(.on), .playlists a.pl:hover:not(.on) { background: var(--line); 
            text-overflow: ellipsis; }
 .head .detail { display: block; font-size: 11px; color: var(--soft); white-space: nowrap; overflow: hidden;
                 text-overflow: ellipsis; }
+/* Delete the selection: a bordered icon button beside its title; red only on hover (with its aria-label). */
+.head .delete { width: 30px; height: 30px; flex: none; padding: 0; border: 1px solid var(--border); border-radius: 8px;
+                background: var(--raised); color: var(--soft); }
+.head .delete:hover:not(:disabled) { color: var(--red); border-color: var(--red); }
+.head .delete .icon { width: 16px; height: 16px; }
 .period { display: flex; align-items: center; gap: 6px; height: 30px; padding: 0 4px 0 10px; border: 1px solid var(--border);
           border-radius: 8px; color: var(--soft); font-size: 12px; }
 .period label { display: flex; align-items: center; gap: 6px; }

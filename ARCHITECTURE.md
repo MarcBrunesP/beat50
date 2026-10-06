@@ -34,6 +34,7 @@ a selection is made when the user asks for it.
 | `app/state.py` | `state.json` and the process lock |
 | `app/marks.py` | Stars and created playlists per selection |
 | `app/consent.py` | The user's permission to read the Beatport session |
+| `app/trash.py` | Moves a deleted selection's files to the Mac's Trash |
 | `app/static/` | CSS and JavaScript of the page |
 | `packaging/` | Entry point of the packaged app and the DMG notes |
 
@@ -121,6 +122,11 @@ All user data lives in `~/Library/Application Support/beatcrate/` (or `$BEATCRAT
 Marks live apart from selections and are written atomically under an in-process lock, so two quick
 clicks never lose a star.
 
+Deleting a selection (`POST /api/selection/<code>/delete`) moves `crates/<code>.json` and, if any,
+`marks/<code>.json` to the Trash (`NSFileManager`, so Finder can put them back). It is local only (no consent),
+waits while beatcrate is busy (409) and leaves the playlists on Beatport untouched. Since earlier selections are
+read from `crates/`, its tracks may be picked again.
+
 ## The local app
 
 - `app/server.py` listens on `127.0.0.1:8765` only. Requests with any other `Host` get 403 (DNS
@@ -128,7 +134,8 @@ clicks never lose a star.
   embedded in the page, so no other website can trigger actions.
 - Routes: `GET /`, `/crate/<code>`, `/static/*`, `/api/state`, `/api/health`; `POST /api/consent` (`on`),
   `/api/generate` (`since`, `until`), `/api/session/check`, `/api/login/start`, `/api/star/<code>/<track>`
-  (`on`), `/api/playlist/<code>` (`name`, `genres`), `/api/playlist/<code>/<id>` (`name`, `remove`, `add`).
+  (`on`), `/api/playlist/<code>` (`name`, `genres`), `/api/playlist/<code>/<id>` (`name`, `remove`, `add`),
+  `/api/selection/<code>/delete`.
   Also `GET /crate/<code>/playlist/<id>`, the playlist editor.
 - Consent: the routes that read the session (`generate`, `session/check`, `login/start`, `playlist/*`)
   answer 409 `consent_required` until the user accepts the notice in the page, which explains the Beatport

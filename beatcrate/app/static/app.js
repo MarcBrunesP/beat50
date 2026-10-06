@@ -37,6 +37,7 @@ const ROUTES = {
   'revoke': () => '/api/consent',
   'save-playlist': (b) => '/api/playlist/' + document.body.dataset.selection + '/' + b.dataset.playlist,
   'forget-playlist': (b) => ROUTES['save-playlist'](b) + '/forget',
+  'delete-selection': () => '/api/selection/' + document.body.dataset.selection + '/delete',
 };
 
 // Actions that read the Beatport session: the first time, the user has to accept.
@@ -216,8 +217,13 @@ function tickPick() {
   const [from, to, tau] = PICK_BANDS[Math.min(Math.max(pick.step, 1), PICK_BANDS.length) - 1];
   const t = Math.max(0, (Date.now() - Date.parse(pick.since)) / 1000) || 0;
   shown = Math.max(shown, from + (to - from) * (1 - Math.exp(-t / tau)));  // never backwards
-  progress.querySelector('.prog i').style.width = shown.toFixed(1) + '%';
-  progress.querySelector('.pct').textContent = Math.floor(shown) + '%';
+  // The card and the sidebar's running row show the same progress.
+  document.querySelectorAll('#progress .prog i, .sel.running .side-prog b').forEach((b) => {
+    b.style.width = shown.toFixed(1) + '%';
+  });
+  document.querySelectorAll('#progress .pct, .sel.running .pct').forEach((p) => {
+    p.textContent = Math.floor(shown) + '%';
+  });
 }
 
 if (progress) {
@@ -291,6 +297,10 @@ function run(button) {
                         until: document.getElementById('until').value});
   }
   if (action === 'revoke') return act(button, {on: false});
+  if (action === 'delete-selection') {
+    if (confirm(text('js_delete', {name: button.dataset.name}))) act(button);
+    return;
+  }
   if (action === 'save-playlist') {
     return act(button, {name: document.getElementById('pl-name').value, remove: marked('remove'),
                         add: marked('add')});

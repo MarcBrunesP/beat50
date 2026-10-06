@@ -36,6 +36,8 @@ ICONS = {
     "save": '<path d="M5 12l5 5L20 7"/>',
     "star": '<path d="M12 2.5l2.9 6.1 6.7.8-4.9 4.6 1.3 6.6L12 17.4l-6 3.2 1.3-6.6L2.4 9.4l6.7-.8z"/>',
     "sync": '<path d="M20 12a8 8 0 0 1-14 5.3M4 12a8 8 0 0 1 14-5.3"/><path d="M18 3v4h-4M6 21v-4h4"/>',
+    "trash": '<path d="M4 7h16M10 11v6M14 11v6"/><path d="M6 7l1 12.2a2 2 0 0 0 2 1.8h6a2 2 0 0 0 2-1.8L18 7"/>'
+             '<path d="M9 7V4.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 .5.5V7"/>',
     "verified_user": '<path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/>',
     "window": '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 9h18"/>',
 }
@@ -115,6 +117,11 @@ HELP_ART = [
            '<line x1="28" y1="36" x2="64" y2="36"/><line x1="28" y1="45" x2="52" y2="45"/>'
            '<rect x="82" y="22" width="18" height="13" rx="2"/><path d="M85.5 22 v-3 a5.5 5.5 0 0 1 11 0 v3"/>'
            '<path class="amber" d="M91 44 v12 M85 50 h12"/></svg>',
+    _SVG + '<rect x="14" y="16" width="48" height="40" rx="4"/><line x1="22" y1="27" x2="54" y2="27"/>'
+           '<line x1="22" y1="36" x2="54" y2="36"/><line x1="22" y1="45" x2="42" y2="45"/>'
+           '<path d="M68 36 h10"/><path d="M74 32 l4 4 -4 4"/>'
+           '<path d="M84 26 h22"/><path d="M88 26 l1.5 24 a2 2 0 0 0 2 2 h7 a2 2 0 0 0 2 -2 l1.5 -24"/>'
+           '<path d="M91 26 v-4 h8 v4"/><path class="amber" d="M93 32 v14 M97 32 v14"/></svg>',
 ]
 
 
@@ -246,11 +253,15 @@ def _status(state, lang):
     return f'<section class="status">{"".join(parts)}</section>'
 
 
-def _toolbar(title, detail, state, today, lang):
-    """The top of the main column: the title, the period and the action that makes a new selection."""
+def _toolbar(title, detail, state, today, lang, deletable=False):
+    """The top of the main column: the title (with a delete button on a selection), the period and the action that
+    makes a new selection."""
     off = " disabled" if state.get("running") or state.get("login_pending") else ""
     since = (today - timedelta(days=config.WINDOW_DAYS)).isoformat()
-    return (f'<header class="head"><div class="title"><h1>{title}</h1><span class="detail">{detail}</span></div>'
+    delete = (f'<button class="delete" data-action="delete-selection" data-name="{escape(title)}" '
+              f'aria-label="{i18n.t(lang, "delete_selection")}" title="{i18n.t(lang, "delete_selection")}"{off}>'
+              f'{_icon("trash")}</button>' if deletable else "")
+    return (f'<header class="head"><div class="title"><h1>{title}</h1><span class="detail">{detail}</span></div>{delete}'
             f'<div class="period"><label>{i18n.t(lang, "since")} '
             f'<input type="date" id="since" value="{since}" max="{today}"></label>'
             f'<label>{i18n.t(lang, "until")} <input type="date" id="until" value="{today}" max="{today}"></label></div>'
@@ -276,6 +287,21 @@ PICK_DISC = ('<svg class="disc" viewBox="0 0 120 120" aria-hidden="true">'
 _PICK_FROM = (2, 35, 85)
 
 
+def _pick_from(running):
+    return _PICK_FROM[min(max(running["step"], 1), len(_PICK_FROM)) - 1]
+
+
+def _running_row(state, lang):
+    """The selection under way at the top of the sidebar: a spinning icon, its percentage and a thin bar that
+    app.js moves together with the card's."""
+    running = state.get("running")
+    if not running:
+        return ""
+    pct = _pick_from(running)
+    return (f'<span class="sel running">{_icon("sync")}<span class="lbl">{i18n.t(lang, "running")}</span>'
+            f'<small class="pct">{pct}%</small><i class="side-prog"><b style="width:{pct}%"></b></i></span>')
+
+
 def _progress(state, lang):
     """The selection under way: a centred card over the content column with the record spinning, the step, a
     bar and the three phases. app.js moves the bar little by little, updates the phases and reloads at the end."""
@@ -283,7 +309,7 @@ def _progress(state, lang):
     if not running:
         return ""
     step = running["step"]
-    pct = _PICK_FROM[min(max(step, 1), len(_PICK_FROM)) - 1]
+    pct = _pick_from(running)
     phase = i18n.t(lang, f"phase_{running.get('phase', 'library')}")
     phases = "".join(
         f'<li class="{"done" if n < step else "now" if n == step else "next"}">'
@@ -337,7 +363,7 @@ def _editor(selection, crate, playlist, starred, lang, refresh):
 
 def render_page(selection, crate, selections, state, token, today, marks=None, lang="en", playlist=None):
     marks = marks or {"starred": [], "playlists": []}
-    running = f'<span class="sel running">{_icon("sync")}{i18n.t(lang, "running")}</span>' if state.get("running") else ""
+    running = _running_row(state, lang)
     links = "".join(
         f'<a class="sel{" on" if s == selection else ""}" href="/crate/{escape(s)}">'
         f'{i18n.short_title(s, lang)} <small>{n}</small></a>'
@@ -383,7 +409,7 @@ def render_page(selection, crate, selections, state, token, today, marks=None, l
                   f'{i18n.t(lang, "create_playlist", count=count)}</button>')
         rows = "".join(_row(i, t, lang, t["id"] in starred, in_playlists.get(t["id"], ()))
                        for i, t in enumerate(crate["tracks"], 1))
-        inner = (_toolbar(i18n.title(selection, lang), detail, state, today, lang)
+        inner = (_toolbar(i18n.title(selection, lang), detail, state, today, lang, deletable=True)
                  + f'<div class="filters">{_genres(crate, lang)}{create}</div>{notice}<ol class="tracks">{rows}</ol>'
                  '<audio id="player" preload="none"></audio>')
         player = _player()
