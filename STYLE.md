@@ -74,7 +74,7 @@ Numbers that line up (BPM, keys, counts, times) use `font-variant-numeric: tabul
 - Gaps: 14 px between row parts, 12 px in toolbars, 6–8 px between controls and chips, 2 px between sidebar rows.
 - Radii: 12–14 px cards and the dialog, 8 px buttons and inputs, 7 px sidebar rows and segmented control, 6 px covers,
   5 px chips, full round for pills, toggles and play.
-- Shadows only on floating things: the loading box (`0 8px 24px`), the dialog (`0 16px 40px`), the segmented control's
+- Shadows only on floating things: the loading box (`0 8px 24px`), the dialog and the picking card (`0 16px 40px`), the segmented control's
   selected segment (`0 1px 2px`).
 
 ## Icons
@@ -107,10 +107,13 @@ icon is the `sync` glyph in the loading overlay, which spins (stopped under `pre
   1100 px the genre name is dropped from the row (it is already in the filter row).
 - **Editor toggles**: 32 px circles; on = red (remove) or green (add) fill with white icon. A row marked to remove
   dims to 60 % and strikes the name; a row marked to add tints `--green-soft`.
-- **Picking overlay** (`#picking`): while a selection runs it fills the whole window (opaque `--bg`, below the
-  "server gone" banner) with the record (`PICK_DISC`) spinning in the centre — navy disc, blue grooves, amber
-  label and a faint highlight arc so the spin reads (stopped under `prefers-reduced-motion`) — and below it, in a
-  320 px column, the step line, a 6 px bar and the three phases as dots (done green, now accent ring, next faint).
+- **Picking card** (`#picking` › `#progress`): while a selection runs, an `--overlay` scrim over the content column
+  (the sidebar stays usable, like the loading overlay) with a centred 380 px raised card, radius 14, dialog shadow:
+  the record (`PICK_DISC`, 52 px) spinning next to the 14 / 600 step line; a 6 px bar with its percentage, which
+  app.js moves little by little inside each phase's stretch (`PICK_BANDS`, never backwards); and, under a `--line`
+  divider, the three phases as a vertical stepper with 18 px markers — done: green disc with a white check; now:
+  a spinning `--accent-text` ring and the label in `--text` 600; next: an empty `--border` ring. The spins stop
+  under `prefers-reduced-motion`.
 - **Empty state**: the 88 px app icon, 20 px title, one paragraph, three numbered steps.
 - **Consent sheet**: 520 px dialog, radius 14, accent icon tile, four points each with an icon, buttons right-aligned.
 - **Help** (`#help`): the onboarding, a 460 px dialog with five slides — a line illustration on a `--side` tile

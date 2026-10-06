@@ -258,7 +258,7 @@ def _toolbar(title, detail, state, today, lang):
             '</button></header>')
 
 
-# The record drawn as a spinning vinyl for the picking overlay: navy disc, blue grooves, amber label and a
+# The record drawn as a spinning vinyl for the picking card: navy disc, blue grooves, amber label and a
 # light highlight arc so the rotation reads. Echoes the brand mark's colours; it spins through CSS only.
 PICK_DISC = ('<svg class="disc" viewBox="0 0 120 120" aria-hidden="true">'
              '<circle cx="60" cy="60" r="59" fill="#0A1F44"/>'
@@ -272,21 +272,28 @@ PICK_DISC = ('<svg class="disc" viewBox="0 0 120 120" aria-hidden="true">'
              '<circle cx="60" cy="60" r="3.5" fill="#0A1F44"/></svg>')
 
 
+# Where the bar starts in each phase (%); app.js (PICK_BANDS) creeps it from there towards the next phase.
+_PICK_FROM = (2, 35, 85)
+
+
 def _progress(state, lang):
-    """The selection under way: a full-screen overlay with the record spinning in the centre, the phase and a
-    bar. app.js keeps the text, bar and phases up to date and reloads when it ends."""
+    """The selection under way: a centred card over the content column with the record spinning, the step, a
+    bar and the three phases. app.js moves the bar little by little, updates the phases and reloads at the end."""
     running = state.get("running")
     if not running:
         return ""
-    pct = round(100 * running["step"] / (running["of"] + 1))
+    step = running["step"]
+    pct = _PICK_FROM[min(max(step, 1), len(_PICK_FROM)) - 1]
     phase = i18n.t(lang, f"phase_{running.get('phase', 'library')}")
     phases = "".join(
-        f'<li class="{"done" if n < running["step"] else "now" if n == running["step"] else "next"}">'
+        f'<li class="{"done" if n < step else "now" if n == step else "next"}">'
         f'{i18n.t(lang, f"phase_{p}")}</li>' for n, p in enumerate(("library", "discover", "rank"), 1))
-    return (f'<div id="picking" role="status" aria-live="polite">{PICK_DISC}'
-            f'<section id="progress"><p class="working step">'
-            f'{escape(i18n.t(lang, "making", step=running["step"], of=running["of"], phase=phase))}</p>'
-            f'<div class="prog"><i style="width:{pct}%"></i></div><ol class="phases">{phases}</ol></section></div>')
+    return (f'<div id="picking" role="status" aria-live="polite">'
+            f'<section id="progress" data-step="{step}" data-since="{escape(running.get("since") or "")}">'
+            f'<div class="pick-head">{PICK_DISC}<p class="working step">'
+            f'{escape(i18n.t(lang, "making", step=step, of=running["of"], phase=phase))}</p></div>'
+            f'<div class="pick-bar"><div class="prog"><i style="width:{pct}%"></i></div>'
+            f'<span class="pct">{pct}%</span></div><ol class="phases">{phases}</ol></section></div>')
 
 
 def _empty(lang):

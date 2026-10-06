@@ -202,21 +202,41 @@ async function refreshPlaylist() {
 
 if (document.querySelector('main[data-refresh]')) refreshPlaylist();
 
-// Progress: while a selection runs, update the bar; when it ends, reload to show it. The same when the
-// sign-in window closes.
+// Progress: while a selection runs, the bar creeps on little by little and the phases follow the server; when it
+// ends, reload to show it. The same when the sign-in window closes.
+// Per phase: where the bar starts and where it heads (%), and the seconds to cover about two thirds of that
+// stretch. It slows down as it nears the end, so it never stalls nor passes the next phase (views._PICK_FROM).
+const PICK_BANDS = [[2, 35, 10], [35, 85, 20], [85, 97, 3]];
+const progress = document.getElementById('progress');
+let pick = progress ? {step: Number(progress.dataset.step), since: progress.dataset.since} : null;
+let shown = 0;
+
+function tickPick() {
+  if (!pick || !progress) return;
+  const [from, to, tau] = PICK_BANDS[Math.min(Math.max(pick.step, 1), PICK_BANDS.length) - 1];
+  const t = Math.max(0, (Date.now() - Date.parse(pick.since)) / 1000) || 0;
+  shown = Math.max(shown, from + (to - from) * (1 - Math.exp(-t / tau)));  // never backwards
+  progress.querySelector('.prog i').style.width = shown.toFixed(1) + '%';
+  progress.querySelector('.pct').textContent = Math.floor(shown) + '%';
+}
+
+if (progress) {
+  tickPick();
+  setInterval(tickPick, 250);
+}
+
 let running = document.body.dataset.running === '1';
 async function poll() {
   const st = await fetch('/api/state').then((r) => r.json()).catch(() => null);
   if (!st) return closed();
   if (document.body.dataset.login === '1' && !st.login_pending) return location.reload();
   if (st.running) {
-    const p = document.getElementById('progress');
-    if (!p) return location.reload();
+    if (!progress) return location.reload();
     running = true;
+    pick = {step: st.running.step, since: st.running.since};
     const phase = TEXTS['phase_' + st.running.phase] || '';
-    p.querySelector('.step').textContent = text('making', {step: st.running.step, of: st.running.of, phase});
-    p.querySelector('i').style.width = Math.round(100 * st.running.step / (st.running.of + 1)) + '%';
-    p.querySelectorAll('.phases li').forEach((li, i) => {
+    progress.querySelector('.step').textContent = text('making', {step: st.running.step, of: st.running.of, phase});
+    progress.querySelectorAll('.phases li').forEach((li, i) => {
       li.className = i + 1 < st.running.step ? 'done' : i + 1 === st.running.step ? 'now' : 'next';
     });
   } else if (running) {

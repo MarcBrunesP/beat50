@@ -108,23 +108,30 @@ a.sel:hover:not(.on), .playlists a.pl:hover:not(.on) { background: var(--line); 
            letter-spacing: .4px; }
 #closed { position: fixed; top: 0; left: 0; right: 0; z-index: 10; padding: 10px 16px; background: var(--red); color: #FFFFFF; }
 
-/* A selection under way: a full-screen overlay with the record spinning in the centre (below #closed, so a
-   "server gone" banner still shows). The disc spins through CSS; app.js updates the text, bar and phases. */
-#picking { position: fixed; inset: 0; z-index: 8; display: flex; flex-direction: column; align-items: center;
-           justify-content: center; gap: 24px; background: var(--bg); }
-#picking .disc { width: 148px; height: 148px; transform-origin: center; animation: spin 3.4s linear infinite; }
-@media (prefers-reduced-motion: reduce) { #picking .disc { animation: none; } }
-#progress { width: 320px; max-width: calc(100vw - 40px); text-align: center; }
-#progress .step { margin: 0 0 12px; font-weight: 600; }
-.prog { height: 6px; background: var(--line); border-radius: 3px; }
-.prog i { display: block; height: 6px; background: var(--accent); border-radius: 3px; transition: width .35s ease; }
-.phases { display: flex; justify-content: center; gap: 18px; margin: 12px 0 0; padding: 0; list-style: none; font-size: 12px; }
-.phases li { display: flex; align-items: center; gap: 6px; }
-.phases li::before { content: ""; width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid var(--border); }
+/* A selection under way: a scrim over the content column (the sidebar stays usable) with a centred card — the
+   record spinning, the step, a bar app.js moves little by little, and the phases as a vertical stepper. */
+#picking { position: fixed; top: 0; left: 240px; right: 0; bottom: 0; z-index: 5; display: flex; align-items: center;
+           justify-content: center; padding: 20px; background: var(--overlay); }
+#progress { width: 380px; max-width: 100%; padding: 20px; border-radius: 14px; background: var(--raised);
+            box-shadow: 0 16px 40px var(--shadow); }
+.pick-head { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+#picking .disc { width: 52px; height: 52px; flex: none; animation: spin 2.4s linear infinite; }
+#progress .step { margin: 0; font-size: 14px; font-weight: 600; color: var(--text); }
+.pick-bar { display: flex; align-items: center; gap: 10px; }
+.prog { flex: 1; height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; }
+.prog i { display: block; height: 6px; background: var(--accent); border-radius: 3px; transition: width .4s linear; }
+.pct { width: 34px; text-align: right; font-size: 11px; color: var(--soft); font-variant-numeric: tabular-nums; }
+.phases { display: flex; flex-direction: column; gap: 10px; margin: 16px 0 0; padding: 14px 0 0;
+          border-top: 1px solid var(--line); list-style: none; font-size: 13px; }
+.phases li { position: relative; display: flex; align-items: center; gap: 10px; min-height: 20px; color: var(--soft); }
+.phases li::before { content: ""; width: 18px; height: 18px; flex: none; border-radius: 50%; border: 2px solid var(--border); }
 .phases .done::before { background: var(--green); border-color: var(--green); }
-.phases .now { font-weight: 600; }
-.phases .now::before { border: 2px solid var(--accent); }
+.phases .done::after { content: ""; position: absolute; left: 7px; top: 50%; width: 4px; height: 8px; margin-top: -6px;
+                       border: solid #FFFFFF; border-width: 0 2px 2px 0; transform: rotate(45deg); }
+.phases .now { color: var(--text); font-weight: 600; }
+.phases .now::before { border-color: var(--accent-text); border-right-color: transparent; animation: spin .9s linear infinite; }
 .phases .next { color: var(--faint); }
+@media (prefers-reduced-motion: reduce) { #picking .disc, .phases .now::before { animation: none; } }
 
 /* The first time */
 .empty { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 120px 40px 60px; text-align: center; }
