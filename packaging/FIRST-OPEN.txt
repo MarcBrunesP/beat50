@@ -1,0 +1,14 @@
+beatcrate — first open / primera apertura
+
+EN
+1. Drag beatcrate to Applications.
+2. Open it. macOS blocks it the first time because it is not signed by an Apple developer
+   account: go to System Settings > Privacy & Security, click "Open Anyway", and open it again.
+3. beatcrate opens in its own window. Sign in to Beatport from there with your email and password.
+
+ES
+1. Arrastra beatcrate a Aplicaciones.
+2. Ábrela. La primera vez macOS la bloquea porque no está firmada con una cuenta de desarrollador
+   de Apple: ve a Ajustes del Sistema > Privacidad y seguridad, pulsa "Abrir igualmente" y vuelve
+   a abrirla.
+3. beatcrate se abre en su propia ventana. Inicia sesión en Beatport desde ahí con tu email y contraseña.

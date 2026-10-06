@@ -1,0 +1,27 @@
+# Local user data and secrets (the app keeps its data in ~/Library/Application Support/beatcrate)
+data/
+.env
+.env.*
+*.key
+*.pem
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+
+# App and DMG builds
+build/
+dist/
+
+# Local leftovers and tooling
+spike/
+.superpowers/
+.DS_Store
+*.log
+
+# Tests (kept local, not tracked)
+tests/
