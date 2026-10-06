@@ -3,6 +3,12 @@
 What changed in each version of beatcrate. The format follows [Keep a Changelog](https://keepachangelog.com/)
 and versions follow [Semantic Versioning](https://semver.org/). The version lives in `pyproject.toml`.
 
+## 2.10.0 — 2026-10-06
+
+### Changed
+
+- While a selection is being made, the progress now takes over the whole window: the record spins in the centre with the step, the bar and the three phases below it, instead of a card at the top of the list.
+
 ## 2.9.0 — 2026-10-06
 
 ### Added

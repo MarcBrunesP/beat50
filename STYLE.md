@@ -107,8 +107,10 @@ icon is the `sync` glyph in the loading overlay, which spins (stopped under `pre
   1100 px the genre name is dropped from the row (it is already in the filter row).
 - **Editor toggles**: 32 px circles; on = red (remove) or green (add) fill with white icon. A row marked to remove
   dims to 60 % and strikes the name; a row marked to add tints `--green-soft`.
-- **Progress panel**: a raised card with the step line, a 6 px bar and the three phases as dots (done green, now
-  accent ring, next faint). It appears at the top of every page while a selection runs.
+- **Picking overlay** (`#picking`): while a selection runs it fills the whole window (opaque `--bg`, below the
+  "server gone" banner) with the record (`PICK_DISC`) spinning in the centre — navy disc, blue grooves, amber
+  label and a faint highlight arc so the spin reads (stopped under `prefers-reduced-motion`) — and below it, in a
+  320 px column, the step line, a 6 px bar and the three phases as dots (done green, now accent ring, next faint).
 - **Empty state**: the 88 px app icon, 20 px title, one paragraph, three numbered steps.
 - **Consent sheet**: 520 px dialog, radius 14, accent icon tile, four points each with an icon, buttons right-aligned.
 - **Help** (`#help`): the onboarding, a 460 px dialog with five slides — a line illustration on a `--side` tile

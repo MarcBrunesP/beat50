@@ -258,8 +258,23 @@ def _toolbar(title, detail, state, today, lang):
             '</button></header>')
 
 
+# The record drawn as a spinning vinyl for the picking overlay: navy disc, blue grooves, amber label and a
+# light highlight arc so the rotation reads. Echoes the brand mark's colours; it spins through CSS only.
+PICK_DISC = ('<svg class="disc" viewBox="0 0 120 120" aria-hidden="true">'
+             '<circle cx="60" cy="60" r="59" fill="#0A1F44"/>'
+             '<circle cx="60" cy="60" r="52" fill="none" stroke="#0B5FB8" stroke-width="2"/>'
+             '<circle cx="60" cy="60" r="45" fill="none" stroke="#0B5FB8" stroke-width="2"/>'
+             '<circle cx="60" cy="60" r="38" fill="none" stroke="#0B5FB8" stroke-width="2"/>'
+             '<circle cx="60" cy="60" r="31" fill="none" stroke="#0B5FB8" stroke-width="2"/>'
+             '<path d="M60 4 A56 56 0 0 1 112 40" fill="none" stroke="#FFFFFF" stroke-opacity=".16" stroke-width="7"/>'
+             '<circle cx="60" cy="60" r="22" fill="#F0B12E"/>'
+             '<circle cx="60" cy="60" r="11" fill="none" stroke="#0A1F44" stroke-width="1.5"/>'
+             '<circle cx="60" cy="60" r="3.5" fill="#0A1F44"/></svg>')
+
+
 def _progress(state, lang):
-    """The selection under way: its phase and a bar. app.js keeps them up to date and reloads when it ends."""
+    """The selection under way: a full-screen overlay with the record spinning in the centre, the phase and a
+    bar. app.js keeps the text, bar and phases up to date and reloads when it ends."""
     running = state.get("running")
     if not running:
         return ""
@@ -268,9 +283,10 @@ def _progress(state, lang):
     phases = "".join(
         f'<li class="{"done" if n < running["step"] else "now" if n == running["step"] else "next"}">'
         f'{i18n.t(lang, f"phase_{p}")}</li>' for n, p in enumerate(("library", "discover", "rank"), 1))
-    return (f'<section id="progress"><p class="working step">'
+    return (f'<div id="picking" role="status" aria-live="polite">{PICK_DISC}'
+            f'<section id="progress"><p class="working step">'
             f'{escape(i18n.t(lang, "making", step=running["step"], of=running["of"], phase=phase))}</p>'
-            f'<div class="prog"><i style="width:{pct}%"></i></div><ol class="phases">{phases}</ol></section>')
+            f'<div class="prog"><i style="width:{pct}%"></i></div><ol class="phases">{phases}</ol></section></div>')
 
 
 def _empty(lang):
