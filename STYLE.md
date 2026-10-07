@@ -126,7 +126,7 @@ second one in `--star` and, between them when the slide is a step, a 26 px `--fa
   under `prefers-reduced-motion`.
 - **Empty state**: the 88 px app icon, 20 px title, one paragraph, three numbered steps.
 - **Consent sheet**: 520 px dialog, radius 14, accent icon tile, four points each with an icon, buttons right-aligned.
-- **Help** (`#help`): the onboarding, a 460 px dialog with six slides — Material icons on a 132 px `--side` tile, a
+- **Help** (`#help`): the onboarding, a 460 px dialog with seven slides — Material icons on a 132 px `--side` tile, a
   title and a line of text — plus dots and Back / Next / Got it. All slides share one grid cell (the hidden ones
   invisible), so the dialog always has the tallest slide's size and never jumps. It auto-opens on first launch
   (then `/api/help-seen` records it) and reopens from the Help button beside the app's name.

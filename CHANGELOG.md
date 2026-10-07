@@ -3,6 +3,13 @@
 What changed in each version of beatcrate. The format follows [Keep a Changelog](https://keepachangelog.com/)
 and versions follow [Semantic Versioning](https://semver.org/). The version lives in `pyproject.toml`.
 
+## 2.13.0 — 2026-10-07
+
+### Added
+
+- A Help slide on how beatcrate picks: it reads all your purchases and playlists with no date limit (newer ones and
+  purchases count more), then scores only the releases of the chosen period and skips what you already have.
+
 ## 2.12.0 — 2026-10-07
 
 ### Added
