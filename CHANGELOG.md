@@ -3,7 +3,7 @@
 What changed in each version of beatcrate. The format follows [Keep a Changelog](https://keepachangelog.com/)
 and versions follow [Semantic Versioning](https://semver.org/). The version lives in `pyproject.toml`.
 
-## Unreleased
+## 2.14.0 — 2026-10-07
 
 ### Added
 
