@@ -1,0 +1,223 @@
+{
+  "next": "https://api.beatport.com/v4/my/downloads/",
+  "previous": null,
+  "count": 6,
+  "page": "1/3",
+  "per_page": 3,
+  "results": [
+    {
+      "artists": [
+        {
+          "id": 391255,
+          "image": {
+            "id": 33220442,
+            "uri": "https://geo-media.beatport.com/image_size/590x404/af8e65e1-22f7-4cba-adb5-26103a5c958d.jpg",
+            "dynamic_uri": "https://geo-media.beatport.com/image_size/{w}x{h}/af8e65e1-22f7-4cba-adb5-26103a5c958d.jpg"
+          },
+          "name": "Di Chiara Brothers",
+          "slug": "di-chiara-brothers",
+          "url": "https://api.beatport.com/v4/catalog/artists/391255/"
+        }
+      ],
+      "audio_format": {
+        "id": 1,
+        "name": "mp3"
+      },
+      "bpm": 127,
+      "enabled": true,
+      "genre": {
+        "id": 5,
+        "name": "House",
+        "slug": "house",
+        "url": "https://api.beatport.com/v4/catalog/genres/5/"
+      },
+      "id": 11618948,
+      "image": {
+        "id": 21228357,
+        "uri": "https://geo-media.beatport.com/image_size/1500x250/2ecec4ac-3d3a-470e-b67e-86da126c1379.png",
+        "dynamic_uri": "https://geo-media.beatport.com/image_size/{w}x{h}/2ecec4ac-3d3a-470e-b67e-86da126c1379.png"
+      },
+      "initial_download": false,
+      "is_available_for_streaming": true,
+      "is_explicit": false,
+      "is_ugc_remix": false,
+      "is_dj_edit": false,
+      "is_dj_version": false,
+      "key": {
+        "camelot_number": 3,
+        "camelot_letter": "A",
+        "chord_type": {
+          "id": 1,
+          "name": "Minor",
+          "url": "https://api.beatport.com/v4/catalog/chord-types/1/"
+        },
+        "id": 26,
+        "is_sharp": true,
+        "is_flat": false,
+        "letter": "A",
+        "name": "A# Minor",
+        "url": "https://api.beatport.com/v4/catalog/keys/26/"
+      },
+      "length_ms": 394960,
+      "mix_name": "Original Mix",
+      "name": "Superlovin",
+      "new_release_date": "2019-02-15",
+      "order_item_download_id": 100000001,
+      "order_item_download_try_count": 1,
+      "pre_order_date": null,
+      "pre_order": false,
+      "price": {
+        "code": "EUR",
+        "symbol": "€",
+        "value": 1.39,
+        "display": "€1.39"
+      },
+      "publish_date": "2019-02-15",
+      "purchase_date": "2024-01-15T12:00:00-07:00",
+      "received_status": true,
+      "release": {
+        "id": 2513067,
+        "name": "Superlovin",
+        "image": {
+          "id": 21227818,
+          "uri": "https://geo-media.beatport.com/image_size/500x500/aa41c56a-f28e-48e8-a975-acfcc532c5b8.jpg",
+          "dynamic_uri": "https://geo-media.beatport.com/image_size/{w}x{h}/aa41c56a-f28e-48e8-a975-acfcc532c5b8.jpg"
+        },
+        "label": {
+          "id": 69488,
+          "name": "Creature Records",
+          "image": {
+            "id": 18987806,
+            "uri": "https://geo-media.beatport.com/image_size/500x500/188323c3-3bf2-4d7a-ab57-ffb05a4e6093.jpg",
+            "dynamic_uri": "https://geo-media.beatport.com/image_size/{w}x{h}/188323c3-3bf2-4d7a-ab57-ffb05a4e6093.jpg"
+          },
+          "slug": "creature-records"
+        },
+        "slug": "superlovin"
+      },
+      "remixers": [],
+      "sample_url": "https://geo-samples.beatport.com/track/5f383ce5-0f6e-47b4-bdca-9caa227671a0.LOFI.mp3",
+      "sample_start_ms": 157984,
+      "sample_end_ms": 277984,
+      "slug": "superlovin",
+      "sub_genre": null,
+      "upgrade_fees": {
+        "aiff": {
+          "code": "EUR",
+          "symbol": "€",
+          "value": 0.75,
+          "display": "€0.75"
+        }
+      },
+      "url": "https://api.beatport.com/v4/catalog/tracks/11618948/",
+      "is_hype": false
+    },
+    {
+      "artists": [
+        {
+          "id": 380949,
+          "image": {
+            "id": 45676927,
+            "uri": "https://geo-media.beatport.com/image_size/590x404/b2ea4349-4ac1-42e5-804f-07d7755963e8.jpg",
+            "dynamic_uri": "https://geo-media.beatport.com/image_size/{w}x{h}/b2ea4349-4ac1-42e5-804f-07d7755963e8.jpg"
+          },
+          "name": "Life on Planets",
+          "slug": "life-on-planets",
+          "url": "https://api.beatport.com/v4/catalog/artists/380949/"
+        }
+      ],
+      "audio_format": {
+        "id": 1,
+        "name": "mp3"
+      },
+      "bpm": 124,
+      "enabled": true,
+      "genre": {
+        "id": 39,
+        "name": "Dance / Pop",
+        "slug": "dance-pop",
+        "url": "https://api.beatport.com/v4/catalog/genres/39/"
+      },
+      "id": 15697930,
+      "image": {
+        "id": 29402649,
+        "uri": "https://geo-media.beatport.com/image_size/1500x250/3db76bfd-38a4-47fe-8441-11b0bddd6e75.png",
+        "dynamic_uri": "https://geo-media.beatport.com/image_size/{w}x{h}/3db76bfd-38a4-47fe-8441-11b0bddd6e75.png"
+      },
+      "initial_download": false,
+      "is_available_for_streaming": true,
+      "is_explicit": false,
+      "is_ugc_remix": false,
+      "is_dj_edit": false,
+      "is_dj_version": false,
+      "key": {
+        "camelot_number": 11,
+        "camelot_letter": "B",
+        "chord_type": {
+          "id": 2,
+          "name": "Major",
+          "url": "https://api.beatport.com/v4/catalog/chord-types/2/"
+        },
+        "id": 23,
+        "is_sharp": false,
+        "is_flat": false,
+        "letter": "A",
+        "name": "A Major",
+        "url": "https://api.beatport.com/v4/catalog/keys/23/"
+      },
+      "length_ms": 341500,
+      "mix_name": "Extended Mix",
+      "name": "Stay",
+      "new_release_date": "2021-09-17",
+      "order_item_download_id": 100000002,
+      "order_item_download_try_count": 1,
+      "pre_order_date": "2021-09-03",
+      "pre_order": false,
+      "price": {
+        "code": "EUR",
+        "symbol": "€",
+        "value": 1.39,
+        "display": "€1.39"
+      },
+      "publish_date": "2021-09-17",
+      "purchase_date": "2024-01-15T12:00:00-07:00",
+      "received_status": true,
+      "release": {
+        "id": 3505318,
+        "name": "Stay (Extended Mix)",
+        "image": {
+          "id": 29402647,
+          "uri": "https://geo-media.beatport.com/image_size/500x500/d97796a3-88a2-4954-b311-28eec6d639e6.jpg",
+          "dynamic_uri": "https://geo-media.beatport.com/image_size/{w}x{h}/d97796a3-88a2-4954-b311-28eec6d639e6.jpg"
+        },
+        "label": {
+          "id": 96184,
+          "name": "Palm Recs",
+          "image": {
+            "id": 28547909,
+            "uri": "https://geo-media.beatport.com/image_size/500x500/1a090476-d50a-43b8-9e9d-ce8711069ba3.jpg",
+            "dynamic_uri": "https://geo-media.beatport.com/image_size/{w}x{h}/1a090476-d50a-43b8-9e9d-ce8711069ba3.jpg"
+          },
+          "slug": "palm-recs"
+        },
+        "slug": "stay-extended-mix"
+      },
+      "remixers": [],
+      "sample_url": "https://geo-samples.beatport.com/track/3db76bfd-38a4-47fe-8441-11b0bddd6e75.LOFI.mp3",
+      "sample_start_ms": 136600,
+      "sample_end_ms": 256600,
+      "slug": "stay",
+      "sub_genre": null,
+      "upgrade_fees": {
+        "aiff": {
+          "code": "EUR",
+          "symbol": "€",
+          "value": 0.75,
+          "display": "€0.75"
+        }
+      },
+      "url": "https://api.beatport.com/v4/catalog/tracks/15697930/",
+      "is_hype": false
+    }
+  ]
+}

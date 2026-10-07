@@ -1,0 +1,275 @@
+{
+  "next": "https://api.beatport.com/v4/my/playlists/1000001/tracks/",
+  "previous": null,
+  "count": 27,
+  "page": "1/9",
+  "per_page": 3,
+  "results": [
+    {
+      "id": 2000001,
+      "position": 1,
+      "track": {
+        "artists": [
+          {
+            "id": 172033,
+            "image": {
+              "id": 5539565,
+              "uri": "https://geo-media.beatport.com/image_size/590x404/0dc61986-bccf-49d4-8fad-6b147ea8f327.jpg",
+              "dynamic_uri": "https://geo-media.beatport.com/image_size/{w}x{h}/0dc61986-bccf-49d4-8fad-6b147ea8f327.jpg"
+            },
+            "name": "Son Of Sam",
+            "slug": "son-of-sam",
+            "url": "https://api.beatport.com/v4/catalog/artists/172033/"
+          },
+          {
+            "id": 1276777,
+            "image": {
+              "id": 58465919,
+              "uri": "https://geo-media.beatport.com/image_size/590x404/963b64ee-bb0b-48ae-8274-00540930c324.jpg",
+              "dynamic_uri": "https://geo-media.beatport.com/image_size/{w}x{h}/963b64ee-bb0b-48ae-8274-00540930c324.jpg"
+            },
+            "name": "I Just Will",
+            "slug": "i-just-will",
+            "url": "https://api.beatport.com/v4/catalog/artists/1276777/"
+          }
+        ],
+        "publish_status": "published",
+        "available_worldwide": true,
+        "bpm": 104,
+        "bsrc_remixer": [],
+        "catalog_number": "3938021",
+        "current_status": {
+          "id": 8,
+          "name": "New Release",
+          "url": "https://api.beatport.com/v4/auxiliary/current-status/8/"
+        },
+        "encoded_date": "2026-07-15T04:28:14-06:00",
+        "exclusive": false,
+        "free_downloads": [],
+        "free_download_start_date": null,
+        "free_download_end_date": null,
+        "genre": {
+          "id": 86,
+          "name": "UK Garage / Bassline",
+          "slug": "uk-garage-bassline",
+          "url": "https://api.beatport.com/v4/catalog/genres/86/"
+        },
+        "id": 29727487,
+        "image": {
+          "id": 56880623,
+          "uri": "https://geo-media.beatport.com/image_size/1500x250/b9277897-d0bf-44f5-a6ef-cbf4e1f3ccfa.png",
+          "dynamic_uri": "https://geo-media.beatport.com/image_size/{w}x{h}/b9277897-d0bf-44f5-a6ef-cbf4e1f3ccfa.png"
+        },
+        "is_available_for_streaming": true,
+        "is_explicit": false,
+        "is_ugc_remix": false,
+        "is_dj_edit": false,
+        "is_dj_version": false,
+        "isrc": "GX3Q92639180",
+        "key": {
+          "camelot_number": 8,
+          "camelot_letter": "A",
+          "chord_type": {
+            "id": 1,
+            "name": "Minor",
+            "url": "https://api.beatport.com/v4/catalog/chord-types/1/"
+          },
+          "id": 8,
+          "is_sharp": false,
+          "is_flat": false,
+          "letter": "A",
+          "name": "A Minor",
+          "url": "https://api.beatport.com/v4/catalog/keys/8/"
+        },
+        "label_track_identifier": null,
+        "length": "3:04",
+        "length_ms": 184347,
+        "mix_name": "Original Mix",
+        "name": "Let You Go",
+        "new_release_date": "2026-09-04",
+        "pre_order": false,
+        "pre_order_date": null,
+        "price": {
+          "code": "EUR",
+          "symbol": "€",
+          "value": 1.59,
+          "display": "€1.59"
+        },
+        "publish_date": "2026-09-04",
+        "release": {
+          "id": 7200285,
+          "name": "Let You Go",
+          "image": {
+            "id": 56880621,
+            "uri": "https://geo-media.beatport.com/image_size/1400x1400/b1e9bdb1-1735-4a7f-b06b-5233b72e7dbb.jpg",
+            "dynamic_uri": "https://geo-media.beatport.com/image_size/{w}x{h}/b1e9bdb1-1735-4a7f-b06b-5233b72e7dbb.jpg"
+          },
+          "label": {
+            "id": 126825,
+            "name": "HoneyPot",
+            "image": {
+              "id": 58070836,
+              "uri": "https://geo-media.beatport.com/image_size/500x500/6392b0ba-cfbe-4928-b2bb-3d85604287c7.jpg",
+              "dynamic_uri": "https://geo-media.beatport.com/image_size/{w}x{h}/6392b0ba-cfbe-4928-b2bb-3d85604287c7.jpg"
+            },
+            "slug": "honeypot"
+          },
+          "slug": "let-you-go"
+        },
+        "remixers": [],
+        "sale_type": {
+          "id": 1,
+          "name": "purchase",
+          "url": "https://api.beatport.com/v4/auxiliary/sale-types/1/"
+        },
+        "sample_url": "https://geo-samples.beatport.com/track/b9277897-d0bf-44f5-a6ef-cbf4e1f3ccfa.LOFI.mp3",
+        "sample_start_ms": 30000,
+        "sample_end_ms": 120000,
+        "slug": "let-you-go",
+        "sub_genre": null,
+        "url": "https://api.beatport.com/v4/catalog/tracks/29727487/",
+        "is_hype": false
+      },
+      "tombstoned": false
+    },
+    {
+      "id": 2000002,
+      "position": 2,
+      "track": {
+        "artists": [
+          {
+            "id": 24271,
+            "image": {
+              "id": 4587120,
+              "uri": "https://geo-media.beatport.com/image_size/590x404/9aeea21e-5025-43cb-8646-e2701193370c.jpg",
+              "dynamic_uri": "https://geo-media.beatport.com/image_size/{w}x{h}/9aeea21e-5025-43cb-8646-e2701193370c.jpg"
+            },
+            "name": "Xenia Beliayeva",
+            "slug": "xenia-beliayeva",
+            "url": "https://api.beatport.com/v4/catalog/artists/24271/"
+          },
+          {
+            "id": 378429,
+            "image": {
+              "id": 39089806,
+              "uri": "https://geo-media.beatport.com/image_size/590x404/00697880-0557-4474-9d31-b6963510edab.jpg",
+              "dynamic_uri": "https://geo-media.beatport.com/image_size/{w}x{h}/00697880-0557-4474-9d31-b6963510edab.jpg"
+            },
+            "name": "Moonhacker",
+            "slug": "moonhacker",
+            "url": "https://api.beatport.com/v4/catalog/artists/378429/"
+          }
+        ],
+        "publish_status": "published",
+        "available_worldwide": true,
+        "bpm": 142,
+        "bsrc_remixer": [],
+        "catalog_number": "MOON13",
+        "current_status": {
+          "id": 8,
+          "name": "New Release",
+          "url": "https://api.beatport.com/v4/auxiliary/current-status/8/"
+        },
+        "encoded_date": "2026-07-21T12:35:21-06:00",
+        "exclusive": false,
+        "free_downloads": [],
+        "free_download_start_date": null,
+        "free_download_end_date": null,
+        "genre": {
+          "id": 6,
+          "name": "Techno (Peak Time / Driving)",
+          "slug": "techno-peak-time-driving",
+          "url": "https://api.beatport.com/v4/catalog/genres/6/"
+        },
+        "id": 29850585,
+        "image": {
+          "id": 57122277,
+          "uri": "https://geo-media.beatport.com/image_size/1500x250/18d6a977-6adc-4dfa-8362-a47af0d13b34.png",
+          "dynamic_uri": "https://geo-media.beatport.com/image_size/{w}x{h}/18d6a977-6adc-4dfa-8362-a47af0d13b34.png"
+        },
+        "is_available_for_streaming": true,
+        "is_explicit": false,
+        "is_ugc_remix": false,
+        "is_dj_edit": false,
+        "is_dj_version": false,
+        "isrc": "DEH742619994",
+        "key": {
+          "camelot_number": 1,
+          "camelot_letter": "A",
+          "chord_type": {
+            "id": 1,
+            "name": "Minor",
+            "url": "https://api.beatport.com/v4/catalog/chord-types/1/"
+          },
+          "id": 1,
+          "is_sharp": false,
+          "is_flat": true,
+          "letter": "A",
+          "name": "Ab Minor",
+          "url": "https://api.beatport.com/v4/catalog/keys/1/"
+        },
+        "label_track_identifier": null,
+        "length": "6:13",
+        "length_ms": 373863,
+        "mix_name": "Andrew Red Hand Remix",
+        "name": "Radiate",
+        "new_release_date": "2026-09-04",
+        "pre_order": false,
+        "pre_order_date": null,
+        "price": {
+          "code": "EUR",
+          "symbol": "€",
+          "value": 1.59,
+          "display": "€1.59"
+        },
+        "publish_date": "2026-09-04",
+        "release": {
+          "id": 7235474,
+          "name": "Radiate",
+          "image": {
+            "id": 57122481,
+            "uri": "https://geo-media.beatport.com/image_size/1400x1400/b0b44d56-d0c9-41e6-8719-507e14e6ce63.jpg",
+            "dynamic_uri": "https://geo-media.beatport.com/image_size/{w}x{h}/b0b44d56-d0c9-41e6-8719-507e14e6ce63.jpg"
+          },
+          "label": {
+            "id": 120792,
+            "name": "Moonhacker",
+            "image": {
+              "id": 38429698,
+              "uri": "https://geo-media.beatport.com/image_size/500x500/b896bf8a-531a-47b5-849e-9bbbef1dca27.jpg",
+              "dynamic_uri": "https://geo-media.beatport.com/image_size/{w}x{h}/b896bf8a-531a-47b5-849e-9bbbef1dca27.jpg"
+            },
+            "slug": "moonhacker"
+          },
+          "slug": "radiate"
+        },
+        "remixers": [
+          {
+            "id": 59764,
+            "image": {
+              "id": 45693271,
+              "uri": "https://geo-media.beatport.com/image_size/590x404/177594be-a9a8-41d8-941b-09b591806bfa.jpg",
+              "dynamic_uri": "https://geo-media.beatport.com/image_size/{w}x{h}/177594be-a9a8-41d8-941b-09b591806bfa.jpg"
+            },
+            "name": "Andrew Red Hand",
+            "slug": "andrew-red-hand",
+            "url": "https://api.beatport.com/v4/catalog/artists/59764/"
+          }
+        ],
+        "sale_type": {
+          "id": 1,
+          "name": "purchase",
+          "url": "https://api.beatport.com/v4/auxiliary/sale-types/1/"
+        },
+        "sample_url": "https://geo-samples.beatport.com/track/18d6a977-6adc-4dfa-8362-a47af0d13b34.LOFI.mp3",
+        "sample_start_ms": 138000,
+        "sample_end_ms": 258000,
+        "slug": "radiate",
+        "sub_genre": null,
+        "url": "https://api.beatport.com/v4/catalog/tracks/29850585/",
+        "is_hype": false
+      },
+      "tombstoned": false
+    }
+  ]
+}

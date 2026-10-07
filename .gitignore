@@ -23,5 +23,3 @@ spike/
 .DS_Store
 *.log
 
-# Tests (kept local, not tracked)
-tests/

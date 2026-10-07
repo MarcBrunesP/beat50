@@ -1,0 +1,73 @@
+{
+  "next": "https://api.beatport.com/v4/my/playlists/",
+  "previous": null,
+  "count": 25,
+  "page": "1/9",
+  "per_page": 3,
+  "results": [
+    {
+      "id": 1000001,
+      "name": "Warm-up Techno",
+      "created_date": "2026-08-20T10:00:00-06:00",
+      "updated_date": "2026-08-20T11:00:00-06:00",
+      "track_count": 27,
+      "type": {
+        "id": 2,
+        "name": "user"
+      },
+      "length_ms": 8416363,
+      "bpm_range": [
+        67,
+        142
+      ],
+      "genres": [
+        "Bass House",
+        "Techno (Peak Time / Driving)",
+        "UK Garage / Bassline",
+        "Techno (Raw / Deep / Hypnotic)",
+        "Breaks / Breakbeat / UK Bass"
+      ],
+      "keys": [
+        "Ab Minor",
+        "Eb Minor",
+        "A Minor",
+        "F# Minor"
+      ],
+      "release_images": [
+        "https://geo-media.beatport.com/image_size/1400x1400/b1e9bdb1-1735-4a7f-b06b-5233b72e7dbb.jpg"
+      ],
+      "is_public": false,
+      "is_owner": true,
+      "followers": 0
+    },
+    {
+      "id": 1000002,
+      "name": "Sunday House",
+      "created_date": "2026-08-18T10:00:00-06:00",
+      "updated_date": "2026-08-18T11:00:00-06:00",
+      "track_count": 2,
+      "type": {
+        "id": 2,
+        "name": "user"
+      },
+      "length_ms": 608810,
+      "bpm_range": [
+        82,
+        129
+      ],
+      "genres": [
+        "House"
+      ],
+      "keys": [
+        "Bb Minor",
+        "D Minor"
+      ],
+      "release_images": [
+        "https://geo-media.beatport.com/image_size/1400x1400/cfbb25f9-8e76-4147-95e3-1401bfffabb7.jpg"
+      ],
+      "is_public": false,
+      "is_owner": true,
+      "followers": 0
+    }
+  ]
+}

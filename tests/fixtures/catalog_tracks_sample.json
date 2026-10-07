@@ -1,0 +1,90 @@
+{
+  "results": [
+    {
+      "artists": [
+        {
+          "id": 1374454,
+          "name": "The Record Company",
+          "slug": "the-record-company",
+          "url": "https://api.beatport.com/v4/catalog/artists/1374454/"
+        }
+      ],
+      "publish_status": "published",
+      "bpm": 72,
+      "genre": { "id": 109, "name": "Rock", "slug": "rock", "url": "https://api.beatport.com/v4/catalog/genres/109/" },
+      "id": 30501529,
+      "isrc": "USC4R1906941",
+      "key": {
+        "camelot_number": 10,
+        "camelot_letter": "B",
+        "chord_type": { "id": 2, "name": "Major", "url": "https://api.beatport.com/v4/catalog/chord-types/2/" },
+        "id": 22,
+        "letter": "D",
+        "name": "D Major"
+      },
+      "length": "5:49",
+      "length_ms": 349834,
+      "mix_name": "T Bone Burnett Version",
+      "name": "You And Me Now",
+      "new_release_date": "2020-06-26",
+      "price": { "code": "EUR", "symbol": "€", "value": 1.39, "display": "€1.39" },
+      "publish_date": "2020-06-26",
+      "release": {
+        "id": 7430247,
+        "name": "You And Me Now (T Bone Burnett Version)",
+        "label": { "id": 78787, "name": "Concord Records", "slug": "concord-records" },
+        "slug": "you-and-me-now-t-bone-burnett-version"
+      },
+      "remixers": [],
+      "sale_type": { "id": 1, "name": "purchase", "url": "https://api.beatport.com/v4/auxiliary/sale-types/1/" },
+      "slug": "you-and-me-now",
+      "sub_genre": null,
+      "url": "https://api.beatport.com/v4/catalog/tracks/30501529/",
+      "is_hype": false
+    },
+    {
+      "artists": [
+        { "id": 714890, "name": "Joyner Lucas", "slug": "joyner-lucas", "url": "https://api.beatport.com/v4/catalog/artists/714890/" },
+        { "id": 858252, "name": "I Prevail", "slug": "i-prevail", "url": "https://api.beatport.com/v4/catalog/artists/858252/" }
+      ],
+      "publish_status": "published",
+      "bpm": 89,
+      "genre": { "id": 109, "name": "Rock", "slug": "rock", "url": "https://api.beatport.com/v4/catalog/genres/109/" },
+      "id": 30501528,
+      "isrc": "US5262023652",
+      "key": {
+        "camelot_number": 7,
+        "camelot_letter": "A",
+        "chord_type": { "id": 1, "name": "Minor", "url": "https://api.beatport.com/v4/catalog/chord-types/1/" },
+        "id": 7,
+        "letter": "D",
+        "name": "D Minor"
+      },
+      "length": "3:38",
+      "length_ms": 218571,
+      "mix_name": "Original Mix",
+      "name": "DOA",
+      "new_release_date": "2020-05-28",
+      "price": { "code": "EUR", "symbol": "€", "value": 1.39, "display": "€1.39" },
+      "publish_date": "2020-05-28",
+      "release": {
+        "id": 7430246,
+        "name": "DOA",
+        "label": { "id": 99084, "name": "Fearless Records", "slug": "fearless-records" },
+        "slug": "doa"
+      },
+      "remixers": [],
+      "sale_type": { "id": 1, "name": "purchase", "url": "https://api.beatport.com/v4/auxiliary/sale-types/1/" },
+      "slug": "doa",
+      "sub_genre": null,
+      "url": "https://api.beatport.com/v4/catalog/tracks/30501528/",
+      "is_hype": false
+    }
+  ],
+  "next": "api.beatport.com/v4/catalog/tracks/?per_page=2&page=2",
+  "previous": null,
+  "count": 10000,
+  "page": "1/5000",
+  "per_page": 2,
+  "_nota": "Capturado 2026-09-07 con un token anónimo de app (scope app:prostore user:anon) obtenido del front-end público de beatport.com, sin login. Confirma que /catalog/tracks/ trae sello, género, BPM, key, ISRC y fechas en el listado, y que acepta filtros label_id, genre_id y publish_date en rango."
+}
