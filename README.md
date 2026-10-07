@@ -4,6 +4,9 @@ A Mac app that picks 50 Beatport new releases for your taste, based on your purc
 each with the reason it was picked and a preview. The tracks you like (★) become private playlists in
 your Beatport account.
 
+**beatcrate is an independent project, not affiliated with, endorsed by or supported by Beatport.** It uses
+Beatport's unofficial API with your own session, for personal use.
+
 The app speaks English and Spanish. How it works inside: [ARCHITECTURE.md](ARCHITECTURE.md); how it looks: [STYLE.md](STYLE.md). What changed
 in each version: [CHANGELOG.md](CHANGELOG.md).
 
@@ -85,8 +88,8 @@ To uninstall, delete the app and those folders.
 - **Nothing opens:** look at `~/Library/Logs/beatcrate.log` (for example, another program using port
   8765).
 
-beatcrate uses Beatport's unofficial API with your own session, for personal use. If Beatport changes
-it, beatcrate may stop working.
+beatcrate is not affiliated with Beatport and uses its unofficial API. If Beatport changes it, beatcrate may
+stop working.
 
 ## Development
 
@@ -106,3 +109,7 @@ python3 -m venv .venv
   `pyproject.toml`. `scripts/make_icon.py` regenerates the icon.
 - Changes go under **Unreleased** in `CHANGELOG.md`; a release turns that section into the new version
   with its date, together with the version in `pyproject.toml`.
+
+## License
+
+MIT, see [LICENSE](LICENSE). Third-party notices are in [NOTICE](NOTICE).

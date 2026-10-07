@@ -1,0 +1,30 @@
+beatcrate
+Copyright (c) 2026 Marc Brunes
+Licensed under the MIT License (see LICENSE).
+
+beatcrate is an independent project. It is not affiliated with, endorsed by or
+supported by Beatport. It uses Beatport's unofficial API with the user's own
+session, for personal use.
+
+This product includes material from third parties:
+
+Material Symbols (Outlined)
+  Copyright Google LLC. Licensed under the Apache License, Version 2.0.
+  https://www.apache.org/licenses/LICENSE-2.0
+  Icon paths embedded in beatcrate/app/views.py (MATERIAL) for the help slides.
+
+pywebview
+  Copyright (c) 2014-2017, Roman Sirokov. Licensed under the BSD 3-Clause License.
+  https://github.com/r0x0r/pywebview/blob/master/LICENSE
+  Bundled in the packaged app.
+
+PyInstaller
+  Licensed under the GNU GPL v2 or later, with the PyInstaller Bootloader
+  Exception that allows distributing programs built with it under any license.
+  https://pyinstaller.org/en/stable/license.html
+  Used to build the packaged app; its bootloader is bundled in it.
+
+Python
+  Copyright (c) Python Software Foundation. Licensed under the PSF License.
+  https://docs.python.org/3/license.html
+  Bundled in the packaged app.

@@ -3,6 +3,8 @@ name = "beatcrate"
 version = "2.14.0"
 description = "A Mac app that picks Beatport new releases for your taste"
 requires-python = ">=3.13"
+license = "MIT"
+license-files = ["LICENSE", "NOTICE"]
 dependencies = ["pywebview>=6.2"]
 
 [project.optional-dependencies]
