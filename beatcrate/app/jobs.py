@@ -58,12 +58,15 @@ def generate(trigger, today=None, now=None, since=None, until=None):
             ingest.write_library(lib)
             prof = profile.build_profile(lib, today)
             profile.write_profile(prof)
+            # The Genres dialog's choices shape this selection only; profile.json stays as the library says.
+            prof = profile.apply_prefs(prof, state.read().get("genre_prefs") or {})
             _step(2, "discover")
             cand = discover.find_candidates(client, prof, until or today, since)
             discover.write_candidates(cand)
             _step(3, "rank")
             crate = rank.build_crate(cand, lib, prof, rank.previous_track_ids(config.CRATES_DIR, code))
             crate["id"] = code
+            crate["genre_prefs"] = prof["genre_prefs"]
             path = rank.write_crate(crate)
         except Exception as e:
             if isinstance(e, (auth.SessionExpired, TokenExpired)):

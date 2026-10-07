@@ -91,6 +91,46 @@ def build_profile(library, today):
     }
 
 
+def apply_prefs(prof, prefs):
+    """The profile as a selection sees it, with the user's genre preferences (the Genres dialog).
+
+    `prefs` is `{"levels": {"<genre id>": multiplier}, "only": genre id or None}`. Each genre's weight is
+    multiplied by its level (1 when not given); with `only`, that genre alone stays. The genres are then
+    normalised to the top one again, so the charts, the score and the slots all follow. A level 0 (and every
+    other genre under `only`) is left out of the selection: `genres_off` lists their ids and `genre_only` the one
+    kept, for the ranking. `genre_prefs` records what applied, with names, for the selection's heading.
+    An `only` that is no longer in the profile is ignored.
+    """
+    levels = {int(k): v for k, v in (prefs.get("levels") or {}).items()}
+    only = prefs.get("only")
+    genres = prof.get("genres") or []
+    if only is not None and all(g["id"] != only for g in genres):
+        only = None
+    kept, off, used = [], [], []
+    for g in genres:
+        m = (1 if g["id"] == only else 0) if only is not None else levels.get(g["id"], 1)
+        if m == 0:
+            off.append(g["id"])
+        else:
+            kept.append(dict(g, weight=g["weight"] * m))
+        if only is None and m != 1:
+            used.append({"id": g["id"], "name": g["name"], "level": m})
+        elif g["id"] == only:
+            used.append({"id": g["id"], "name": g["name"], "level": "only"})
+    top = max((g["weight"] for g in kept), default=0) or 1
+    for g in kept:
+        g["weight"] = round(g["weight"] / top, 4)
+    kept.sort(key=lambda g: g["weight"], reverse=True)
+    return dict(prof, genres=kept, genres_off=off, genre_only=only, genre_prefs=used)
+
+
+def read_profile():
+    """The last profile, or {} before the first selection."""
+    if not config.PROFILE_FILE.exists():
+        return {}
+    return json.loads(config.PROFILE_FILE.read_text())
+
+
 def write_profile(prof):
     config.DATA.mkdir(parents=True, exist_ok=True)
     tmp = config.PROFILE_FILE.with_suffix(".tmp")

@@ -47,7 +47,19 @@ TEXTS = {
         "help_s4_b": "Your taste comes from all your purchases and playlists, with no date limit: the newer, the more "
                      "they count (half every {months} months), and purchases more than playlists. Then it scores the "
                      "releases of the chosen period (the last {days} days by default, up to a year) by label, artist, "
-                     "genre, BPM and key, and skips what you already have or were already shown.",
+                     "genre, BPM and key, and skips what you already have or were already shown. With Genres you "
+                     "give each genre more or less room, or keep only one.",
+        "genres_open": "Genres",
+        "genres_title": "Genres of the next selection",
+        "genres_hint": "Give each genre more or less room. The share is an estimate of the 50 slots; “Only” leaves "
+                       "the others out, and the selection may then be shorter.",
+        "genres_none": "Your genres appear here after your first selection.",
+        "genre_level_0": "Off",
+        "genre_only": "Only",
+        "genres_reset": "Reset",
+        "genres_done": "Done",
+        "only_genre": "only {name}",
+        "genre_off": "{name} off",
         "help_s5_t": "Listen and star",
         "help_s5_b": "Play the previews (▶) and star (★) the ones you like. Filter by genre to focus.",
         "help_s6_t": "Create a private playlist",
@@ -181,7 +193,19 @@ TEXTS = {
         "help_s4_b": "Tu gusto sale de todas tus compras y playlists, sin límite de fechas: cuanto más recientes, más "
                      "cuentan (la mitad cada {months} meses), y las compras más que las playlists. Luego puntúa las "
                      "novedades del periodo elegido (por defecto los últimos {days} días, hasta un año) por sello, "
-                     "artista, género, BPM y tonalidad, y descarta lo que ya tienes o ya te salió.",
+                     "artista, género, BPM y tonalidad, y descarta lo que ya tienes o ya te salió. En Géneros le "
+                     "das más o menos sitio a cada género, o te quedas solo con uno.",
+        "genres_open": "Géneros",
+        "genres_title": "Géneros de la próxima selección",
+        "genres_hint": "Dale más o menos sitio a cada género. El reparto es una estimación de los 50 huecos; «Solo» "
+                       "deja fuera a los demás, y la selección puede salir más corta.",
+        "genres_none": "Tus géneros aparecerán aquí tras tu primera selección.",
+        "genre_level_0": "Apagado",
+        "genre_only": "Solo",
+        "genres_reset": "Restablecer",
+        "genres_done": "Listo",
+        "only_genre": "solo {name}",
+        "genre_off": "{name} apagado",
         "help_s5_t": "Escucha y marca",
         "help_s5_b": "Escucha las previews (▶) y marca (★) las que te gusten. Filtra por género para centrarte.",
         "help_s6_t": "Crea una playlist privada",

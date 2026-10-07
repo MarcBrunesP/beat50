@@ -95,6 +95,15 @@ def _quotas(profile):
     return quotas
 
 
+def _genre_allowed(profile, genre_id):
+    """The user's genre preferences (profile.apply_prefs): a genre at level 0, or any other than the one chosen
+    with "Only", never enters the selection, not even to fill the slots left over."""
+    only = profile.get("genre_only")
+    if only is not None:
+        return genre_id == only
+    return genre_id not in (profile.get("genres_off") or ())
+
+
 def build_crate(candidates, library, profile, previous_ids):
     library_tracks = library.get("tracks", [])
     library_ids = {t["id"] for t in library_tracks}
@@ -106,6 +115,8 @@ def build_crate(candidates, library, profile, previous_ids):
     scored = []
     for t in candidates.get("tracks", []):
         if t["id"] in library_ids or t["id"] in previous_ids:
+            continue
+        if not _genre_allowed(profile, (t.get("genre") or {}).get("id")):
             continue
         if t.get("isrc") and t["isrc"] in library_isrcs:
             continue

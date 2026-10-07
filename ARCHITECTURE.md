@@ -21,7 +21,7 @@ a selection is made when the user asks for it.
 | `auth.py` | Gets a Beatport user token from a Beatport window |
 | `client.py` | Beatport API v4 client: paging, retries, token renewal, the single `post()` |
 | `ingest.py` | Library: playlists + purchases → `library.json` |
-| `profile.py` | Taste profile: weighted labels, artists, genres, BPM and key → `profile.json` |
+| `profile.py` | Taste profile: weighted labels, artists, genres, BPM and key → `profile.json`; `apply_prefs` applies the Genres choices |
 | `discover.py` | Candidates published in the period → `candidates.json` |
 | `rank.py` | Scoring, exclusions, genre quotas, diversity → `crates/<code>.json` |
 | `playlists.py` | Creates private playlists and edits them: beatcrate's only writes to Beatport |
@@ -91,7 +91,11 @@ Base `https://api.beatport.com/v4`, header `Authorization: Bearer <token>`.
 2. **Profile** (`profile.py`): each track weighs `decay × origin`, where `decay = 0.5 ** (months / 18)`
    and `origin` is 1.0 for purchases, 0.6 for playlists. Labels, artists (including remixers) and genres
    sum those weights and are normalised to the top one. BPM (weighted p10, median, p90) and key
-   frequencies use the same weights.
+   frequencies use the same weights. `profile.json` is that profile as the library says; the selection then
+   works on `apply_prefs(profile, state.genre_prefs)`: each genre's weight times its level (0, 0.5, 1, 2 or
+   4; `config.GENRE_LEVELS`), or only one genre with `only`, normalised and ordered again, so the charts,
+   the score and the slots below all follow. Genres at level 0 (`genres_off`), or every other one under
+   `only` (`genre_only`), never enter the selection. An `only` no longer in the profile is ignored.
 3. **Candidates** (`discover.py`): in the chosen period (by default the last 31 days), releases from the
    top 50 labels and top 100 artists, plus each of the top 5 genres' current chart trimmed to the period.
    At most 60 requests, as a safety net.
@@ -102,6 +106,8 @@ Base `https://api.beatport.com/v4`, header `Authorization: Bearer <token>`.
      purchases since they come without ISRC) and tracks in any earlier selection.
    - Each top-5 genre gets slots proportional to its weight (largest remainder); a second pass fills the
      slots of genres without enough candidates. At most 3 tracks per label and 2 per artist.
+   - The selection records the genre choices it was made with (`genre_prefs`: `[{id, name, level}]`, level
+     `"only"` for the one kept), shown in its heading.
    - Each track keeps its two strongest reasons (`{"kind", "value"}`), shown translated.
 5. The selection is saved as `crates/<YYYYMMDD_HHMMSS>.json` and never overwritten.
 
@@ -115,7 +121,7 @@ All user data lives in `~/Library/Application Support/beatcrate/` (or `$BEATCRAT
 | `library.json`, `profile.json`, `candidates.json` | Last library, profile and candidates |
 | `crates/<code>.json` | One file per selection. Files named `YYYY-MM` come from an earlier version and are still shown |
 | `marks/<code>.json` | `{"starred": [...], "playlists": [{id, name, track_ids, created_at}]}` |
-| `state.json` | Running job, last selection result, session status |
+| `state.json` | Running job, last selection result, session status, `genre_prefs` (`{"levels": {"<genre id>": level}, "only": id or null}`) |
 | `consent.json` | `{"session": true, "granted_at"}` once the user accepts the notice; deleted when withdrawn |
 | `.lock` | Process lock (`flock`) |
 
@@ -136,7 +142,8 @@ read from `crates/`, its tracks may be picked again.
 - Routes: `GET /`, `/crate/<code>`, `/static/*`, `/api/state`, `/api/health`; `POST /api/consent` (`on`),
   `/api/generate` (`since`, `until`), `/api/session/check`, `/api/login/start`, `/api/star/<code>/<track>`
   (`on`), `/api/playlist/<code>` (`name`, `genres`), `/api/playlist/<code>/<id>` (`name`, `remove`, `add`),
-  `/api/selection/<code>/delete`.
+  `/api/selection/<code>/delete`, `/api/genres` (`levels`, `only`: the Genres dialog's choices, saved whole on
+  every change; local only, 409 while busy).
   Also `GET /crate/<code>/playlist/<id>`, the playlist editor.
 - Consent: the routes that read the session (`generate`, `session/check`, `login/start`, `playlist/*`)
   answer 409 `consent_required` until the user accepts the notice in the page, which explains the Beatport

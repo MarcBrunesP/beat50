@@ -34,6 +34,10 @@ CRATE_SIZE = 50
 MAX_PER_LABEL = 3
 MAX_PER_ARTIST = 2
 
+# Genre preferences (the Genres dialog): what each level multiplies a genre's profile weight by. 0 leaves it out.
+GENRE_LEVELS = (0, 0.5, 1, 2, 4)
+GENRES_SHOWN = 10  # the profile's top genres listed in the dialog
+
 # Profile
 HALFLIFE_MONTHS = 18
 ORIGIN_PURCHASE = 1.0

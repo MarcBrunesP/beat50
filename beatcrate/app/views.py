@@ -38,6 +38,7 @@ ICONS = {
     "sync": '<path d="M20 12a8 8 0 0 1-14 5.3M4 12a8 8 0 0 1 14-5.3"/><path d="M18 3v4h-4M6 21v-4h4"/>',
     "trash": '<path d="M4 7h16M10 11v6M14 11v6"/><path d="M6 7l1 12.2a2 2 0 0 0 2 1.8h6a2 2 0 0 0 2-1.8L18 7"/>'
              '<path d="M9 7V4.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 .5.5V7"/>',
+    "tune": '<path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/>',
     "verified_user": '<path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/>',
     "window": '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 9h18"/>',
 }
@@ -281,17 +282,70 @@ def _status(state, lang):
 
 
 def _toolbar(title, detail, state, today, lang, selection=None):
-    """The top of the main column: the title (with a delete button on a selection), the period and the action that
-    makes a new selection."""
+    """The top of the main column: the title (with a delete button on a selection), the period, the Genres button
+    (with how many genres are adjusted) and the action that makes a new selection."""
     off = " disabled" if state.get("running") or state.get("login_pending") else ""
     since = (today - timedelta(days=config.WINDOW_DAYS)).isoformat()
     delete = _delete_button(selection, lang, off, "delete", "delete_selection") if selection else ""
+    prefs = state.get("genre_prefs") or {}
+    adjusted = 1 if prefs.get("only") is not None else len(prefs.get("levels") or {})
     return (f'<header class="head"><div class="title"><h1>{title}</h1><span class="detail">{detail}</span></div>{delete}'
             f'<div class="period"><label>{i18n.t(lang, "since")} '
             f'<input type="date" id="since" value="{since}" max="{today}"></label>'
             f'<label>{i18n.t(lang, "until")} <input type="date" id="until" value="{today}" max="{today}"></label></div>'
+            f'<button class="create" data-genres-open aria-haspopup="dialog"{off}>{_icon("tune")}'
+            f'{i18n.t(lang, "genres_open")}<span class="n"{"" if adjusted else " hidden"}>{adjusted}</span></button>'
             f'<button class="main" data-action="generate"{off}>{_icon("auto_awesome")}{i18n.t(lang, "new_selection")}'
             '</button></header>')
+
+
+# How a level reads next to a genre's name in the selection's heading; 0 and "only" have their own sentence.
+LEVEL_MARKS = {0.5: "−", 2: "+", 4: "++"}
+
+
+def _prefs_detail(prefs, lang):
+    """The genre preferences a selection was made with, for its heading: "only Techno" or "Techno ++ · House −"."""
+    parts = []
+    for p in prefs or []:
+        name = escape(p.get("name") or "")
+        if p["level"] == "only":
+            parts.append(i18n.t(lang, "only_genre", name=name))
+        elif p["level"] == 0:
+            parts.append(i18n.t(lang, "genre_off", name=name))
+        else:
+            parts.append(f"{name} {LEVEL_MARKS[p['level']]}")
+    return " · ".join(parts)
+
+
+def _genres_dialog(profile, state, lang):
+    """The Genres dialog: the profile's top genres, each with its share of the slots now and with the choices made
+    (the JS keeps the second one up to date), a segmented level control and an "Only" button. Every change is
+    saved at once (POST /api/genres); the choices apply to the next selection."""
+    prefs = state.get("genre_prefs") or {}
+    levels, only = prefs.get("levels") or {}, prefs.get("only")
+    top = (profile.get("genres") or [])[:config.TOP_GENRES]
+    total = sum(g["weight"] for g in top) or 1
+    shares = {g["id"]: round(100 * g["weight"] / total) for g in top}
+    rows = []
+    for g in (profile.get("genres") or [])[:config.GENRES_SHOWN]:
+        level = levels.get(str(g["id"]), 1)
+        seg = "".join(
+            f'<button data-level="{lv:g}" aria-pressed="{"true" if lv == level else "false"}">'
+            f'{i18n.t(lang, "genre_level_0") if lv == 0 else {0.5: "−", 1: "=", 2: "+", 4: "++"}[lv]}</button>'
+            for lv in config.GENRE_LEVELS)
+        name = escape(g.get("name") or "")
+        rows.append(
+            f'<li class="gp" data-genre="{g["id"]}" data-weight="{g["weight"]}"><span class="gp-name">{name}</span>'
+            f'<span class="gp-share"><span class="now">{shares.get(g["id"], 0)} %</span> → <span class="then"></span></span>'
+            f'<div class="seg" role="group" aria-label="{name}">{seg}</div>'
+            f'<button class="only" data-only aria-pressed="{"true" if g["id"] == only else "false"}">'
+            f'{i18n.t(lang, "genre_only")}</button></li>')
+    body = f'<ul class="gps">{"".join(rows)}</ul>' if rows else f'<p class="hint">{i18n.t(lang, "genres_none")}</p>'
+    return (f'<dialog id="genres" aria-labelledby="genres-title" data-top="{config.TOP_GENRES}">'
+            f'<h2 id="genres-title">{_icon("tune")}{i18n.t(lang, "genres_title")}</h2>'
+            f'<p class="hint">{i18n.t(lang, "genres_hint")}</p>{body}<div class="buttons">'
+            f'<button class="reset" data-genres-reset{"" if rows else " hidden"}>{i18n.t(lang, "genres_reset")}</button>'
+            f'<button class="main" data-genres-done>{i18n.t(lang, "genres_done")}</button></div></dialog>')
 
 
 # The record drawn as a spinning vinyl for the picking card: navy disc, blue grooves, amber label and a
@@ -372,7 +426,8 @@ def _editor(selection, crate, playlist, starred, lang, refresh):
             '<audio id="player" preload="none"></audio>')
 
 
-def render_page(selection, crate, selections, state, token, today, marks=None, lang="en", playlist=None):
+def render_page(selection, crate, selections, state, token, today, marks=None, lang="en", playlist=None,
+                profile=None):
     marks = marks or {"starred": [], "playlists": []}
     off = " disabled" if state.get("running") or state.get("login_pending") else ""
     links = "".join(
@@ -408,6 +463,8 @@ def render_page(selection, crate, selections, state, token, today, marks=None, l
             detail += " · " + i18n.t(lang, "period", start=i18n.day(w["from"], lang), end=i18n.day(w["to"], lang))
         if crate.get("candidates_seen"):
             detail += " · " + i18n.t(lang, "candidates", n=crate["candidates_seen"])
+        if crate.get("genre_prefs"):
+            detail += " · " + _prefs_detail(crate["genre_prefs"], lang)
         notice = (f'<p class="notice">{_icon("info")}{i18n.t(lang, "short", n=len(crate["tracks"]))}</p>'
                   if crate.get("short") else "")
         ids = {t["id"] for t in crate["tracks"]}
@@ -439,6 +496,6 @@ def render_page(selection, crate, selections, state, token, today, marks=None, l
             f' data-consent="{"1" if state.get("consent") else "0"}" data-login="{"1" if state.get("login_pending") else "0"}"'
             f' data-help="{"0" if state.get("help_seen") else "1"}">'
             f'{_sprite()}<div class="app"{inert}>{side}{main}</div>{_progress(state, lang)}{_action_loading()}{_toast()}'
-            f'{_help(lang)}{_consent(lang)}'
+            f'{_help(lang)}{_consent(lang)}{_genres_dialog(profile or {}, state, lang)}'
             f'<script id="texts" type="application/json">{texts}</script>'
             '<script src="/static/app.js"></script></body></html>')

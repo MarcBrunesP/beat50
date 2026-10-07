@@ -3,6 +3,16 @@
 What changed in each version of beatcrate. The format follows [Keep a Changelog](https://keepachangelog.com/)
 and versions follow [Semantic Versioning](https://semver.org/). The version lives in `pyproject.toml`.
 
+## Unreleased
+
+### Added
+
+- A **Genres** button beside "New selection" that opens a dialog with the top 10 genres of your profile: give each
+  one less (×0.5), more (×2) or much more (×4) room, switch it off, or keep **Only** one. The dialog shows each
+  genre's share of the 50 slots now and with your choices; every change is saved at once and applies to the next
+  selection, which records the choices in its heading ("Techno ++ · House −", "only Techno"). With Only, the
+  selection may be shorter than 50.
+
 ## 2.13.0 — 2026-10-07
 
 ### Added

@@ -360,6 +360,84 @@ if (player) {
   });
 }
 
+// Genres: more or less room for each genre in the next selection. Every change is saved at once; the share each
+// genre would get is estimated here the way rank.py splits the slots (among the top genres, by weight).
+const genres = document.getElementById('genres');
+if (genres) {
+  const rows = [...genres.querySelectorAll('.gp')];
+  const top = Number(genres.dataset.top);
+  function prefs() {
+    const levels = {};
+    let only = null;
+    rows.forEach((r) => {
+      const level = Number(r.querySelector('.seg [aria-pressed="true"]').dataset.level);
+      if (level !== 1) levels[r.dataset.genre] = level;
+      if (r.querySelector('[data-only]').getAttribute('aria-pressed') === 'true') only = Number(r.dataset.genre);
+    });
+    return {levels, only};
+  }
+  function shares() {
+    const p = prefs();
+    const weights = rows.map((r) => {
+      const m = p.only !== null ? (Number(r.dataset.genre) === p.only ? 1 : 0) : (p.levels[r.dataset.genre] ?? 1);
+      return Number(r.dataset.weight) * m;
+    });
+    const kept = weights.map((w, i) => [w, i]).filter(([w]) => w > 0).sort((a, b) => b[0] - a[0]).slice(0, top);
+    const total = kept.reduce((s, [w]) => s + w, 0);
+    rows.forEach((r, i) => {
+      const got = kept.find(([, k]) => k === i);
+      r.querySelector('.then').textContent = Math.round(got && total ? 100 * got[0] / total : 0) + ' %';
+      r.classList.toggle('off', weights[i] === 0);
+    });
+    const n = p.only !== null ? 1 : Object.keys(p.levels).length;
+    const badge = document.querySelector('[data-genres-open] .n');  // not on the playlist editor
+    if (badge) {
+      badge.textContent = n;
+      badge.hidden = n === 0;
+    }
+  }
+  async function save() {
+    shares();
+    let r;
+    try {
+      r = await post('/api/genres', prefs());
+    } catch (e) {
+      return closed();
+    }
+    if (!r.ok) {
+      const data = await r.json().catch(() => ({}));
+      alert(data.error || text('js_error', {status: r.status}));
+    }
+  }
+  function press(group, on) {
+    group.forEach((b) => b.setAttribute('aria-pressed', String(b === on)));
+  }
+  shares();
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('[data-genres-open]')) return genres.showModal();
+    if (e.target.closest('[data-genres-done]')) return genres.close();
+    const level = e.target.closest('#genres .seg button');
+    if (level) {
+      press([...level.parentNode.children], level);
+      return save();
+    }
+    const only = e.target.closest('#genres [data-only]');
+    if (only) {
+      const was = only.getAttribute('aria-pressed') === 'true';
+      rows.forEach((r) => r.querySelector('[data-only]').setAttribute('aria-pressed', 'false'));
+      only.setAttribute('aria-pressed', String(!was));
+      return save();
+    }
+    if (e.target.closest('[data-genres-reset]')) {
+      rows.forEach((r) => {
+        press([...r.querySelectorAll('.seg button')], r.querySelector('.seg [data-level="1"]'));
+        r.querySelector('[data-only]').setAttribute('aria-pressed', 'false');
+      });
+      return save();
+    }
+  });
+}
+
 // Help: graphical onboarding slides. Auto-opens on first launch (then marks itself seen) and reopens on Help.
 const help = document.getElementById('help');
 if (help) {

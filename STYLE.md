@@ -105,7 +105,8 @@ second one in `--star` and, between them when the slide is a step, a 26 px `--fa
 - **Session foot**: dot-style icon (green / red / grey) + text + a 24 px "Check" button; the sign-in button is red and
   full width; language switch is a segmented control; "Withdraw permission" is an underlined link.
 - **Toolbar**: title + one-line detail on the left (on a selection, a 30 px bordered bin button beside it that
-  turns red on hover, to delete it), the period group (one bordered box with two date inputs) and the
+  turns red on hover, to delete it), the period group (one bordered box with two date inputs), the secondary
+  **Genres** button (`tune` icon; an 18 px `--tag` pill with how many genres are adjusted, hidden at zero) and the
   primary button on the right. The editor's toolbar swaps them for back, name input, "Private on Beatport" and Save.
 - **Buttons**: primary `.main` 30 px, accent fill, white 600 text; secondary `.create` 30 px, bordered, raised fill;
   small `.small` 24 px; destructive `.warn` red; link `.link`. Disabled is 45 % opacity.
@@ -126,6 +127,11 @@ second one in `--star` and, between them when the slide is a step, a 26 px `--fa
   under `prefers-reduced-motion`.
 - **Empty state**: the 88 px app icon, 20 px title, one paragraph, three numbered steps.
 - **Consent sheet**: 520 px dialog, radius 14, accent icon tile, four points each with an icon, buttons right-aligned.
+- **Genres** (`#genres`): a 600 px dialog like the consent sheet (accent icon tile, hint line). One 32 px row per
+  genre: the name, its share of the slots "now → with the choices" (the second in `--text` 600), a segmented
+  control (`.seg`, the language switch's style: `--line` track, raised pressed segment) with Off · − · = · + · ++,
+  and a 24 px bordered **Only** button that fills `--accent` when on. A switched-off genre dims its name to `--off`.
+  Reset sits left, Done right.
 - **Help** (`#help`): the onboarding, a 460 px dialog with seven slides — Material icons on a 132 px `--side` tile, a
   title and a line of text — plus dots and Back / Next / Got it. All slides share one grid cell (the hidden ones
   invisible), so the dialog always has the tallest slide's size and never jumps. It auto-opens on first launch

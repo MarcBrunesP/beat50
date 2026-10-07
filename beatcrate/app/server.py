@@ -8,7 +8,7 @@ from datetime import date
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
-from .. import config, webkit
+from .. import config, profile, webkit
 from ..errors import BeatcrateError
 from . import consent, i18n, jobs, marks, state, trash, views
 
@@ -38,6 +38,18 @@ def _period(body):
     if (until - since).days > MAX_PERIOD_DAYS:
         raise BeatcrateError("period_too_long", "The period cannot be longer than a year.")
     return since, until
+
+
+def _genre_prefs(body):
+    """The Genres dialog's choices, validated: levels by genre id (only the ones in config.GENRE_LEVELS) and the
+    genre chosen with "Only", or None."""
+    levels, only = body.get("levels", {}), body.get("only")
+    if not (isinstance(levels, dict) and all(_digits(k) and isinstance(v, (int, float)) and not isinstance(v, bool)
+                                              and v in config.GENRE_LEVELS for k, v in levels.items())):
+        raise BeatcrateError("bad_request", "\"levels\" must map genre ids to levels.")
+    if only is not None and not (isinstance(only, int) and not isinstance(only, bool)):
+        raise BeatcrateError("bad_request", "\"only\" must be a genre id or null.")
+    return {"levels": {k: v for k, v in levels.items() if v != 1}, "only": only}
 
 
 def _selections():
@@ -134,7 +146,8 @@ class Handler(BaseHTTPRequestHandler):
         st = dict(self._state(), consent=consent.granted())
         self.server.lang = self._lang()
         html = views.render_page(selection, crate, _selections(), st, self.server.token, date.today(),
-                                 marks.read(selection) if selection else None, self.server.lang, playlist)
+                                 marks.read(selection) if selection else None, self.server.lang, playlist,
+                                 profile.read_profile())
         self._send(200, html, "text/html; charset=utf-8")
 
     def _body(self):
@@ -170,6 +183,12 @@ class Handler(BaseHTTPRequestHandler):
             return self._json(200, {"ok": True})
         if path == "/api/help-seen":  # the onboarding has been shown; local only, reads nothing from Beatport
             state.update(help_seen=True)
+            return self._json(200, {"ok": True})
+        if path == "/api/genres":  # the next selection's genre preferences; local only
+            prefs = _genre_prefs(body)
+            if jobs.busy() or state.lock_owner():
+                raise state.Busy("busy", "beatcrate is already busy.")
+            state.update(genre_prefs=prefs)
             return self._json(200, {"ok": True})
         if path.startswith(SESSION_ROUTES) and not path.endswith("/forget"):  # forgetting is only local
             consent.require()

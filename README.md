@@ -32,7 +32,9 @@ it works; you can reopen them anytime with the **?** button beside the app's nam
    closes by itself.
 3. Choose the period (**From / To**, the last 31 days by default) and click **New selection**. A card
    shows each step as it goes and the app waits until it ends (about a minute); then the new selection opens
-   with a "Selection created successfully" message.
+   with a "Selection created successfully" message. **Genres** (beside it) gives each of your top 10 genres
+   less, more or much more room in the next selection, switches it off, or keeps **Only** one; the choices are
+   saved as you make them and the selection's heading says which ones it was made with.
 4. Each selection is saved with a code `YYYYMMDD_HHMMSS` and listed in the sidebar. Play the previews (▶ on
    the cover; the player with the progress bar opens under the track) and filter by genre.
 5. Star (★) what you like and click **Create Beatport playlist**: it creates an **always private**
@@ -61,6 +63,9 @@ asks first, because it would stop it.
 - **The 50:** each candidate is scored; what you already own and what earlier selections showed are left
   out; slots are split by genre according to your profile, with at most 3 tracks per label and 2 per
   artist.
+- **Genres:** your choices multiply each genre's weight (less ×0.5, more ×2, much more ×4) before the charts,
+  the score and the slots are worked out; a genre switched off, or every other genre with **Only**, never
+  enters, so a selection may then be shorter than 50.
 
 ## Data
 
