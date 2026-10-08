@@ -16,7 +16,7 @@ Beatport's unofficial API with your own session, for personal use.
 The app speaks English and Spanish. How it works inside: [ARCHITECTURE.md](ARCHITECTURE.md); how it looks: [STYLE.md](STYLE.md). What changed
 in each version: [CHANGELOG.md](CHANGELOG.md).
 
-Website: <https://beatcrate.ezb.com.es/>.
+Website: <https://beat50.ezb.com.es/>.
 
 ## Requirements
 
