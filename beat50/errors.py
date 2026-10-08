@@ -5,7 +5,7 @@ text (str) is the English message, used by the command line.
 """
 
 
-class BeatcrateError(RuntimeError):
+class Beat50Error(RuntimeError):
     def __init__(self, code, message, **params):
         super().__init__(message)
         self.code = code

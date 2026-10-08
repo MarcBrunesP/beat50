@@ -1,7 +1,24 @@
+---
+title: CHANGELOG
+type: note
+permalink: marc-vps/beat50/changelog
+---
+
 # Changelog
 
-What changed in each version of beatcrate. The format follows [Keep a Changelog](https://keepachangelog.com/)
+What changed in each version of beat50 (called beatcrate before 3.0). The format follows [Keep a Changelog](https://keepachangelog.com/)
 and versions follow [Semantic Versioning](https://semver.org/). The version lives in `pyproject.toml`.
+
+## Unreleased
+
+### Changed
+
+- beatcrate is now **beat50**: the app, its window, the DMG (`beat50-<version>.dmg`), the command (`beat50`), the
+  Python package and the log (`~/Library/Logs/beat50.log`). The repository moved to `MarcBrunesP/beat50`.
+- Your data stays where it was (`~/Library/Application Support/beatcrate`), and so do the Beatport session and
+  the language you chose: nothing to sign in again. Move **beatcrate** to the Trash after installing beat50, or
+  both apps would try to open on the same port.
+- For development, `BEATCRATE_DATA` is now `BEAT50_DATA`.
 
 ## 2.14.0 — 2026-10-07
 

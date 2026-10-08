@@ -2,8 +2,8 @@ import json
 
 import pytest
 
-from beatcrate.app import consent
-from beatcrate.errors import BeatcrateError
+from beat50.app import consent
+from beat50.errors import Beat50Error
 
 
 def test_there_is_no_consent_until_the_user_gives_it(data_dir):
@@ -18,7 +18,7 @@ def test_giving_consent_is_remembered_with_its_date(data_dir):
 
 
 def test_a_consent_given_for_chrome_is_asked_again(data_dir):
-    # beatcrate 1.1 asked to open Chrome; reading the session in its own window is a different request.
+    # beat50 1.1 asked to open Chrome; reading the session in its own window is a different request.
     (data_dir / "consent.json").write_text('{"chrome": true, "version": 2, "granted_at": "2026-10-01T12:00:00+00:00"}')
     assert consent.granted() is False
 
@@ -36,7 +36,7 @@ def test_a_damaged_consent_file_counts_as_no_consent(data_dir):
 
 
 def test_require_stops_without_consent(data_dir):
-    with pytest.raises(BeatcrateError) as e:
+    with pytest.raises(Beat50Error) as e:
         consent.require()
     assert e.value.code == "consent_required"
     consent.grant()
@@ -44,7 +44,7 @@ def test_require_stops_without_consent(data_dir):
 
 
 def test_a_consent_given_to_an_older_notice_is_asked_again(data_dir):
-    # 2.2 can also edit the playlists beatcrate created: the notice says so and is asked again.
+    # 2.2 can also edit the playlists beat50 created: the notice says so and is asked again.
     (data_dir / "consent.json").write_text('{"session": true, "granted_at": "2026-10-01T12:00:00+00:00"}')
     assert consent.granted() is False
     consent.grant()

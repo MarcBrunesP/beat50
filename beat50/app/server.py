@@ -9,7 +9,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 from .. import config, profile, webkit
-from ..errors import BeatcrateError
+from ..errors import Beat50Error
 from . import consent, i18n, jobs, marks, state, trash, views
 
 STATIC = Path(__file__).parent / "static"
@@ -19,7 +19,7 @@ SELECTION = re.compile(r"^(\d{8}_\d{6}|\d{4}-\d{2})$")
 MAX_PERIOD_DAYS = 366
 # Errors whose cause is not the request itself: a retry later or a sign-in may fix them.
 CONFLICTS = {"busy", "session_expired", "login_already", "consent_required"}
-# Routes that read the Beatport session (in a window of beatcrate's): only with the user's consent.
+# Routes that read the Beatport session (in a window of beat50's): only with the user's consent.
 SESSION_ROUTES = ("/api/generate", "/api/session/check", "/api/login/start", "/api/playlist/")
 
 
@@ -30,13 +30,13 @@ def _period(body):
     try:
         since, until = date.fromisoformat(body["since"]), date.fromisoformat(body["until"])
     except (KeyError, TypeError, ValueError):
-        raise BeatcrateError("period_format", "Dates must be YYYY-MM-DD.") from None
+        raise Beat50Error("period_format", "Dates must be YYYY-MM-DD.") from None
     if until > date.today():
-        raise BeatcrateError("period_future", "'until' cannot be later than today.")
+        raise Beat50Error("period_future", "'until' cannot be later than today.")
     if since > until:
-        raise BeatcrateError("period_order", "'since' cannot be later than 'until'.")
+        raise Beat50Error("period_order", "'since' cannot be later than 'until'.")
     if (until - since).days > MAX_PERIOD_DAYS:
-        raise BeatcrateError("period_too_long", "The period cannot be longer than a year.")
+        raise Beat50Error("period_too_long", "The period cannot be longer than a year.")
     return since, until
 
 
@@ -46,9 +46,9 @@ def _genre_prefs(body):
     levels, only = body.get("levels", {}), body.get("only")
     if not (isinstance(levels, dict) and all(_digits(k) and isinstance(v, (int, float)) and not isinstance(v, bool)
                                               and v in config.GENRE_LEVELS for k, v in levels.items())):
-        raise BeatcrateError("bad_request", "\"levels\" must map genre ids to levels.")
+        raise Beat50Error("bad_request", "\"levels\" must map genre ids to levels.")
     if only is not None and not (isinstance(only, int) and not isinstance(only, bool)):
-        raise BeatcrateError("bad_request", "\"only\" must be a genre id or null.")
+        raise Beat50Error("bad_request", "\"only\" must be a genre id or null.")
     return {"levels": {k: v for k, v in levels.items() if v != 1}, "only": only}
 
 
@@ -121,7 +121,7 @@ class Handler(BaseHTTPRequestHandler):
             return self._json(403, {"error": "host not allowed"})
         path = self.path.split("?")[0]
         if path == "/api/health":
-            return self._json(200, {"app": "beatcrate"})
+            return self._json(200, {"app": "beat50"})
         if path == "/api/state":
             return self._json(200, self._state())
         if path.startswith("/static/") and path[len("/static/"):] in STATIC_FILES:
@@ -165,12 +165,12 @@ class Handler(BaseHTTPRequestHandler):
             body = self._body()
         except ValueError as e:
             return self._fail(400, "bad_request", fallback=str(e))
-        sent = self.headers.get("X-Beatcrate-Token", "").encode()
+        sent = self.headers.get("X-Beat50-Token", "").encode()
         if not secrets.compare_digest(sent, self.server.token.encode()):
             return self._json(403, {"error": "invalid token"})
         try:
             return self._action(path, body)
-        except BeatcrateError as e:
+        except Beat50Error as e:
             return self._fail(409 if e.code in CONFLICTS else 400, e.code, e.params, str(e))
         except Exception as e:
             return self._json(500, {"error": str(e)})
@@ -178,7 +178,7 @@ class Handler(BaseHTTPRequestHandler):
     def _action(self, path, body):
         if path == "/api/consent":
             if not isinstance(body.get("on"), bool):
-                raise BeatcrateError("bad_request", "Missing \"on\" (true or false).")
+                raise Beat50Error("bad_request", "Missing \"on\" (true or false).")
             consent.grant() if body["on"] else consent.revoke()
             return self._json(200, {"ok": True})
         if path == "/api/help-seen":  # the onboarding has been shown; local only, reads nothing from Beatport
@@ -187,7 +187,7 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/genres":  # the next selection's genre preferences; local only
             prefs = _genre_prefs(body)
             if jobs.busy() or state.lock_owner():
-                raise state.Busy("busy", "beatcrate is already busy.")
+                raise state.Busy("busy", "beat50 is already busy.")
             state.update(genre_prefs=prefs)
             return self._json(200, {"ok": True})
         if path.startswith(SESSION_ROUTES) and not path.endswith("/forget"):  # forgetting is only local
@@ -208,9 +208,9 @@ class Handler(BaseHTTPRequestHandler):
                 return self._fail(404, "not_found")
             ids = {t["id"] for t in crate["tracks"]}
             if int(parts[1]) not in ids:
-                raise BeatcrateError("not_in_selection", "That track is not in this selection.")
+                raise Beat50Error("not_in_selection", "That track is not in this selection.")
             if not isinstance(body.get("on"), bool):
-                raise BeatcrateError("bad_request", "Missing \"on\" (true or false).")
+                raise Beat50Error("bad_request", "Missing \"on\" (true or false).")
             starred = marks.set_star(parts[0], int(parts[1]), body["on"])
             return self._json(200, {"starred": len([t for t in starred if t in ids])})
         if path.startswith("/api/playlist/"):
@@ -221,12 +221,12 @@ class Handler(BaseHTTPRequestHandler):
             if slash:
                 return self._playlist_action(selection, int(playlist_id), action, body)
             if jobs.busy() or state.lock_owner():
-                raise state.Busy("busy", "beatcrate is already busy.")
+                raise state.Busy("busy", "beat50 is already busy.")
             if not isinstance(body.get("name"), str):
-                raise BeatcrateError("name_required", "The playlist needs a name.")
+                raise Beat50Error("name_required", "The playlist needs a name.")
             genres = body.get("genres")
             if genres is not None and not (isinstance(genres, list) and all(isinstance(g, str) for g in genres)):
-                raise BeatcrateError("bad_request", "\"genres\" must be a list of strings.")
+                raise Beat50Error("bad_request", "\"genres\" must be a list of strings.")
             r = jobs.create_playlist(selection, body["name"], genres=genres or None)
             return self._json(200, {"ok": True, "message": _playlist_message(self._lang(), r)})
         if path.startswith("/api/selection/") and path.endswith("/delete"):  # only local: no permission needed
@@ -234,26 +234,26 @@ class Handler(BaseHTTPRequestHandler):
             if _crate(selection) is None:
                 return self._fail(404, "not_found")
             if jobs.busy() or state.lock_owner():
-                raise state.Busy("busy", "beatcrate is already busy.")
+                raise state.Busy("busy", "beat50 is already busy.")
             _delete(selection)
             return self._json(200, {"ok": True})  # the page knows where to go: home if it was showing it
         return self._fail(404, "not_found")
 
     def _playlist_action(self, selection, playlist_id, action, body):
-        """Saving (no action), refreshing from Beatport or forgetting one of beatcrate's playlists."""
+        """Saving (no action), refreshing from Beatport or forgetting one of beat50's playlists."""
         if marks.find_playlist(selection, playlist_id) is None or action not in ("", "refresh", "forget"):
             return self._fail(404, "not_found")
         if action == "forget":
             jobs.forget_playlist(selection, playlist_id)
             return self._json(200, {"ok": True, "redirect": f"/crate/{selection}"})
         if jobs.busy() or state.lock_owner():
-            raise state.Busy("busy", "beatcrate is already busy.")
+            raise state.Busy("busy", "beat50 is already busy.")
         if action == "refresh":
             return self._json(200, jobs.refresh_playlist(selection, playlist_id))
         if not isinstance(body.get("name"), str):
-            raise BeatcrateError("name_required", "The playlist needs a name.")
+            raise Beat50Error("name_required", "The playlist needs a name.")
         if not (_ids(body.get("remove", [])) and _ids(body.get("add", []))):
-            raise BeatcrateError("bad_request", "\"remove\" and \"add\" must be lists of track ids.")
+            raise Beat50Error("bad_request", "\"remove\" and \"add\" must be lists of track ids.")
         r = jobs.edit_playlist(selection, playlist_id, body["name"], remove=body.get("remove", []),
                                add=body.get("add", []))
         return self._json(200, {"ok": True, "message": _saved_message(self._lang(), r)})
@@ -291,7 +291,7 @@ def _quit_texts(lang):
 def _already_open(url):
     try:
         with urllib.request.urlopen(f"{url}/api/health", timeout=2) as r:
-            return json.loads(r.read()).get("app") == "beatcrate"
+            return json.loads(r.read()).get("app") == "beat50"
     except (OSError, ValueError):
         return False
 
@@ -299,8 +299,8 @@ def _already_open(url):
 def run_app():
     """Serves the app on 127.0.0.1 and shows it in its own window; quits when the window closes."""
     url = f"http://{config.APP_HOST}:{config.APP_PORT}"
-    if _already_open(url):  # e.g. `beatcrate app` from the terminal while the app is open
-        print("beatcrate is already running.")
+    if _already_open(url):  # e.g. `beat50 app` from the terminal while the app is open
+        print("beat50 is already running.")
         return
     app = App(config.APP_PORT)
     threading.Thread(target=app.serve_forever, kwargs={"poll_interval": 0.1}, daemon=True).start()

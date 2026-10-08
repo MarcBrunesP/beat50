@@ -1,6 +1,6 @@
 import pytest
 
-from beatcrate import config
+from beat50 import config
 
 
 @pytest.fixture

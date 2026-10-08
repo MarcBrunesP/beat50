@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from beatcrate import ingest
+from beat50 import ingest
 
 FIXTURES = Path(__file__).parent / "fixtures"
 

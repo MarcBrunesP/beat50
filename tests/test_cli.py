@@ -1,6 +1,6 @@
 import pytest
 
-from beatcrate import cli
+from beat50 import cli
 
 
 def test_no_arguments_returns_an_error_without_crashing(capsys):
@@ -31,7 +31,7 @@ def test_the_help_does_not_mention_chrome(capsys):
 
 @pytest.fixture
 def window_loop(monkeypatch):
-    """Records that a command ran inside beatcrate.webkit.run (the window loop) and runs it there."""
+    """Records that a command ran inside beat50.webkit.run (the window loop) and runs it there."""
     ran = []
 
     def run(work):

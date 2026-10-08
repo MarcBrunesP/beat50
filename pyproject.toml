@@ -1,5 +1,5 @@
 [project]
-name = "beatcrate"
+name = "beat50"
 version = "2.14.0"
 description = "A Mac app that picks Beatport new releases for your taste"
 requires-python = ">=3.13"
@@ -12,13 +12,13 @@ dev = ["pytest>=8"]
 build = ["pyinstaller>=6.22"]
 
 [project.scripts]
-beatcrate = "beatcrate.cli:main"
+beat50 = "beat50.cli:main"
 
 [tool.setuptools]
-packages = ["beatcrate", "beatcrate.app"]
+packages = ["beat50", "beat50.app"]
 
 [tool.setuptools.package-data]
-"beatcrate.app" = ["static/*"]
+"beat50.app" = ["static/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

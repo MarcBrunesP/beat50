@@ -1,4 +1,4 @@
-"""beatcrate's long-running jobs: making a selection, checking the session, signing in, playlists.
+"""beat50's long-running jobs: making a selection, checking the session, signing in, playlists.
 
 Used by the app (selections and the sign-in wait run in threads) and by the command line. Selections,
 session checks and playlists run under the state lock, so the app and the command line never overlap.
@@ -9,7 +9,7 @@ from datetime import datetime
 
 from .. import auth, config, discover, ingest, playlists, profile, rank, webkit
 from ..client import Client, TokenExpired
-from ..errors import BeatcrateError
+from ..errors import Beat50Error
 from . import marks, state
 
 STEPS = 3
@@ -34,7 +34,7 @@ def _session(status):
 
 def _error(e):
     """How a failure is kept in state.json: the English text plus the code to translate it."""
-    if not isinstance(e, BeatcrateError):
+    if not isinstance(e, Beat50Error):
         return {"error": str(e), "error_code": None, "error_params": {}}
     return {"error": str(e), "error_code": e.code, "error_params": e.params}
 
@@ -131,7 +131,7 @@ def login_start():
     global _login_window
     with _thread_lock:
         if login_pending():
-            raise BeatcrateError("login_already", "A sign-in is already in progress.")
+            raise Beat50Error("login_already", "A sign-in is already in progress.")
         window = _login_window = auth.login_window()
 
     def wait():
@@ -183,13 +183,13 @@ def create_playlist(selection, name, genres=None):
 
 
 def edit_playlist(selection, playlist_id, name, remove=(), add=()):
-    """Renames a playlist beatcrate created and removes / adds tracks of its selection, all in one save."""
+    """Renames a playlist beat50 created and removes / adds tracks of its selection, all in one save."""
     playlist = marks.find_playlist(selection, playlist_id)
     if playlist is None:
-        raise BeatcrateError("not_found", "beatcrate did not create that playlist.")
+        raise Beat50Error("not_found", "beat50 did not create that playlist.")
     crate = json.loads((config.CRATES_DIR / f"{selection}.json").read_text())
     if not set(add) <= {t["id"] for t in crate["tracks"]}:
-        raise BeatcrateError("not_in_selection", "That track is not in this selection.")
+        raise Beat50Error("not_in_selection", "That track is not in this selection.")
     clean = playlists.valid_name(name)
     new_name = clean if clean != playlist["name"] else None
     if new_name is None and not remove and not add:
@@ -222,7 +222,7 @@ def refresh_playlist(selection, playlist_id):
     """
     playlist = marks.find_playlist(selection, playlist_id)
     if playlist is None:
-        raise BeatcrateError("not_found", "beatcrate did not create that playlist.")
+        raise Beat50Error("not_found", "beat50 did not create that playlist.")
     with _Working(), state.lock():
         try:
             live = playlists.read_playlist(_client(), playlist_id)
@@ -247,10 +247,10 @@ def refresh_playlist(selection, playlist_id):
 
 
 def forget_playlist(selection, playlist_id):
-    """Drops beatcrate's record of a playlist deleted on Beatport. Only local: Beatport is not touched."""
+    """Drops beat50's record of a playlist deleted on Beatport. Only local: Beatport is not touched."""
     playlist = marks.find_playlist(selection, playlist_id)
     if playlist is None:
-        raise BeatcrateError("not_found", "beatcrate did not create that playlist.")
+        raise Beat50Error("not_found", "beat50 did not create that playlist.")
     if not playlist.get("gone"):
-        raise BeatcrateError("not_gone", "That playlist still exists on Beatport.")
+        raise Beat50Error("not_gone", "That playlist still exists on Beatport.")
     marks.remove_playlist(selection, playlist_id)

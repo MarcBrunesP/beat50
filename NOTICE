@@ -1,8 +1,8 @@
-beatcrate
+beat50
 Copyright (c) 2026 Marc Brunes
 Licensed under the MIT License (see LICENSE).
 
-beatcrate is an independent project. It is not affiliated with, endorsed by or
+beat50 is an independent project. It is not affiliated with, endorsed by or
 supported by Beatport. It uses Beatport's unofficial API with the user's own
 session, for personal use.
 
@@ -11,7 +11,7 @@ This product includes material from third parties:
 Material Symbols (Outlined)
   Copyright Google LLC. Licensed under the Apache License, Version 2.0.
   https://www.apache.org/licenses/LICENSE-2.0
-  Icon paths embedded in beatcrate/app/views.py (MATERIAL) for the help slides.
+  Icon paths embedded in beat50/app/views.py (MATERIAL) for the help slides.
 
 pywebview
   Copyright (c) 2014-2017, Roman Sirokov. Licensed under the BSD 3-Clause License.

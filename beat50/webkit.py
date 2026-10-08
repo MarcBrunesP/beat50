@@ -1,7 +1,7 @@
-"""beatcrate's windows: WebKit (Safari's engine) through pywebview.
+"""beat50's windows: WebKit (Safari's engine) through pywebview.
 
 The app's own window shows the local page; other windows load www.beatport.com so the user can sign in
-and so beatcrate can read the session token. Those are not automated browsers, so Beatport and
+and so beat50 can read the session token. Those are not automated browsers, so Beatport and
 Cloudflare treat them like Safari. WebKit keeps the session in the app's own website data on this Mac.
 
 Cocoa needs its event loop on the main thread: run() and show_app() start it there, and the actual
@@ -9,7 +9,7 @@ work goes on in other threads, which can open, read and close windows while the 
 """
 import threading
 
-TITLE = "beatcrate"
+TITLE = "beat50"
 SIZE = (1200, 820)
 
 # Asks the site for its NextAuth session. A synchronous request, so evaluate_js gets the value itself and

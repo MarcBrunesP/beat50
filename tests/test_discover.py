@@ -1,6 +1,6 @@
 from datetime import date
 
-from beatcrate import discover
+from beat50 import discover
 
 TODAY = date(2026, 9, 7)
 

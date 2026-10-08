@@ -1,6 +1,6 @@
 from datetime import date
 
-from beatcrate import profile
+from beat50 import profile
 
 
 def _track(**kw):

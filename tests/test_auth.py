@@ -3,7 +3,7 @@ import stat
 
 import pytest
 
-from beatcrate import auth
+from beat50 import auth
 
 
 def test_save_session_writes_with_0600_permissions(tmp_path, monkeypatch):
@@ -39,7 +39,7 @@ class Clock:
 
 
 class FakeWindows:
-    """Stands in for beatcrate.webkit. `tokens` is what the page answers on each read."""
+    """Stands in for beat50.webkit. `tokens` is what the page answers on each read."""
 
     def __init__(self, tokens=(), closes_after=None):
         self.tokens = list(tokens)
@@ -49,7 +49,7 @@ class FakeWindows:
         self.loads = []
         self.closed = []
 
-    def open_window(self, url, title="beatcrate", hidden=False):
+    def open_window(self, url, title="beat50", hidden=False):
         self.opened.append({"url": url, "title": title, "hidden": hidden})
         return "W"
 
@@ -85,7 +85,7 @@ def windows(monkeypatch, data_dir):
 def test_get_token_reads_it_in_a_hidden_window_and_saves_it(windows):
     w = windows(tokens=[None, "good-1"])
     assert auth.get_token() == "good-1"
-    assert w.opened == [{"url": "https://www.beatport.com", "title": "beatcrate", "hidden": True}]
+    assert w.opened == [{"url": "https://www.beatport.com", "title": "beat50", "hidden": True}]
     assert w.closed == ["W"]
     assert auth.load_session()["access_token"] == "good-1"
 

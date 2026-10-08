@@ -53,7 +53,7 @@ def add_playlist(selection, playlist):
 
 
 def find_playlist(selection, playlist_id):
-    """A playlist beatcrate created from this selection, or None: only those can be edited."""
+    """A playlist beat50 created from this selection, or None: only those can be edited."""
     return next((p for p in read(selection)["playlists"] if p["id"] == playlist_id), None)
 
 

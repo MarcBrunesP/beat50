@@ -7,7 +7,7 @@ import re
 from datetime import date, datetime
 
 LANGS = ("en", "es")
-COOKIE = "beatcrate_lang"
+COOKIE = "beatcrate_lang"  # named before 3.0 (beatcrate); kept so the choice survives the rename
 CODE = re.compile(r"^(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})\d{2}$")
 
 MONTHS = {
@@ -33,14 +33,14 @@ TEXTS = {
         "new_selection": "New selection",
         "check_session": "Check",
         "help_open": "Help",
-        "help_title": "How beatcrate works",
+        "help_title": "How beat50 works",
         "help_prev": "Back",
         "help_next": "Next",
         "help_done": "Got it",
         "help_s1_t": "50 new releases, for your taste",
-        "help_s1_b": "beatcrate reads your Beatport purchases and playlists and picks 50 new tracks you are likely to want.",
+        "help_s1_b": "beat50 reads your Beatport purchases and playlists and picks 50 new tracks you are likely to want.",
         "help_s2_t": "Permission and sign in",
-        "help_s2_b": "The first time, beatcrate asks permission to read your Beatport session and opens a window to sign in. Nothing is shared.",
+        "help_s2_b": "The first time, beat50 asks permission to read your Beatport session and opens a window to sign in. Nothing is shared.",
         "help_s3_t": "Make a selection",
         "help_s3_b": "Choose a period and click New selection. A card shows how it goes, step by step; in about a minute you get 50 tracks, each with the reason it was picked.",
         "help_s4_t": "How it picks",
@@ -69,7 +69,7 @@ TEXTS = {
         "login": "Sign in",
         "login_hint": "Sign in to Beatport in the window that opened. It closes by itself once you are in.",
         "playlists_here": "Playlists from this selection",
-        "empty": "Click “New selection”: beatcrate reads your Beatport purchases and playlists and picks 50 new "
+        "empty": "Click “New selection”: beat50 reads your Beatport purchases and playlists and picks 50 new "
                  "releases of the period, each with its reason.",
         "empty_title": "No selections yet",
         "step_consent": "Allow reading your session",
@@ -99,7 +99,7 @@ TEXTS = {
         "reason_genre": "genre {v}",
         "reason_bpm": "{v} BPM",
         "reason_key": "{v}",
-        "js_closed": "beatcrate has closed. Open it again from Applications.",
+        "js_closed": "beat50 has closed. Open it again from Applications.",
         "js_prompt": "Name of the private Beatport playlist:",
         "js_error": "Error {status}",
         "playlist_created": "“{name}” created on Beatport (private) with {n} tracks.",
@@ -128,7 +128,7 @@ TEXTS = {
         "remove_track": "Remove from the playlist",
         "add_track": "Add to the playlist",
         "edit_hint": "Mark what to remove or add, then save. Nothing changes on Beatport until you save.",
-        "error_busy": "beatcrate is already busy. Try again in a moment.",
+        "error_busy": "beat50 is already busy. Try again in a moment.",
         "error_session_expired": "Your Beatport session has expired: click “Sign in”.",
         "error_name_required": "The playlist needs a name.",
         "error_name_too_long": "The name cannot be longer than {max} characters.",
@@ -146,22 +146,22 @@ TEXTS = {
         "error_bad_request": "Invalid request.",
         "error_login_already": "A sign-in is already in progress.",
         "error_not_found": "Not found.",
-        "error_consent_required": "beatcrate needs your permission to read your Beatport session.",
-        "error_interrupted": "beatcrate closed before it finished.",
+        "error_consent_required": "beat50 needs your permission to read your Beatport session.",
+        "error_interrupted": "beat50 closed before it finished.",
         "error_trash_failed": "The selection could not be moved to the Trash: {detail}",
         "consent_title": "Before reading your Beatport session",
-        "consent_window": "beatcrate opens Beatport in a window of its own, hidden except when you sign in, "
+        "consent_window": "beat50 opens Beatport in a window of its own, hidden except when you sign in, "
                           "and closes it when done.",
         "consent_reads": "It only reads your Beatport session (the access token), to read your purchases and "
                          "playlists, create private playlists and edit the ones it created.",
         "consent_never": "It never buys, never deletes a playlist, never touches the ones it did not create, "
                          "never makes one public, and sends nothing anywhere except to Beatport.",
-        "consent_where": "Your session stays on this Mac, in beatcrate's own data: it is not shared with Safari "
+        "consent_where": "Your session stays on this Mac, in beat50's own data: it is not shared with Safari "
                          "or your other browsers.",
         "consent_ok": "Accept and continue",
         "consent_cancel": "Cancel",
         "consent_revoke": "Withdraw permission",
-        "quit_busy": "beatcrate is making a selection. If you quit now, it stops. Quit anyway?",
+        "quit_busy": "beat50 is making a selection. If you quit now, it stops. Quit anyway?",
         "quit": "Quit",
     },
     "es": {
@@ -179,14 +179,14 @@ TEXTS = {
         "new_selection": "Nueva selección",
         "check_session": "Comprobar",
         "help_open": "Ayuda",
-        "help_title": "Cómo funciona beatcrate",
+        "help_title": "Cómo funciona beat50",
         "help_prev": "Atrás",
         "help_next": "Siguiente",
         "help_done": "Entendido",
         "help_s1_t": "50 novedades, a tu gusto",
-        "help_s1_b": "beatcrate lee tus compras y playlists de Beatport y elige 50 novedades que probablemente te interesen.",
+        "help_s1_b": "beat50 lee tus compras y playlists de Beatport y elige 50 novedades que probablemente te interesen.",
         "help_s2_t": "Permiso e inicio de sesión",
-        "help_s2_b": "La primera vez, beatcrate te pide permiso para leer tu sesión de Beatport y abre una ventana para iniciar sesión. No se comparte nada.",
+        "help_s2_b": "La primera vez, beat50 te pide permiso para leer tu sesión de Beatport y abre una ventana para iniciar sesión. No se comparte nada.",
         "help_s3_t": "Haz una selección",
         "help_s3_b": "Elige un periodo y pulsa Nueva selección. Una tarjeta te muestra el avance paso a paso; en aproximadamente un minuto tienes 50 temas, cada uno con su motivo.",
         "help_s4_t": "Cómo elige",
@@ -215,7 +215,7 @@ TEXTS = {
         "login": "Iniciar sesión",
         "login_hint": "Inicia sesión en Beatport en la ventana que se ha abierto. Se cierra sola cuando entras.",
         "playlists_here": "Playlists de esta selección",
-        "empty": "Pulsa «Nueva selección»: beatcrate lee tus compras y playlists de Beatport y elige 50 novedades "
+        "empty": "Pulsa «Nueva selección»: beat50 lee tus compras y playlists de Beatport y elige 50 novedades "
                  "del periodo, cada una con su motivo.",
         "empty_title": "Aún no hay ninguna selección",
         "step_consent": "Permiso para leer la sesión",
@@ -245,7 +245,7 @@ TEXTS = {
         "reason_genre": "género {v}",
         "reason_bpm": "{v} BPM",
         "reason_key": "{v}",
-        "js_closed": "beatcrate se ha cerrado. Vuelve a abrirla desde Aplicaciones.",
+        "js_closed": "beat50 se ha cerrado. Vuelve a abrirla desde Aplicaciones.",
         "js_prompt": "Nombre de la playlist privada en Beatport:",
         "js_error": "Error {status}",
         "playlist_created": "«{name}» creada en Beatport (privada) con {n} tracks.",
@@ -274,7 +274,7 @@ TEXTS = {
         "remove_track": "Quitar de la playlist",
         "add_track": "Añadir a la playlist",
         "edit_hint": "Marca lo que quieras quitar o añadir y guarda. Nada cambia en Beatport hasta que guardes.",
-        "error_busy": "beatcrate ya está trabajando. Prueba de nuevo en un momento.",
+        "error_busy": "beat50 ya está trabajando. Prueba de nuevo en un momento.",
         "error_session_expired": "Tu sesión de Beatport ha caducado: pulsa «Iniciar sesión».",
         "error_name_required": "La playlist necesita un nombre.",
         "error_name_too_long": "El nombre no puede pasar de {max} caracteres.",
@@ -293,21 +293,21 @@ TEXTS = {
         "error_login_already": "Ya hay un inicio de sesión en curso.",
         "error_not_found": "No existe.",
         "error_consent_required": "Falta tu permiso para leer tu sesión de Beatport.",
-        "error_interrupted": "beatcrate se cerró antes de terminar.",
+        "error_interrupted": "beat50 se cerró antes de terminar.",
         "error_trash_failed": "No se pudo mover la selección a la Papelera: {detail}",
         "consent_title": "Antes de leer tu sesión de Beatport",
-        "consent_window": "beatcrate abre Beatport en una ventana propia, oculta salvo al iniciar sesión, "
+        "consent_window": "beat50 abre Beatport en una ventana propia, oculta salvo al iniciar sesión, "
                           "y la cierra al terminar.",
         "consent_reads": "Solo lee tu sesión de Beatport (el token de acceso), para leer tus compras y "
                          "playlists, crear playlists privadas y editar las que creó.",
         "consent_never": "Nunca compra, nunca borra una playlist, no toca las que no creó, nunca hace pública "
                          "ninguna y no envía nada a ningún sitio que no sea Beatport.",
-        "consent_where": "Tu sesión se queda en este Mac, en los datos propios de beatcrate: no se comparte con "
+        "consent_where": "Tu sesión se queda en este Mac, en los datos propios de beat50: no se comparte con "
                          "Safari ni con tus otros navegadores.",
         "consent_ok": "Aceptar y continuar",
         "consent_cancel": "Cancelar",
         "consent_revoke": "Retirar permiso",
-        "quit_busy": "beatcrate está haciendo una selección. Si sales ahora, se detendrá. ¿Salir igualmente?",
+        "quit_busy": "beat50 está haciendo una selección. Si sales ahora, se detendrá. ¿Salir igualmente?",
         "quit": "Salir",
     },
 }

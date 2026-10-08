@@ -1,18 +1,18 @@
 """The user's permission for the app to read their Beatport session in a window of its own.
 
 Asked once in the page and kept in consent.json until the user withdraws it. The command line does not
-ask: running `beatcrate login` or `generate` is already a deliberate choice.
+ask: running `beat50 login` or `generate` is already a deliberate choice.
 """
 import json
 import os
 import tempfile
 
 from .. import config
-from ..errors import BeatcrateError
+from ..errors import Beat50Error
 from . import state
 
 # Raised whenever the notice says something new, so a consent given to older wording is asked again.
-# 2: beatcrate also edits the playlists it created.
+# 2: beat50 also edits the playlists it created.
 VERSION = 2
 
 
@@ -38,4 +38,4 @@ def revoke():
 
 def require():
     if not granted():
-        raise BeatcrateError("consent_required", "beatcrate needs your permission to read your Beatport session.")
+        raise Beat50Error("consent_required", "beat50 needs your permission to read your Beatport session.")

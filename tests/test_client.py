@@ -4,9 +4,9 @@ import urllib.error
 
 import pytest
 
-from beatcrate import client
-from beatcrate.client import Client, TokenExpired
-from beatcrate.errors import BeatcrateError
+from beat50 import client
+from beat50.client import Client, TokenExpired
+from beat50.errors import Beat50Error
 
 
 class FakeAPI:
@@ -59,7 +59,7 @@ def test_fetch_turns_a_401_into_token_expired(monkeypatch):
     with pytest.raises(TokenExpired) as err:
         Client("tok").get("/my/account/")
     assert err.value.code == "session_expired"
-    assert isinstance(err.value, BeatcrateError)
+    assert isinstance(err.value, Beat50Error)
 
 
 def test_fetch_retries_5xx_errors(monkeypatch):

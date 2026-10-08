@@ -3,7 +3,7 @@ from datetime import date
 
 import pytest
 
-from beatcrate.app import views
+from beat50.app import views
 
 TRACK = {"id": 1, "name": "Doublespeak ", "mix_name": "Original Mix", "artists": ["Commodore 69"],
          "label": "Urban Kickz Recordings", "genre": "Techno (Raw / Deep / Hypnotic)", "bpm": 140,
@@ -40,7 +40,7 @@ def test_the_row_shows_data_preview_and_purchase():
     assert 'content="TOKEN123"' in html
     assert "September 2026" in html and "628 candidates" in html
     assert 'href="/crate/2026-08"' in html
-    assert 'class="buy"' not in html and "www.beatport.com/track" not in html  # beatcrate is about playlists
+    assert 'class="buy"' not in html and "www.beatport.com/track" not in html  # beat50 is about playlists
 
 
 def test_the_row_in_spanish():
@@ -299,8 +299,8 @@ def test_the_page_language_and_switch():
 
 def test_the_page_embeds_the_texts_for_the_script_in_its_language():
     assert '<script id="texts" type="application/json">' in _page()
-    assert "beatcrate has closed" in _page()
-    assert "beatcrate se ha cerrado" in _page(lang="es")
+    assert "beat50 has closed" in _page()
+    assert "beat50 se ha cerrado" in _page(lang="es")
 
 
 def test_without_consent_the_page_carries_the_session_notice():
@@ -425,7 +425,7 @@ def test_the_edit_page_in_spanish():
     assert "Añadir de la selección" in html and 'aria-label="Quitar de la playlist"' in html
 
 
-def test_the_notice_says_beatcrate_edits_only_its_own_playlists():
+def test_the_notice_says_beat50_edits_only_its_own_playlists():
     html = _page(state={"consent": False})
     assert "edit the ones it created" in html
     assert "never deletes a playlist, never touches the ones it did not create" in html
@@ -481,7 +481,7 @@ def test_the_help_slides_are_on_the_page_and_show_on_first_launch():
     first = _page(state={})  # no help_seen yet
     assert 'data-help="1"' in first and 'id="help"' in first and "data-help-open" in first
     assert first.count('class="help-slide"') == 7
-    assert 'aria-label="How beatcrate works"' in first
+    assert 'aria-label="How beat50 works"' in first
     assert "50 new releases, for your taste" in first and "Create a private playlist" in first
     assert 'data-help="0"' in _page(state={"help_seen": True})
 
@@ -494,7 +494,7 @@ def test_the_help_explains_how_it_picks_with_the_real_settings():
 
 
 def test_the_action_messages_reach_the_js():
-    from beatcrate.app import i18n
+    from beat50.app import i18n
     for lang, creating, checking in (("en", "Creating the playlist on Beatport…", "Checking the Beatport session…"),
                                      ("es", "Creando la playlist en Beatport…", "Comprobando la sesión de Beatport…")):
         texts = i18n.js_texts(lang)
@@ -598,7 +598,7 @@ def test_the_picking_card_starts_the_bar_at_its_phase():
 
 def test_help_opens_from_a_button_beside_the_app_name():
     html = _page()
-    assert ('<div class="brand">' in html and '<span>beatcrate</span><button class="brand-help" data-help-open '
+    assert ('<div class="brand">' in html and '<span>beat50</span><button class="brand-help" data-help-open '
             'aria-label="Help" title="Help"><svg class="icon" aria-hidden="true"><use href="#i-help"></use></svg>'
             '</button></div>') in html
     assert html.count("data-help-open") == 1  # no longer in the sidebar's foot

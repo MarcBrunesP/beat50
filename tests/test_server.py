@@ -6,9 +6,9 @@ from datetime import date, timedelta
 
 import pytest
 
-from beatcrate import auth, playlists
-from beatcrate.app import consent, jobs, marks, server, state
-from beatcrate.errors import BeatcrateError
+from beat50 import auth, playlists
+from beat50.app import consent, jobs, marks, server, state
+from beat50.errors import Beat50Error
 
 
 @pytest.fixture
@@ -30,7 +30,7 @@ def _request(app, method, path, token=None, host=None, body=None, raw=None, head
     c = http.client.HTTPConnection("127.0.0.1", port, timeout=5)
     sent = {"Host": host or f"127.0.0.1:{port}"}
     if token is not None:
-        sent["X-Beatcrate-Token"] = token
+        sent["X-Beat50-Token"] = token
     sent.update(headers or {})
     data = raw if raw is not None else (json.dumps(body).encode() if body is not None else None)
     c.request(method, path, body=data, headers=sent)
@@ -49,7 +49,7 @@ def _crate(data_dir, selection, **kw):
 
 def test_health(app):
     code, body, _ = _request(app, "GET", "/api/health")
-    assert code == 200 and json.loads(body) == {"app": "beatcrate"}
+    assert code == 200 and json.loads(body) == {"app": "beat50"}
 
 
 def test_a_foreign_host_gets_403(app):
@@ -153,7 +153,7 @@ def test_generate_with_the_lock_held_gets_409(app):
     with state.lock():
         code, body, _ = _request(app, "POST", "/api/generate", token=app.token, body={})
     assert code == 409
-    assert json.loads(body)["error"] == "beatcrate is already busy. Try again in a moment."
+    assert json.loads(body)["error"] == "beat50 is already busy. Try again in a moment."
 
 
 def test_generate_busy_is_translated(app, monkeypatch):
@@ -163,12 +163,12 @@ def test_generate_busy_is_translated(app, monkeypatch):
     code, body, _ = _request(app, "POST", "/api/generate", token=app.token, body={},
                              headers={"Accept-Language": "es"})
     assert code == 409
-    assert json.loads(body)["error"] == "beatcrate ya está trabajando. Prueba de nuevo en un momento."
+    assert json.loads(body)["error"] == "beat50 ya está trabajando. Prueba de nuevo en un momento."
 
 
 def test_login_start_with_a_login_in_progress_gets_409(app, monkeypatch):
     def already():
-        raise BeatcrateError("login_already", "A sign-in is already in progress.")
+        raise Beat50Error("login_already", "A sign-in is already in progress.")
     monkeypatch.setattr(server.jobs, "login_start", already)
     code, body, _ = _request(app, "POST", "/api/login/start", token=app.token, body={})
     assert code == 409
@@ -234,7 +234,7 @@ def test_run_app_serves_while_its_window_is_open_and_stops_when_it_closes(data_d
     def show_app(url, busy, texts):
         seen["url"], seen["busy"] = url, busy
         with urllib.request.urlopen(f"{url}/api/health", timeout=2) as r:
-            seen["health"] = json.loads(r.read()) == {"app": "beatcrate"}
+            seen["health"] = json.loads(r.read()) == {"app": "beat50"}
         seen["texts"] = texts()
     monkeypatch.setattr(server.webkit, "show_app", show_app)
     monkeypatch.setattr(server.jobs, "abort_login", lambda: aborted.append(1))
@@ -250,11 +250,11 @@ def test_run_app_serves_while_its_window_is_open_and_stops_when_it_closes(data_d
 
 def test_quitting_while_a_selection_runs_is_asked_in_the_users_language():
     texts = server._quit_texts("es")
-    assert texts == {"message": "beatcrate está haciendo una selección. Si sales ahora, se detendrá. ¿Salir igualmente?",
+    assert texts == {"message": "beat50 está haciendo una selección. Si sales ahora, se detendrá. ¿Salir igualmente?",
                      "quit": "Salir", "cancel": "Cancelar"}
 
 
-def test_already_open_recognises_beatcrate(app):
+def test_already_open_recognises_beat50(app):
     port = app.server_address[1]
     assert server._already_open(f"http://127.0.0.1:{port}") is True
 
@@ -342,7 +342,7 @@ def test_an_error_with_an_unknown_code_keeps_its_own_text(app, data_dir, monkeyp
     _crate_ids(data_dir, "2026-09", [1])
 
     def fails(selection, n, genres=None):
-        raise BeatcrateError("no_such_code", "Plain English text")
+        raise Beat50Error("no_such_code", "Plain English text")
     monkeypatch.setattr(server.jobs, "create_playlist", fails)
     code, body, _ = _request(app, "POST", "/api/playlist/2026-09", token=app.token, body={"name": "x"})
     assert code == 400 and json.loads(body)["error"] == "Plain English text"
@@ -444,7 +444,7 @@ def test_period_without_dates_means_the_default_window():
     ({"since": "2026-09-01", "until": "2999-01-01"}, "period_future"),
 ])
 def test_period_error_codes(body, code):
-    with pytest.raises(BeatcrateError) as err:
+    with pytest.raises(Beat50Error) as err:
         server._period(body)
     assert err.value.code == code
 
@@ -506,7 +506,7 @@ def test_a_created_playlist_opens_in_its_own_page(app, data_dir):
 
 @pytest.mark.parametrize("path", ["/crate/2026-09/playlist/99", "/crate/2026-09/playlist/x9",
                                   "/crate/2026-08/playlist/9"])
-def test_only_playlists_beatcrate_created_open(app, data_dir, path):
+def test_only_playlists_beat50_created_open(app, data_dir, path):
     _edit_setup(data_dir)
     assert _request(app, "GET", path)[0] == 404
 
@@ -671,7 +671,7 @@ def test_a_trash_failure_is_translated(app, data_dir, monkeypatch):
     _crate(data_dir, "20261001_120000")
 
     def refuse(path):
-        raise BeatcrateError("trash_failed", "Could not move it to the Trash: no", detail="no")
+        raise Beat50Error("trash_failed", "Could not move it to the Trash: no", detail="no")
     monkeypatch.setattr(server.trash, "move", refuse)
     code, body, _ = _request(app, "POST", "/api/selection/20261001_120000/delete", token=app.token, body={},
                              headers={"Accept-Language": "es"})
@@ -695,7 +695,7 @@ def test_invalid_genre_preferences_get_400(app, body):
     assert "genre_prefs" not in state.read()
 
 
-def test_genre_preferences_wait_while_beatcrate_is_busy(app):
+def test_genre_preferences_wait_while_beat50_is_busy(app):
     with state.lock():
         assert _request(app, "POST", "/api/genres", token=app.token, body={"levels": {"5": 2}})[0] == 409
 

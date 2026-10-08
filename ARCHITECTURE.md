@@ -1,10 +1,16 @@
-# beatcrate architecture
+---
+title: ARCHITECTURE
+type: note
+permalink: marc-vps/beat50/architecture
+---
 
-How beatcrate works today. For using it, see [README.md](README.md).
+# beat50 architecture
+
+How beat50 works today. For using it, see [README.md](README.md).
 
 ## Overview
 
-beatcrate is a single-user Mac app. It reads the user's Beatport purchases and playlists, builds a taste
+beat50 is a single-user Mac app. It reads the user's Beatport purchases and playlists, builds a taste
 profile, looks for new releases in a period, and picks 50 of them. The user browses each selection in the
 app's window (a local page served on 127.0.0.1), stars tracks and turns them into private Beatport
 playlists.
@@ -17,14 +23,14 @@ a selection is made when the user asks for it.
 | Module | Responsibility |
 |---|---|
 | `config.py` | Paths and tunable constants |
-| `webkit.py` | beatcrate's windows (WebKit through pywebview): the app's own and Beatport's |
+| `webkit.py` | beat50's windows (WebKit through pywebview): the app's own and Beatport's |
 | `auth.py` | Gets a Beatport user token from a Beatport window |
 | `client.py` | Beatport API v4 client: paging, retries, token renewal, the single `post()` |
 | `ingest.py` | Library: playlists + purchases → `library.json` |
 | `profile.py` | Taste profile: weighted labels, artists, genres, BPM and key → `profile.json`; `apply_prefs` applies the Genres choices |
 | `discover.py` | Candidates published in the period → `candidates.json` |
 | `rank.py` | Scoring, exclusions, genre quotas, diversity → `crates/<code>.json` |
-| `playlists.py` | Creates private playlists and edits them: beatcrate's only writes to Beatport |
+| `playlists.py` | Creates private playlists and edits them: beat50's only writes to Beatport |
 | `errors.py` | Errors with a code, so the app can show them translated |
 | `cli.py` | `login`, `ingest`, `generate`, `app` |
 | `app/server.py` | Local HTTP server: routes, security, lifecycle |
@@ -55,7 +61,7 @@ A script cannot get one, and Beatport does not let you sign in inside an automat
 - After hours without use, NextAuth needs a silent re-login that only happens when a page loads. If no
   valid token shows up within 15 s, `auth.py` reloads the store page and keeps polling for 30 s more.
   Each read gives up after 10 s, so a window that never answers cannot block a job. If the window closes
-  from outside (beatcrate quitting), the job ends as interrupted and the session is not marked expired.
+  from outside (beat50 quitting), the job ends as interrupted and the session is not marked expired.
 - A token counts as valid only if `/my/account/` answers 200.
 - Cocoa needs its event loop on the main thread: the app's window owns it, and the command line runs its
   work inside `webkit.run`. Jobs open, read and close windows from other threads.
@@ -113,7 +119,9 @@ Base `https://api.beatport.com/v4`, header `Authorization: Bearer <token>`.
 
 ## Data
 
-All user data lives in `~/Library/Application Support/beatcrate/` (or `$BEATCRATE_DATA`):
+All user data lives in `~/Library/Application Support/beatcrate/` (or `$BEAT50_DATA`). The folder, the bundle id
+(`com.beatcrate.app`, under which macOS keeps the Beatport session) and the `beatcrate_lang` cookie keep the app's
+name before 3.0, so renaming it to beat50 did not lose any data or sign anyone out:
 
 | Path | Content |
 |---|---|
@@ -130,14 +138,14 @@ clicks never lose a star.
 
 Deleting a selection (`POST /api/selection/<code>/delete`) moves `crates/<code>.json` and, if any,
 `marks/<code>.json` to the Trash (`NSFileManager`, so Finder can put them back). It is local only (no consent),
-waits while beatcrate is busy (409) and leaves the playlists on Beatport untouched. The page then goes home if it
+waits while beat50 is busy (409) and leaves the playlists on Beatport untouched. The page then goes home if it
 was showing that selection, or reloads. Since earlier selections are
 read from `crates/`, its tracks may be picked again.
 
 ## The local app
 
 - `app/server.py` listens on `127.0.0.1:8765` only. Requests with any other `Host` get 403 (DNS
-  rebinding). Every POST needs the `X-Beatcrate-Token` header with a random token created at startup and
+  rebinding). Every POST needs the `X-Beat50-Token` header with a random token created at startup and
   embedded in the page, so no other website can trigger actions.
 - Routes: `GET /`, `/crate/<code>`, `/static/*`, `/api/state`, `/api/health`; `POST /api/consent` (`on`),
   `/api/generate` (`since`, `until`), `/api/session/check`, `/api/login/start`, `/api/star/<code>/<track>`
@@ -147,7 +155,7 @@ read from `crates/`, its tracks may be picked again.
   Also `GET /crate/<code>/playlist/<id>`, the playlist editor.
 - Consent: the routes that read the session (`generate`, `session/check`, `login/start`, `playlist/*`)
   answer 409 `consent_required` until the user accepts the notice in the page, which explains the Beatport
-  window, what is read, what beatcrate never does and where the session is kept. The page asks before the
+  window, what is read, what beat50 never does and where the session is kept. The page asks before the
   first such action and then carries it out; **Withdraw permission** deletes `consent.json`, not the
   session. A `consent.json` from version 1.1 (`"chrome": true`) is asked again. The command line does not
   ask.
@@ -169,7 +177,7 @@ read from `crates/`, its tracks may be picked again.
   its tokens, type scale and components are described in [STYLE.md](STYLE.md).
 - Language: the `beatcrate_lang` cookie (the ES / EN switch) or else the Mac's language (sent by the window as `Accept-Language`). Errors from
   the core carry a code that `app/i18n.py` turns into the user's language.
-- Playlists are always private: if Beatport returns one that is not `is_public: false`, beatcrate stops
+- Playlists are always private: if Beatport returns one that is not `is_public: false`, beat50 stops
   before adding tracks and says so. Once a playlist exists it is always recorded, even if adding or
   counting tracks failed, so a retry does not duplicate it.
 - Editing (`/crate/<code>/playlist/<id>`, saved with `POST /api/playlist/<code>/<id>` `{name, remove, add}`):
@@ -187,10 +195,10 @@ read from `crates/`, its tracks may be picked again.
 
 ## Packaging
 
-- `beatcrate.spec` (PyInstaller) builds `beatcrate.app`, a regular app with a Dock icon, with Python and
+- `beat50.spec` (PyInstaller) builds `beat50.app`, a regular app with a Dock icon, with Python and
   pywebview inside and the app icon from `assets/`. The entry point
-  (`packaging/beatcrate_app.py`) runs `beatcrate app` on a double-click and sends output to
-  `~/Library/Logs/beatcrate.log`.
+  (`packaging/beat50_app.py`) runs `beat50 app` on a double-click and sends output to
+  `~/Library/Logs/beat50.log`.
 - `scripts/build_dmg.sh` puts the app, a link to Applications and `FIRST-OPEN.txt` in a compressed DMG.
 - The app is built for Apple silicon and is not signed with an Apple developer account.
 

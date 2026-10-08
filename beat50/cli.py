@@ -1,4 +1,4 @@
-"""beatcrate's command line."""
+"""beat50's command line."""
 import argparse
 import json
 import sys
@@ -51,10 +51,10 @@ def cmd_app(_):
 
 
 def main(argv=None):
-    p = argparse.ArgumentParser(prog="beatcrate", description="Beatport new releases picked for your taste")
+    p = argparse.ArgumentParser(prog="beat50", description="Beatport new releases picked for your taste")
     subs = p.add_subparsers(dest="cmd")
     for name, fn, help_text in (
-        ("login", cmd_login, "sign in to Beatport in a beatcrate window"),
+        ("login", cmd_login, "sign in to Beatport in a beat50 window"),
         ("ingest", cmd_ingest, "read playlists and purchases and build the profile"),
         ("generate", cmd_generate, "make a new selection of the last 31 days"),
         ("app", cmd_app, "open the app in its window"),

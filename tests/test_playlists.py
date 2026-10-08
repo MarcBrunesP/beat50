@@ -3,8 +3,8 @@ import urllib.error
 
 import pytest
 
-from beatcrate import playlists
-from beatcrate.errors import BeatcrateError
+from beat50 import playlists
+from beat50.errors import Beat50Error
 
 
 class FakeClient:
@@ -131,8 +131,8 @@ def test_creating_without_a_response_says_to_check():
     assert "Check beatport.com" in str(err.value)
 
 
-def test_playlist_errors_are_beatcrate_errors():
-    assert issubclass(playlists.PlaylistError, BeatcrateError)
+def test_playlist_errors_are_beat50_errors():
+    assert issubclass(playlists.PlaylistError, Beat50Error)
 
 
 def _http(code):
@@ -214,14 +214,14 @@ def test_edit_reads_the_real_playlist_first():
 
 
 def test_edit_of_a_playlist_gone_from_beatport():
-    with pytest.raises(BeatcrateError) as e:
+    with pytest.raises(Beat50Error) as e:
         playlists.edit_playlist(FakePlaylist([1], gone=True), 7, remove=[1])
     assert e.value.code == "playlist_gone"
 
 
 def test_edit_checks_the_name_before_touching_beatport():
     pl = FakePlaylist([1])
-    with pytest.raises(BeatcrateError) as e:
+    with pytest.raises(Beat50Error) as e:
         playlists.edit_playlist(pl, 7, name="   ")
     assert e.value.code == "name_required" and pl.calls == []
 
@@ -248,13 +248,13 @@ def test_edit_that_cannot_read_the_playlist_says_so_in_the_users_terms():
     class Down(FakePlaylist):
         def paged(self, path, **kw):
             raise _http(502)
-    with pytest.raises(BeatcrateError) as e:
+    with pytest.raises(Beat50Error) as e:
         playlists.edit_playlist(Down([1]), 7, remove=[1])
     assert e.value.code == "edit_failed"
 
 
 def test_an_expired_session_while_editing_is_not_hidden_as_a_warning():
-    from beatcrate.client import TokenExpired
+    from beat50.client import TokenExpired
 
     class Expired(FakePlaylist):
         def patch(self, path, body):
@@ -272,7 +272,7 @@ def test_read_playlist_gives_its_name_tracks_and_their_titles():
 
 
 def test_read_playlist_of_one_deleted_on_beatport():
-    with pytest.raises(BeatcrateError) as e:
+    with pytest.raises(Beat50Error) as e:
         playlists.read_playlist(FakePlaylist([1], gone=True), 7)
     assert e.value.code == "playlist_gone"
 

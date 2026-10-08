@@ -1,4 +1,4 @@
-// beatcrate/app/static/app.js — actions, consent, progress, genre filter, stars, playlist editor and player.
+// beat50/app/static/app.js — actions, consent, progress, genre filter, stars, playlist editor and player.
 const token = document.querySelector('meta[name="bc-token"]').content;
 const TEXTS = JSON.parse(document.getElementById('texts').textContent);
 
@@ -8,7 +8,7 @@ function text(key, params) {
 
 function post(path, body) {
   return fetch(path, {method: 'POST', body: JSON.stringify(body || {}),
-                      headers: {'X-Beatcrate-Token': token, 'Content-Type': 'application/json'}});
+                      headers: {'X-Beat50-Token': token, 'Content-Type': 'application/json'}});
 }
 
 // If the server is gone (the app closed), say so instead of leaving dead buttons.

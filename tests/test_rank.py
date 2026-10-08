@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from beatcrate import rank
+from beat50 import rank
 
 PROFILE = {
     "labels": [{"id": 100, "name": "Afterlife", "weight": 1.0, "n": 12},

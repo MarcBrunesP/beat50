@@ -5,9 +5,9 @@ from pathlib import Path
 
 import pytest
 
-from beatcrate import auth, playlists
-from beatcrate.app import jobs, marks, state
-from beatcrate.errors import BeatcrateError
+from beat50 import auth, playlists
+from beat50.app import jobs, marks, state
+from beat50.errors import Beat50Error
 
 FIXTURES = Path(__file__).parent / "fixtures"
 TODAY = date(2026, 9, 30)
@@ -81,7 +81,7 @@ def test_an_expired_session_is_kept_in_the_state_and_leaves_the_crate_alone(data
     previous.write_text(json.dumps({"tracks": [{"id": 1}]}))
 
     def no_session():
-        raise auth.SessionExpired("session_expired", "No valid user session in beatcrate.")
+        raise auth.SessionExpired("session_expired", "No valid user session in beat50.")
     monkeypatch.setattr(jobs, "_client", no_session)
     with pytest.raises(auth.SessionExpired):
         jobs.generate("app", today=TODAY)
@@ -97,9 +97,9 @@ def test_an_expired_session_is_kept_in_the_state_and_leaves_the_crate_alone(data
 
 def test_a_failure_keeps_its_code_and_params_in_the_state(data_dir, monkeypatch):
     def failing():
-        raise BeatcrateError("some_code", "It broke.", name="x")
+        raise Beat50Error("some_code", "It broke.", name="x")
     monkeypatch.setattr(jobs, "_client", failing)
-    with pytest.raises(BeatcrateError):
+    with pytest.raises(Beat50Error):
         jobs.generate("app", today=TODAY)
     last = state.read()["last_run"]
     assert last["ok"] is False
@@ -221,7 +221,7 @@ def test_closing_the_login_window_changes_nothing(data_dir, login_window):
 def test_only_one_login_at_a_time(data_dir, login_window):
     finish, _ = login_window
     thread = jobs.login_start()
-    with pytest.raises(BeatcrateError) as e:
+    with pytest.raises(Beat50Error) as e:
         jobs.login_start()
     assert e.value.code == "login_already"
     finish(None)
@@ -377,7 +377,7 @@ def test_an_interrupted_check_does_not_mark_the_session_expired(data_dir, monkey
     state.update(session={"status": "active"})
 
     def interrupted():
-        raise auth.Interrupted("interrupted", "beatcrate closed before it finished.")
+        raise auth.Interrupted("interrupted", "beat50 closed before it finished.")
     monkeypatch.setattr(jobs.auth, "get_token", interrupted)
     with pytest.raises(auth.Interrupted):
         jobs.check_session()
@@ -429,7 +429,7 @@ def test_edit_playlist_keeps_the_record_when_beatport_could_not_be_reread(data_d
 
 
 @pytest.mark.parametrize("pid, name, remove, add, code", [
-    (99, "x", [], [3], "not_found"),            # not a playlist beatcrate created
+    (99, "x", [], [3], "not_found"),            # not a playlist beat50 created
     (9, "Old", [], [], "no_changes"),
     (9, "", [2], [], "name_required"),
     (9, "Old", [], [77], "not_in_selection"),   # only tracks of this selection can be added
@@ -438,13 +438,13 @@ def test_edit_playlist_checks_everything_before_reading_the_session(data_dir, mo
                                                                      code):
     _with_playlist(data_dir)
     monkeypatch.setattr(jobs, "_client", lambda: pytest.fail("must not read the session"))
-    with pytest.raises(BeatcrateError) as e:
+    with pytest.raises(Beat50Error) as e:
         jobs.edit_playlist(SELECTION, pid, name, remove=remove, add=add)
     assert e.value.code == code
 
 
 def test_edit_playlist_with_an_expired_session_marks_it_expired(data_dir, monkeypatch):
-    from beatcrate.client import TokenExpired
+    from beat50.client import TokenExpired
     _with_playlist(data_dir)
     state.update(session={"status": "active"})
 
@@ -508,7 +508,7 @@ def test_saving_a_playlist_deleted_on_beatport_marks_it_gone(data_dir, monkeypat
 
 def test_forget_only_drops_playlists_gone_from_beatport(data_dir):
     _with_playlist(data_dir)
-    with pytest.raises(BeatcrateError) as e:
+    with pytest.raises(Beat50Error) as e:
         jobs.forget_playlist(SELECTION, 9)
     assert e.value.code == "not_gone"
     marks.update_playlist(SELECTION, 9, gone=True)

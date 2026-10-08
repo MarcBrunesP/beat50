@@ -1,4 +1,10 @@
-# beatcrate style
+---
+title: STYLE
+type: note
+permalink: marc-vps/beat50/style
+---
+
+# beat50 style
 
 The look of the app's page, as `app/static/app.css` implements it. [ARCHITECTURE.md](ARCHITECTURE.md) says how the app works;
 this file says how it looks and which rules a new element follows. Every value below is the one in the stylesheet:
@@ -101,7 +107,7 @@ second one in `--star` and, between them when the slide is a step, a 26 px `--fa
 - **Sidebar rows** (`.sel`, `.pl`): 32 px, radius 7, name left and count right; hover `--line` except on the selected
   row, which stays `--accent` with white text. A deleted playlist is struck through (the name only, not its tag).
   Each selection row (`.sel-row`) has a 24 px bin (`.sel-del`) that replaces the count on hover or keyboard focus;
-  it turns red on a `--chip` tile when pointed at, and is hidden while beatcrate is busy.
+  it turns red on a `--chip` tile when pointed at, and is hidden while beat50 is busy.
 - **Session foot**: dot-style icon (green / red / grey) + text + a 24 px "Check" button; the sign-in button is red and
   full width; language switch is a segmented control; "Withdraw permission" is an underlined link.
 - **Toolbar**: title + one-line detail on the left (on a selection, a 30 px bordered bin button beside it that

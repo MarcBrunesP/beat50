@@ -1,6 +1,6 @@
 import threading
 
-from beatcrate.app import marks
+from beat50.app import marks
 
 
 def test_without_a_file_it_returns_empty(data_dir):
@@ -47,7 +47,7 @@ def test_update_playlist_changes_only_that_playlist(data_dir):
         {"id": 2, "name": "B2", "track_ids": [2, 3], "created_at": "t", "edited_at": "t2"}]
 
 
-def test_find_playlist_only_finds_beatcrates_own(data_dir):
+def test_find_playlist_only_finds_beat50s_own(data_dir):
     marks.add_playlist("2026-09", {"id": 1, "name": "A", "track_ids": [1], "created_at": "t"})
     assert marks.find_playlist("2026-09", 1)["name"] == "A"
     assert marks.find_playlist("2026-09", 99) is None

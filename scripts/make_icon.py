@@ -1,4 +1,4 @@
-"""Generates assets/beatcrate.png and assets/beatcrate.icns: the "groove" icon, a close-up of a record's grooves.
+"""Generates assets/beat50.png and assets/beat50.icns: the "groove" icon, a close-up of a record's grooves.
 
 Drawn with the standard library on the macOS icon grid (an 824 px rounded square inside 1024), scaled with sips
 and iconutil. Run it once; the results are committed.
@@ -76,9 +76,9 @@ def _png(path):
 
 def main():
     with tempfile.TemporaryDirectory() as tmp:
-        base = Path(tmp) / "beatcrate.png"
+        base = Path(tmp) / "beat50.png"
         _png(base)
-        iconset = Path(tmp) / "beatcrate.iconset"
+        iconset = Path(tmp) / "beat50.iconset"
         iconset.mkdir()
         for side in (16, 32, 128, 256, 512):
             for scale in (1, 2):
@@ -86,10 +86,10 @@ def main():
                 px = str(side * scale)
                 subprocess.run(["sips", "-z", px, px, str(base), "--out", str(iconset / name)],
                                check=True, capture_output=True)
-        target = ROOT / "assets" / "beatcrate.icns"
+        target = ROOT / "assets" / "beat50.icns"
         target.parent.mkdir(exist_ok=True)
         subprocess.run(["iconutil", "-c", "icns", str(iconset), "-o", str(target)], check=True)
-        shutil.copy(base, ROOT / "assets" / "beatcrate.png")
+        shutil.copy(base, ROOT / "assets" / "beat50.png")
     print(target)
 
 

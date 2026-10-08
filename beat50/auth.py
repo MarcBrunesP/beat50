@@ -1,7 +1,7 @@
-"""Gets a Beatport user token from beatcrate's own WebKit windows.
+"""Gets a Beatport user token from beat50's own WebKit windows.
 
 www.beatport.com sits behind Cloudflare and only hands tokens to a real browser, and the API needs a
-user token. beatcrate loads the site in a WebKit window (beatcrate.webkit): visible when the user signs
+user token. beat50 loads the site in a WebKit window (beat50.webkit): visible when the user signs
 in, hidden when it only needs a fresh token. The site keeps the session in the app's website data.
 """
 import json
@@ -11,7 +11,7 @@ import urllib.error
 import urllib.request
 
 from . import config, webkit
-from .errors import BeatcrateError
+from .errors import Beat50Error
 
 TOKEN_WAIT_S = 45  # how long a hidden window may take to hand out a valid token
 RELOGIN_AFTER_S = 15  # with no valid token by then, reload to force NextAuth's silent re-login
@@ -20,12 +20,12 @@ POLL_S = 1
 LOGIN_POLL_S = 2
 
 
-class SessionExpired(BeatcrateError):
-    """There is no Beatport user session in beatcrate's windows: the user has to sign in."""
+class SessionExpired(Beat50Error):
+    """There is no Beatport user session in beat50's windows: the user has to sign in."""
 
 
-class Interrupted(BeatcrateError):
-    """The window closed before handing out a token (beatcrate is quitting): says nothing about the session."""
+class Interrupted(Beat50Error):
+    """The window closed before handing out a token (beat50 is quitting): says nothing about the session."""
 
 
 def save_session(token):
@@ -79,16 +79,16 @@ def get_token():
     finally:
         webkit.close(window)
     if not token and closed:
-        raise Interrupted("interrupted", "beatcrate closed before it finished.")
+        raise Interrupted("interrupted", "beat50 closed before it finished.")
     if not token:
-        raise SessionExpired("session_expired", "No valid Beatport session in beatcrate: sign in again.")
+        raise SessionExpired("session_expired", "No valid Beatport session in beat50: sign in again.")
     save_session(token)
     return token
 
 
 def login_window():
     """Opens Beatport in a visible window for the user to sign in."""
-    return webkit.open_window(config.STORE, title="beatcrate · Beatport")
+    return webkit.open_window(config.STORE, title="beat50 · Beatport")
 
 
 def wait_for_login(window):

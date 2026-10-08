@@ -1,6 +1,6 @@
 import pytest
 
-from beatcrate.app import i18n
+from beat50.app import i18n
 
 
 def test_every_text_exists_in_both_languages():
@@ -72,5 +72,5 @@ def test_unknown_error_codes_keep_the_original_message():
 
 def test_texts_for_the_page_script():
     texts = i18n.js_texts("es")
-    assert texts["js_closed"] == "beatcrate se ha cerrado. Vuelve a abrirla desde Aplicaciones."
+    assert texts["js_closed"] == "beat50 se ha cerrado. Vuelve a abrirla desde Aplicaciones."
     assert set(texts) == set(i18n.JS_KEYS)

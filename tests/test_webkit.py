@@ -2,7 +2,7 @@ import threading
 
 import pytest
 
-from beatcrate import webkit
+from beat50 import webkit
 
 
 class FakeEvent:

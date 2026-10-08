@@ -1,4 +1,4 @@
-/* beatcrate/app/static/app.css — source-list sidebar + track list on the system font, night mode (dark only), 13 px base */
+/* beat50/app/static/app.css — source-list sidebar + track list on the system font, night mode (dark only), 13 px base */
 :root { color-scheme: dark; --bg: #121214; --side: #1C1C1E; --raised: #1F1F22; --hover: #1A1A1E; --chip: #2A2A2F; --line: #2C2C30;
         --line-soft: #1F1F23; --border: #3A3A40; --text: #F2F2F4; --soft: #A8A8AE; --faint: #A8A8AE; --off: #6E6E76;
         --accent: #0B5FB8; --accent-ink: #FFFFFF; --accent-soft: #17213A; --accent-text: #8FC1FF; --tag: #0F2B4A; --tag-ink: #8FC1FF;

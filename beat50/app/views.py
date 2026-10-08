@@ -437,12 +437,12 @@ def render_page(selection, crate, selections, state, token, today, marks=None, l
         for s, n in selections)
     help_btn = (f'<button class="brand-help" data-help-open aria-label="{i18n.t(lang, "help_open")}" '
                 f'title="{i18n.t(lang, "help_open")}">{_icon("help")}</button>')
-    side = (f'<aside class="side"><div class="brand">{BRAND_MARK}<span>beatcrate</span>{help_btn}</div>'
+    side = (f'<aside class="side"><div class="brand">{BRAND_MARK}<span>beat50</span>{help_btn}</div>'
             f'<h2 class="side-h">{i18n.t(lang, "selections")}</h2><nav class="sels">{links}</nav>'
             f'{_playlists(marks, lang, selection, playlist)}{_status(state, lang)}</aside>')
     marker = player = ""
     if playlist is not None:
-        page_title = f"beatcrate · {playlist['name']}"
+        page_title = f"beat50 · {playlist['name']}"
         if playlist.get("gone"):
             inner = _gone(selection, playlist, lang)
         else:
@@ -451,10 +451,10 @@ def render_page(selection, crate, selections, state, token, today, marks=None, l
             inner = _editor(selection, crate, playlist, set(marks["starred"]), lang, refresh)
             player = _player()
     elif crate is None:
-        page_title = "beatcrate"
-        inner = _toolbar("beatcrate", i18n.t(lang, "tagline"), state, today, lang) + _empty(lang)
+        page_title = "beat50"
+        inner = _toolbar("beat50", i18n.t(lang, "tagline"), state, today, lang) + _empty(lang)
     else:
-        page_title = f"beatcrate · {i18n.title(selection, lang)}"
+        page_title = f"beat50 · {i18n.title(selection, lang)}"
         w = crate.get("window") or {}
         detail = i18n.t(lang, "tracks", n=len(crate["tracks"]))
         if i18n.CODE.match(selection):

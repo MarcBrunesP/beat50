@@ -1,10 +1,16 @@
-# beatcrate
+---
+title: README
+type: note
+permalink: marc-vps/beat50/readme
+---
+
+# beat50
 
 A Mac app that picks 50 Beatport new releases for your taste, based on your purchases and playlists,
 each with the reason it was picked and a preview. The tracks you like (★) become private playlists in
 your Beatport account.
 
-**beatcrate is an independent project, not affiliated with, endorsed by or supported by Beatport.** It uses
+**beat50 is an independent project, not affiliated with, endorsed by or supported by Beatport.** It uses
 Beatport's unofficial API with your own session, for personal use.
 
 The app speaks English and Spanish. How it works inside: [ARCHITECTURE.md](ARCHITECTURE.md); how it looks: [STYLE.md](STYLE.md). What changed
@@ -19,19 +25,22 @@ Website: <https://beatcrate.ezb.com.es/>.
 
 ## Install
 
-1. Open `beatcrate-<version>.dmg` and drag **beatcrate** to **Applications**.
-2. Open beatcrate. The first time, macOS blocks it because it is not signed with an Apple developer
+1. Open `beat50-<version>.dmg` and drag **beat50** to **Applications**.
+2. Open beat50. The first time, macOS blocks it because it is not signed with an Apple developer
    account: go to **System Settings → Privacy & Security**, click **Open Anyway**, and open it again.
 
 To update, replace the app with the one from the new DMG. Your data is kept.
 
+beat50 was called beatcrate before 3.0. Coming from beatcrate, drag **beat50** to **Applications** and move
+**beatcrate** to the Trash: your selections, playlists, session and language are kept.
+
 ## Use
 
-beatcrate opens in a window of its own and quits when you close it. The first time, a few slides explain how
+beat50 opens in a window of its own and quits when you close it. The first time, a few slides explain how
 it works; you can reopen them anytime with the **?** button beside the app's name.
 
 1. **Allow reading your session** (the first time): before anything that reads your Beatport session,
-   beatcrate explains what it does and asks for your permission. It is remembered until you click
+   beat50 explains what it does and asks for your permission. It is remembered until you click
    **Withdraw permission**.
 2. **Sign in** (the first time, or when the session expires): a Beatport window opens; sign in and it
    closes by itself.
@@ -46,14 +55,14 @@ it works; you can reopen them anytime with the **?** button beside the app's nam
    playlist with the starred tracks in view (with a genre filter on, only those genres).
 6. Click a playlist under **Playlists from this selection** to edit it: change its name, mark tracks to
    remove and tracks of the selection to add (starred ones first), then **Save changes**. Nothing changes
-   on Beatport until you save. When it opens, beatcrate checks the playlist on Beatport first, so a new
+   on Beatport until you save. When it opens, beat50 checks the playlist on Beatport first, so a new
    name, tracks added on beatport.com (shown with their title, and removable) and edits made there are
    kept. A playlist deleted on Beatport shows as such and can be removed from the list.
 7. To delete a selection, click its bin (in the sidebar, on hover, or next to its title) and confirm. It goes to the Trash (Finder's
    **Put Back** restores it) with its stars and the record of its playlists; the playlists stay on
    Beatport, and its tracks may show up again in new selections.
 
-Creating and editing its own playlists is all beatcrate writes to your account. It never deletes a
+Creating and editing its own playlists is all beat50 writes to your account. It never deletes a
 playlist, never touches the others and never makes one public.
 
 Switch the language with **ES / EN** in the sidebar. Closing the window while a selection is being made
@@ -76,21 +85,21 @@ asks first, because it would stop it.
 
 - `~/Library/Application Support/beatcrate/`: your library and profile, the selections (`crates/`), your
   stars and playlists (`marks/`), the last token (`session.json`) and your permission (`consent.json`).
-- beatcrate's own website data, where Beatport keeps your session: `~/Library/WebKit/com.beatcrate.app`
+- beat50's own website data, where Beatport keeps your session: `~/Library/WebKit/com.beatcrate.app`
   and `~/Library/HTTPStorages/com.beatcrate.app*`. It is not shared with Safari or other browsers.
-- The app log: `~/Library/Logs/beatcrate.log`.
+- The app log: `~/Library/Logs/beat50.log`.
 
 To uninstall, delete the app and those folders.
 
 ## Troubleshooting
 
 - **"Beatport session expired":** click **Sign in**.
-- **"beatcrate needs your permission to read your Beatport session":** click the action again and accept
+- **"beat50 needs your permission to read your Beatport session":** click the action again and accept
   the notice.
-- **Nothing opens:** look at `~/Library/Logs/beatcrate.log` (for example, another program using port
+- **Nothing opens:** look at `~/Library/Logs/beat50.log` (for example, another program using port
   8765).
 
-beatcrate is not affiliated with Beatport and uses its unofficial API. If Beatport changes it, beatcrate may
+beat50 is not affiliated with Beatport and uses its unofficial API. If Beatport changes it, beat50 may
 stop working.
 
 ## Development
@@ -103,11 +112,11 @@ python3 -m venv .venv
 .venv/bin/python -m pytest
 ```
 
-- `BEATCRATE_DATA=/some/folder` keeps the data out of Application Support.
-- `.venv/bin/beatcrate app` runs the app from source; `login`, `ingest` and `generate` also work from the
+- `BEAT50_DATA=/some/folder` keeps the data out of Application Support.
+- `.venv/bin/beat50 app` runs the app from source; `login`, `ingest` and `generate` also work from the
   terminal. Run from source, the website data belongs to Python (`org.python.python`), so it needs its own
   sign-in.
-- `./scripts/build_dmg.sh` builds `dist/beatcrate-<version>.dmg`; the version comes from
+- `./scripts/build_dmg.sh` builds `dist/beat50-<version>.dmg`; the version comes from
   `pyproject.toml`. `scripts/make_icon.py` regenerates the icon.
 - Changes go under **Unreleased** in `CHANGELOG.md`; a release turns that section into the new version
   with its date, together with the version in `pyproject.toml`.

@@ -1,4 +1,4 @@
-"""beatcrate's only writes to the user's Beatport account: creating private playlists and editing them.
+"""beat50's only writes to the user's Beatport account: creating private playlists and editing them.
 
 It only edits playlists it created (the app checks that against its records). It never deletes a playlist,
 never touches others and never changes whether a playlist is public.
@@ -7,7 +7,7 @@ import urllib.error
 
 from .auth import SessionExpired
 from .client import TokenExpired
-from .errors import BeatcrateError
+from .errors import Beat50Error
 
 # An expired session is never turned into a warning: the user has to sign in, and the app has to know.
 SESSION_ENDED = (TokenExpired, SessionExpired)
@@ -16,7 +16,7 @@ MAX_NAME = 100
 CHECK_FIRST = "Check beatport.com before retrying so it is not duplicated."
 
 
-class PlaylistError(BeatcrateError):
+class PlaylistError(Beat50Error):
     """The playlist cannot be created with this data, or Beatport failed."""
 
 

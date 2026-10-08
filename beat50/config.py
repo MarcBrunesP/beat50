@@ -1,9 +1,10 @@
-"""Paths and constants for beatcrate. One place to tune the settings."""
+"""Paths and constants for beat50. One place to tune the settings."""
 import os
 from pathlib import Path
 
-# User data lives outside the code so it survives app updates. BEATCRATE_DATA overrides it for development.
-DATA = Path(os.environ.get("BEATCRATE_DATA") or Path.home() / "Library" / "Application Support" / "beatcrate")
+# User data lives outside the code so it survives app updates. BEAT50_DATA overrides it for development.
+# The folder keeps the app's name before 3.0 (beatcrate), so the data of earlier versions is still found.
+DATA = Path(os.environ.get("BEAT50_DATA") or Path.home() / "Library" / "Application Support" / "beatcrate")
 SESSION_FILE = DATA / "session.json"
 LIBRARY_FILE = DATA / "library.json"
 PROFILE_FILE = DATA / "profile.json"

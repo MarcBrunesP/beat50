@@ -7,11 +7,11 @@ from contextlib import contextmanager
 from datetime import datetime, timezone
 
 from .. import config
-from ..errors import BeatcrateError
+from ..errors import Beat50Error
 
 
-class Busy(BeatcrateError):
-    """Another beatcrate process is reading the session or making a selection."""
+class Busy(Beat50Error):
+    """Another beat50 process is reading the session or making a selection."""
 
 
 def now():
@@ -76,7 +76,7 @@ def acquire():
         fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
     except BlockingIOError:
         os.close(fd)
-        raise Busy("busy", f"Another beatcrate process is running (pid {_pid()}).") from None
+        raise Busy("busy", f"Another beat50 process is running (pid {_pid()}).") from None
     os.ftruncate(fd, 0)
     os.write(fd, str(os.getpid()).encode())
     _fd = fd

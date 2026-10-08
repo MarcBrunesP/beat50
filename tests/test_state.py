@@ -4,7 +4,7 @@ import sys
 
 import pytest
 
-from beatcrate.app import state
+from beat50.app import state
 
 
 def test_read_without_a_file_returns_empty(data_dir):

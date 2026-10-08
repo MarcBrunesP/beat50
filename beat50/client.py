@@ -6,13 +6,13 @@ import urllib.parse
 import urllib.request
 
 from . import config
-from .errors import BeatcrateError
+from .errors import Beat50Error
 
 RETRIES = 3
 BACKOFF_BASE = 2
 
 
-class TokenExpired(BeatcrateError):
+class TokenExpired(Beat50Error):
     """The token is no longer valid: the browser session must be linked again."""
 
 
