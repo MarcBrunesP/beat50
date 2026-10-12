@@ -22,3 +22,6 @@ spike/
 .superpowers/
 .DS_Store
 *.log
+
+# Worktrees de sesion de Claude Code
+.claude/
