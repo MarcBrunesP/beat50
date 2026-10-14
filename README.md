@@ -26,8 +26,8 @@ Website: <https://beat50.ezb.com.es/>.
 ## Install
 
 1. Open `beat50-<version>.dmg` and drag **beat50** to **Applications**.
-2. Open beat50. Releases after 3.1.0 are signed and notarized by Apple; with 3.1.0 or earlier, macOS
-   blocks it the first time: go to **System Settings → Privacy & Security**, click **Open Anyway**, and open it again.
+2. Open beat50. The first time, macOS blocks it because it is not signed with an Apple developer
+   account: go to **System Settings → Privacy & Security**, click **Open Anyway**, and open it again.
 
 To update, replace the app with the one from the new DMG. Your data is kept.
 
@@ -116,25 +116,10 @@ python3 -m venv .venv
 - `.venv/bin/beat50 app` runs the app from source; `login`, `ingest` and `generate` also work from the
   terminal. Run from source, the website data belongs to Python (`org.python.python`), so it needs its own
   sign-in.
-- `./scripts/build_dmg.sh` builds `dist/beat50-<version>.dmg`, signed and notarized (below); the version comes
-  from `pyproject.toml`. `--unsigned` builds a test DMG without either. `scripts/make_icon.py` regenerates the icon.
+- `./scripts/build_dmg.sh` builds `dist/beat50-<version>.dmg`; the version comes from
+  `pyproject.toml`. `scripts/make_icon.py` regenerates the icon.
 - Changes go under **Unreleased** in `CHANGELOG.md`; a release turns that section into the new version
   with its date, together with the version in `pyproject.toml`.
-
-### Signing and notarizing
-
-A release DMG is signed with a **Developer ID Application** certificate and notarized by Apple, so macOS opens
-it without warnings. Once per Mac, with the Apple Developer Program account:
-
-1. Create the certificate in Xcode (**Settings → Accounts → Manage Certificates → + → Developer ID
-   Application**); it lands in the login keychain. With more than one, `BEAT50_SIGN_ID` picks it.
-2. Create an app-specific password at account.apple.com and store the notarization profile in the keychain:
-   `xcrun notarytool store-credentials beat50 --apple-id <email> --team-id <TEAM ID>` (it asks for the
-   password). `BEAT50_NOTARY_PROFILE` names another profile.
-
-`build_dmg.sh` then signs every binary and the app with the hardened runtime, signs the DMG, submits it to
-Apple, waits for the verdict, staples the ticket and checks both with `spctl`. A rejected upload stops it and
-prints the `notarytool log` command with Apple's reasons.
 
 ## License
 
