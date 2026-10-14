@@ -9,6 +9,13 @@ permalink: marc-vps/beat50/changelog
 What changed in each version of beat50 (called beatcrate before 3.0). The format follows [Keep a Changelog](https://keepachangelog.com/)
 and versions follow [Semantic Versioning](https://semver.org/). The version lives in `pyproject.toml`.
 
+## Unreleased
+
+### Changed
+
+- The DMG and the app are signed with a Developer ID and notarized by Apple: macOS opens beat50 at once, with
+  no "Open Anyway" in Privacy & Security.
+
 ## 3.1.0 — 2026-10-14
 
 ### Changed
