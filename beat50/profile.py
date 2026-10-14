@@ -50,8 +50,8 @@ def build_profile(library, today):
     bpms, keys = [], defaultdict(float)  # weighted with the same decay
 
     for t in library["tracks"]:
-        factor = config.ORIGIN_PURCHASE if t.get("origin") == "purchase" else config.ORIGIN_PLAYLIST
-        weight = decay(t.get("acquired_at"), today) * factor
+        # A purchase and a playlist track weigh the same: with the subscription, playlists are how people collect.
+        weight = decay(t.get("acquired_at"), today)
 
         if t.get("label_id"):
             labels[t["label_id"]] += weight

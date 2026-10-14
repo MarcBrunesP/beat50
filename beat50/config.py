@@ -41,8 +41,6 @@ GENRES_SHOWN = 10  # the profile's top genres listed in the dialog
 
 # Profile
 HALFLIFE_MONTHS = 18
-ORIGIN_PURCHASE = 1.0
-ORIGIN_PLAYLIST = 0.6
 
 # Score
 W_LABEL = 0.35

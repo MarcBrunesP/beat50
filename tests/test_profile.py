@@ -34,13 +34,13 @@ def test_a_recent_purchase_weighs_more_than_an_old_one():
     assert weights[100] > weights[200]
 
 
-def test_a_playlist_weighs_less_than_a_purchase_on_the_same_date():
+def test_a_playlist_weighs_the_same_as_a_purchase_on_the_same_date():
     lib = {"tracks": [
         _track(id=1, label_id=100, origin="purchase", acquired_at="2026-09-01"),
         _track(id=2, label_id=200, origin="playlist:9", acquired_at="2026-09-01"),
     ]}
     weights = {l["id"]: l["weight"] for l in profile.build_profile(lib, TODAY)["labels"]}
-    assert weights[100] > weights[200]
+    assert weights[100] == weights[200]
 
 
 def test_the_top_weight_is_normalized_to_one():

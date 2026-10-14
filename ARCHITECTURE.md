@@ -94,8 +94,8 @@ Base `https://api.beatport.com/v4`, header `Authorization: Bearer <token>`.
 1. **Library** (`ingest.py`): every playlist track (`origin: playlist:<id>`, dated by the playlist's last
    update) and every purchase (`origin: purchase`, dated by `purchase_date`). A purchase wins over a
    playlist for the same track.
-2. **Profile** (`profile.py`): each track weighs `decay × origin`, where `decay = 0.5 ** (months / 18)`
-   and `origin` is 1.0 for purchases, 0.6 for playlists. Labels, artists (including remixers) and genres
+2. **Profile** (`profile.py`): each track weighs `decay = 0.5 ** (months / 18)`, the same for a purchase
+   and a playlist track. Labels, artists (including remixers) and genres
    sum those weights and are normalised to the top one. BPM (weighted p10, median, p90) and key
    frequencies use the same weights. `profile.json` is that profile as the library says; the selection then
    works on `apply_prefs(profile, state.genre_prefs)`: each genre's weight times its level (0, 0.5, 1, 2 or
