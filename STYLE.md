@@ -1,9 +1,3 @@
----
-title: STYLE
-type: note
-permalink: marc-vps/beat50/style
----
-
 # beat50 style
 
 The look of the app's page, as `app/static/app.css` implements it. [ARCHITECTURE.md](ARCHITECTURE.md) says how the app works;
