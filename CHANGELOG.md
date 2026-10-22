@@ -1,9 +1,3 @@
----
-title: CHANGELOG
-type: note
-permalink: marc-vps/beat50/changelog
----
-
 # Changelog
 
 What changed in each version of beat50 (called beatcrate before 3.0). The format follows [Keep a Changelog](https://keepachangelog.com/)
