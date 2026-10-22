@@ -1,8 +1,3 @@
----
-title: ARCHITECTURE
-type: note
-permalink: marc-vps/beat50/architecture
----
 
 # beat50 architecture
 
