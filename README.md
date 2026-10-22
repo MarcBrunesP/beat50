@@ -1,8 +1,3 @@
----
-title: README
-type: note
-permalink: marc-vps/beat50/readme
----
 
 # beat50
 
