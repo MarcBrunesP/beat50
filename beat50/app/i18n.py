@@ -63,7 +63,7 @@ TEXTS = {
         "help_s5_t": "Listen and star",
         "help_s5_b": "Play the previews (▶) and star (★) the ones you like. Filter by genre to focus.",
         "help_s6_t": "Create a private playlist",
-        "help_s6_b": "Turn your starred tracks into an always-private Beatport playlist, and edit it whenever you want.",
+        "help_s6_b": "Turn your starred tracks into an always-private Beatport playlist, or add them to one of your private playlists without repeating any, and edit it whenever you want.",
         "help_s7_t": "Tidy up your selections",
         "help_s7_b": "Delete a selection you no longer need with its bin, in the sidebar or next to its title. It goes to the Trash, its playlists stay on Beatport and its tracks may come back in new selections.",
         "login": "Sign in",
@@ -100,10 +100,28 @@ TEXTS = {
         "reason_bpm": "{v} BPM",
         "reason_key": "{v}",
         "js_closed": "beat50 has closed. Open it again from Applications.",
-        "js_prompt": "Name of the private Beatport playlist:",
         "js_error": "Error {status}",
         "playlist_created": "“{name}” created on Beatport (private) with {n} tracks.",
         "playlist_partial": " Beatport only accepted {n} of {total}.",
+        "playlist_added": "{n} tracks added to “{name}” on Beatport.",
+        "playlist_already": " {n} were already in it and were not added again.",
+        "playlist_all_already": "All {n} tracks were already in “{name}”: nothing was added.",
+        "pl_dialog_title": "Starred tracks to Beatport",
+        "pl_mode_new": "New playlist",
+        "pl_mode_into": "Add to one of mine",
+        "pl_new_hint": "It is created private on Beatport.",
+        "pl_into_hint": "Tracks already in it are not added again. Public playlists cannot be chosen.",
+        "pl_ok_new": "Create",
+        "pl_ok_into": "Add",
+        "pl_listing": "Reading your playlists on Beatport…",
+        "pl_none": "You have no playlists on Beatport.",
+        "pl_public": "Public",
+        "adding": "Adding the tracks on Beatport…",
+        "edit_hint_external": "beat50 did not create this playlist: it only adds tracks to it. Mark what to add, then save.",
+        "error_list_failed": "Beatport did not answer properly while listing your playlists: {detail}",
+        "error_not_owner": "“{name}” is not one of your playlists: beat50 does not add to it.",
+        "error_playlist_public": "“{name}” is public: beat50 only adds tracks to private playlists.",
+        "error_add_only": "beat50 did not create that playlist: it only adds tracks to it.",
         "warn_add_failed": " The tracks could not be added: {detail}",
         "warn_count_unknown": " Could not check how many tracks were added; check it on beatport.com.",
         "playlist_saved": "“{name}” saved on Beatport: {n} tracks.",
@@ -153,9 +171,11 @@ TEXTS = {
         "consent_window": "beat50 opens Beatport in a window of its own, hidden except when you sign in, "
                           "and closes it when done.",
         "consent_reads": "It only reads your Beatport session (the access token), to read your purchases and "
-                         "playlists, create private playlists and edit the ones it created.",
-        "consent_never": "It never buys, never deletes a playlist, never touches the ones it did not create, "
-                         "never makes one public, and sends nothing anywhere except to Beatport.",
+                         "playlists, create private playlists, edit the ones it created and add tracks to your "
+                         "private playlists.",
+        "consent_never": "It never buys, never deletes a playlist, never renames or removes tracks from the ones "
+                         "it did not create, never adds to public ones, never makes one public, and sends nothing "
+                         "anywhere except to Beatport.",
         "consent_where": "Your session stays on this Mac, in beat50's own data: it is not shared with Safari "
                          "or your other browsers.",
         "consent_ok": "Accept and continue",
@@ -209,7 +229,7 @@ TEXTS = {
         "help_s5_t": "Escucha y marca",
         "help_s5_b": "Escucha las previews (▶) y marca (★) las que te gusten. Filtra por género para centrarte.",
         "help_s6_t": "Crea una playlist privada",
-        "help_s6_b": "Convierte tus favoritos en una playlist de Beatport siempre privada, y edítala cuando quieras.",
+        "help_s6_b": "Convierte tus favoritos en una playlist de Beatport siempre privada, o añádelos a una de tus playlists privadas sin repetir ninguno, y edítala cuando quieras.",
         "help_s7_t": "Ordena tus selecciones",
         "help_s7_b": "Elimina una selección que ya no necesites con su papelera, en la barra lateral o junto a su título. Va a la Papelera, sus playlists siguen en Beatport y sus temas podrán volver a salir en nuevas selecciones.",
         "login": "Iniciar sesión",
@@ -246,10 +266,28 @@ TEXTS = {
         "reason_bpm": "{v} BPM",
         "reason_key": "{v}",
         "js_closed": "beat50 se ha cerrado. Vuelve a abrirla desde Aplicaciones.",
-        "js_prompt": "Nombre de la playlist privada en Beatport:",
         "js_error": "Error {status}",
         "playlist_created": "«{name}» creada en Beatport (privada) con {n} tracks.",
         "playlist_partial": " Beatport solo aceptó {n} de {total}.",
+        "playlist_added": "{n} tracks añadidos a «{name}» en Beatport.",
+        "playlist_already": " {n} ya estaban y no se han vuelto a añadir.",
+        "playlist_all_already": "Los {n} tracks ya estaban en «{name}»: no se ha añadido nada.",
+        "pl_dialog_title": "Favoritos a Beatport",
+        "pl_mode_new": "Playlist nueva",
+        "pl_mode_into": "Añadir a una mía",
+        "pl_new_hint": "Se crea privada en Beatport.",
+        "pl_into_hint": "Los tracks que ya estén no se vuelven a añadir. Las playlists públicas no se pueden elegir.",
+        "pl_ok_new": "Crear",
+        "pl_ok_into": "Añadir",
+        "pl_listing": "Leyendo tus playlists en Beatport…",
+        "pl_none": "No tienes playlists en Beatport.",
+        "pl_public": "Pública",
+        "adding": "Añadiendo los tracks en Beatport…",
+        "edit_hint_external": "Esta playlist no la creó beat50: solo le añade tracks. Marca lo que quieras añadir y guarda.",
+        "error_list_failed": "Beatport no respondió bien al listar tus playlists: {detail}",
+        "error_not_owner": "«{name}» no es una playlist tuya: beat50 no añade nada en ella.",
+        "error_playlist_public": "«{name}» es pública: beat50 solo añade tracks a playlists privadas.",
+        "error_add_only": "Esa playlist no la creó beat50: solo le añade tracks.",
         "warn_add_failed": " No se pudieron añadir los tracks: {detail}",
         "warn_count_unknown": " No se pudo comprobar cuántos tracks entraron; revísalo en beatport.com.",
         "playlist_saved": "«{name}» guardada en Beatport: {n} tracks.",
@@ -299,9 +337,11 @@ TEXTS = {
         "consent_window": "beat50 abre Beatport en una ventana propia, oculta salvo al iniciar sesión, "
                           "y la cierra al terminar.",
         "consent_reads": "Solo lee tu sesión de Beatport (el token de acceso), para leer tus compras y "
-                         "playlists, crear playlists privadas y editar las que creó.",
-        "consent_never": "Nunca compra, nunca borra una playlist, no toca las que no creó, nunca hace pública "
-                         "ninguna y no envía nada a ningún sitio que no sea Beatport.",
+                         "playlists, crear playlists privadas, editar las que creó y añadir tracks a tus "
+                         "playlists privadas.",
+        "consent_never": "Nunca compra, nunca borra una playlist, no renombra ni quita tracks de las que no creó, "
+                         "nunca añade a las públicas, nunca hace pública ninguna y no envía nada a ningún sitio "
+                         "que no sea Beatport.",
         "consent_where": "Tu sesión se queda en este Mac, en los datos propios de beat50: no se comparte con "
                          "Safari ni con tus otros navegadores.",
         "consent_ok": "Aceptar y continuar",
@@ -312,8 +352,9 @@ TEXTS = {
     },
 }
 
-JS_KEYS = ("making", "phase_library", "phase_discover", "phase_rank", "js_closed", "js_prompt", "js_error",
-           "listen", "pause", "creating", "saving", "checking", "js_delete", "created")
+JS_KEYS = ("making", "phase_library", "phase_discover", "phase_rank", "js_closed", "js_error",
+           "listen", "pause", "creating", "saving", "checking", "js_delete", "created", "adding", "pl_ok_new",
+           "pl_ok_into", "pl_listing", "pl_none", "pl_public")
 
 
 def pick(cookie_header, accept_language):

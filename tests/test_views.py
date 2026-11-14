@@ -425,13 +425,15 @@ def test_the_edit_page_in_spanish():
     assert "Añadir de la selección" in html and 'aria-label="Quitar de la playlist"' in html
 
 
-def test_the_notice_says_beat50_edits_only_its_own_playlists():
+def test_the_notice_says_beat50_edits_its_own_playlists_and_only_adds_to_the_others():
     html = _page(state={"consent": False})
-    assert "edit the ones it created" in html
-    assert "never deletes a playlist, never touches the ones it did not create" in html
+    assert "edit the ones it created and add tracks to your private playlists" in html
+    assert "never deletes a playlist, never renames or removes tracks from the ones it did not create" in html
+    assert "never adds to public ones" in html
     assert "changes your playlists" not in html
     es = _page(state={"consent": False}, lang="es")
-    assert "editar las que creó" in es and "no modifica tus playlists" not in es
+    assert "editar las que creó y añadir tracks a tus playlists privadas" in es
+    assert "nunca añade a las públicas" in es and "no modifica tus playlists" not in es
 
 
 def test_a_playlist_deleted_on_beatport_is_shown_as_such():
@@ -675,3 +677,27 @@ def test_the_selection_heading_says_which_genre_choices_it_was_made_with():
     assert "628 candidates · only Techno" in _page(_crate(genre_prefs=only))
     assert "628 candidatos · solo Techno" in _page(_crate(genre_prefs=only), lang="es")
     assert "628 candidates<" in _page(_crate(genre_prefs=[])) and "628 candidates<" in _page()
+
+
+def test_the_selection_offers_a_new_playlist_or_one_of_the_users():
+    html = _page()
+    assert '<dialog id="pl-dialog"' in html and 'data-pl-mode="new" aria-pressed="true">New playlist' in html
+    assert 'data-pl-mode="into" aria-pressed="false">Add to one of mine' in html
+    assert "Tracks already in it are not added again. Public playlists cannot be chosen." in html
+    es = _page(lang="es")
+    assert "Añadir a una mía" in es and "no se vuelven a añadir" in es
+    assert '"pl_public": "Pública"' in es and '"adding": "Añadiendo los tracks en Beatport…"' in es
+
+
+def test_the_playlist_dialog_is_not_on_the_edit_page():
+    assert 'id="pl-dialog"' not in _edit_page()
+
+
+def test_in_one_of_the_users_playlists_the_editor_only_adds():
+    ext = dict(PL, external=True, track_ids=[2, 1, 77], outside={"77": {"name": "Other", "artists": ["X"]}})
+    html = views.render_page("2026-09", _three(), [("2026-09", 3)], {"login_pending": False, "consent": True},
+                             "T", date(2026, 9, 30), {"starred": [], "playlists": [ext]}, "en", ext)
+    assert '<input id="pl-name" value="Peak &lt;&quot;time&quot;&gt;" maxlength="100" aria-label="Playlist name" readonly>' in html
+    assert "data-remove=" not in html and "data-add=" in html and "X — Other" in html
+    assert "beat50 did not create this playlist: it only adds tracks to it." in html
+    assert "readonly" not in _edit_page() and "data-remove=" in _edit_page()

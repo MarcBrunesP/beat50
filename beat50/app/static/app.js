@@ -1,4 +1,4 @@
-// beat50/app/static/app.js — actions, consent, progress, genre filter, stars, playlist editor and player.
+// beat50/app/static/app.js — actions, consent, progress, genre filter, stars, playlist dialog and editor, player.
 const token = document.querySelector('meta[name="bc-token"]').content;
 const TEXTS = JSON.parse(document.getElementById('texts').textContent);
 
@@ -81,7 +81,7 @@ const LOADING_TEXT = {'playlist': 'creating', 'save-playlist': 'saving', 'check'
 async function act(button, body, next) {
   const locked = [...document.querySelectorAll(LOCKABLE)].filter((el) => !el.disabled);
   locked.forEach((el) => { el.disabled = true; });
-  const key = LOADING_TEXT[button.dataset.action];
+  const key = body && body.into ? 'adding' : LOADING_TEXT[button.dataset.action];
   const overlay = key ? document.getElementById('action-loading') : null;
   if (overlay) {
     overlay.querySelector('.msg').textContent = TEXTS[key] || '';
@@ -153,6 +153,101 @@ function applyFilter() {
 if (location.hash.startsWith('#genre=')) {
   location.hash.slice('#genre='.length).split(',').forEach((g) => filter.add(decodeURIComponent(g)));
   applyFilter();
+}
+
+// Playlist dialog: a new private playlist (its name) or one of the user's own, listed from Beatport the first time
+// that tab opens. The server leaves out the tracks already in it.
+const plDialog = document.getElementById('pl-dialog');
+let plMode = 'new';
+let plInto = null;
+let plListed = false;
+
+function setPlaylistMode(mode) {
+  plMode = mode;
+  plDialog.querySelectorAll('[data-pl-mode]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.plMode === mode)));
+  plDialog.querySelectorAll('[data-pl-pane]').forEach((p) => { p.hidden = p.dataset.plPane !== mode; });
+  plDialog.querySelector('[data-pl-ok]').textContent = TEXTS[mode === 'new' ? 'pl_ok_new' : 'pl_ok_into'];
+  if (mode === 'into' && !plListed) listPlaylists();
+  updatePlaylistOk();
+}
+
+function updatePlaylistOk() {
+  const ok = plDialog.querySelector('[data-pl-ok]');
+  ok.disabled = plMode === 'new' ? !tidy(document.getElementById('pl-new-name').value) : plInto === null;
+}
+
+async function listPlaylists() {
+  const status = document.getElementById('pl-list-status');
+  const list = document.getElementById('pl-list');
+  status.textContent = TEXTS.pl_listing;
+  list.replaceChildren();
+  let r;
+  try {
+    r = await post('/api/playlists');
+  } catch (e) {
+    plDialog.close();
+    return closed();
+  }
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) {
+    status.textContent = data.error || text('js_error', {status: r.status});
+    return;
+  }
+  plListed = true;
+  status.textContent = data.playlists.length ? '' : TEXTS.pl_none;
+  data.playlists.forEach((pl) => {  // built with textContent: names come from Beatport
+    const b = document.createElement('button');
+    b.dataset.into = pl.id;
+    b.setAttribute('aria-pressed', 'false');
+    b.disabled = pl.is_public;
+    const n = document.createElement('span');
+    n.className = 'pl-n';
+    n.textContent = pl.name;
+    const count = document.createElement('small');
+    count.textContent = pl.track_count;
+    b.append(n, count);
+    if (pl.is_public) {
+      const pub = document.createElement('span');
+      pub.className = 'pl-pub';
+      pub.textContent = TEXTS.pl_public;
+      b.append(pub);
+    }
+    const li = document.createElement('li');
+    li.append(b);
+    list.append(li);
+  });
+}
+
+function openPlaylistDialog(button) {
+  plInto = null;
+  plListed = false;
+  document.getElementById('pl-new-name').value = button.dataset.suggested;
+  setPlaylistMode('new');
+  plDialog.showModal();
+}
+
+if (plDialog) {
+  plDialog.addEventListener('click', (e) => {
+    const mode = e.target.closest('[data-pl-mode]');
+    if (mode) return setPlaylistMode(mode.dataset.plMode);
+    const pick = e.target.closest('[data-into]');
+    if (pick) {
+      plInto = Number(pick.dataset.into);
+      plDialog.querySelectorAll('[data-into]').forEach((b) => b.setAttribute('aria-pressed', String(b === pick)));
+      return updatePlaylistOk();
+    }
+    if (e.target.closest('[data-pl-cancel]')) return plDialog.close();
+    if (!e.target.closest('[data-pl-ok]')) return;
+    const genres = filter.size ? [...filter] : undefined;
+    const body = plMode === 'new' ? {name: document.getElementById('pl-new-name').value, genres} : {into: plInto, genres};
+    plDialog.close();
+    act(document.querySelector('[data-action="playlist"]'), body);
+  });
+  document.getElementById('pl-new-name').addEventListener('input', updatePlaylistOk);
+  document.getElementById('pl-new-name').addEventListener('keydown', (e) => {
+    const ok = plDialog.querySelector('[data-pl-ok]');
+    if (e.key === 'Enter' && !ok.disabled) ok.click();
+  });
 }
 
 // Playlist editor: the remove / add buttons only mark tracks; "Save changes" sends everything at once.
@@ -301,11 +396,7 @@ function play(button) {
 
 function run(button) {
   const action = button.dataset.action;
-  if (action === 'playlist') {
-    const name = prompt(TEXTS.js_prompt, button.dataset.suggested);
-    if (name !== null) act(button, {name, genres: filter.size ? [...filter] : undefined});
-    return;
-  }
+  if (action === 'playlist') return openPlaylistDialog(button);
   if (action === 'generate') {
     return act(button, {since: document.getElementById('since').value,
                         until: document.getElementById('until').value});

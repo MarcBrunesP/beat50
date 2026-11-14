@@ -449,7 +449,8 @@ def test_period_error_codes(body, code):
     assert err.value.code == code
 
 
-SESSION_ROUTES = ["/api/generate", "/api/session/check", "/api/login/start", "/api/playlist/2026-09"]
+SESSION_ROUTES = ["/api/generate", "/api/session/check", "/api/login/start", "/api/playlist/2026-09",
+                  "/api/playlists"]
 
 
 @pytest.mark.parametrize("path", SESSION_ROUTES)
@@ -457,7 +458,8 @@ def test_without_consent_nothing_reads_the_session(app, data_dir, monkeypatch, p
     _crate(data_dir, "2026-09")
     consent.revoke()
     called = []
-    for name in ("start_generation", "check_session", "login_start", "create_playlist"):
+    for name in ("start_generation", "check_session", "login_start", "create_playlist", "list_playlists",
+                 "add_to_playlist"):
         monkeypatch.setattr(server.jobs, name, lambda *a, _n=name, **kw: called.append(_n))
     code, body, _ = _request(app, "POST", path, token=app.token, body={"name": "x"},
                              headers={"Accept-Language": "es-ES"})
@@ -704,3 +706,55 @@ def test_the_page_lists_the_profile_genres_in_the_dialog(app, data_dir):
     (data_dir / "profile.json").write_text(json.dumps({"genres": [{"id": 5, "name": "Techno", "weight": 1.0, "n": 3}]}))
     _, html, _ = _request(app, "GET", "/")
     assert 'id="genres"' in html and '<li class="gp" data-genre="5" data-weight="1.0">' in html
+
+
+def test_listing_the_users_playlists(app, data_dir, monkeypatch):
+    mine = [{"id": 5, "name": "Warm-up", "track_count": 27, "is_public": False}]
+    monkeypatch.setattr(server.jobs, "list_playlists", lambda: mine)
+    code, body, _ = _request(app, "POST", "/api/playlists", token=app.token, body={})
+    assert code == 200 and json.loads(body) == {"playlists": mine}
+
+
+def test_listing_the_users_playlists_waits_while_busy(app, data_dir):
+    with state.lock():
+        assert _request(app, "POST", "/api/playlists", token=app.token, body={})[0] == 409
+
+
+def test_adding_to_one_of_the_users_playlists(app, data_dir, monkeypatch):
+    _crate(data_dir, "2026-09")
+    seen = []
+    monkeypatch.setattr(server.jobs, "add_to_playlist", lambda sel, pid, genres=None: seen.append((sel, pid, genres))
+                        or {"id": pid, "name": "Warm-up", "track_ids": [1, 2, 3], "added": [3], "already": 2,
+                            "warnings": []})
+    code, body, _ = _request(app, "POST", "/api/playlist/2026-09", token=app.token,
+                             body={"into": 5, "genres": ["House"]})
+    assert code == 200 and seen == [("2026-09", 5, ["House"])]
+    assert json.loads(body)["message"] == ("1 tracks added to “Warm-up” on Beatport. 2 were already in it and "
+                                           "were not added again.")
+
+
+def test_adding_tracks_that_were_all_there_says_nothing_was_added(app, data_dir, monkeypatch):
+    _crate(data_dir, "2026-09")
+    monkeypatch.setattr(server.jobs, "add_to_playlist", lambda sel, pid, genres=None: {
+        "id": pid, "name": "Warm-up", "track_ids": [1, 2], "added": [], "already": 2, "warnings": []})
+    _, body, _ = _request(app, "POST", "/api/playlist/2026-09", token=app.token, body={"into": 5},
+                          headers={"Accept-Language": "es-ES"})
+    assert json.loads(body)["message"] == "Los 2 tracks ya estaban en «Warm-up»: no se ha añadido nada."
+
+
+@pytest.mark.parametrize("into", ["5", True, None, 1.5, [5]])
+def test_adding_needs_a_playlist_id(app, data_dir, monkeypatch, into):
+    _crate(data_dir, "2026-09")
+    monkeypatch.setattr(server.jobs, "add_to_playlist", lambda *a, **kw: pytest.fail("must not add"))
+    assert _request(app, "POST", "/api/playlist/2026-09", token=app.token, body={"into": into})[0] == 400
+
+
+def test_adding_to_a_public_playlist_is_refused_with_its_name(app, data_dir, monkeypatch):
+    _crate(data_dir, "2026-09")
+
+    def public(*a, **kw):
+        raise playlists.PlaylistError("playlist_public", "public", name="Live")
+    monkeypatch.setattr(server.jobs, "add_to_playlist", public)
+    code, body, _ = _request(app, "POST", "/api/playlist/2026-09", token=app.token, body={"into": 5})
+    assert code == 400
+    assert json.loads(body)["error"] == "“Live” is public: beat50 only adds tracks to private playlists."

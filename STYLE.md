@@ -132,6 +132,12 @@ second one in `--star` and, between them when the slide is a step, a 26 px `--fa
   control (`.seg`, the language switch's style: `--line` track, raised pressed segment) with Off · − · = · + · ++,
   and a 24 px bordered **Only** button that fills `--accent` when on. A switched-off genre dims its name to `--off`.
   Reset sits left, Done right.
+- **Playlist dialog** (`#pl-dialog`): a 520 px dialog like the consent sheet. A `.seg` control picks **New
+  playlist** (a 32 px name input on `--bg`, and a lock hint) or **Add to one of mine** (a scrolling list, at most
+  280 px, of 34 px rows: name, track count in `--soft`, and a `--chip` "Public" tag on the disabled public ones; the
+  chosen row gets an `--accent` border on `--accent-soft`). Cancel and Create / Add sit right. In the editor of a
+  playlist beat50 did not create, the name input is read-only (no border or background) and a 32 px gap keeps the
+  rows aligned where the remove button would be.
 - **Help** (`#help`): the onboarding, a 460 px dialog with seven slides — Material icons on a 132 px `--side` tile, a
   title and a line of text — plus dots and Back / Next / Got it. All slides share one grid cell (the hidden ones
   invisible), so the dialog always has the tallest slide's size and never jumps. It auto-opens on first launch

@@ -3,6 +3,21 @@
 What changed in each version of beat50 (called beatcrate before 3.0). The format follows [Keep a Changelog](https://keepachangelog.com/)
 and versions follow [Semantic Versioning](https://semver.org/). The version lives in `pyproject.toml`.
 
+## Unreleased
+
+### Added
+
+- **Create Beatport playlist** now opens a dialog: create a new private playlist, or **add the starred tracks to
+  one of your private playlists** on Beatport. Tracks already in it are left out (checked on Beatport at that
+  moment), and the message says how many were added and how many were already there. Public playlists are
+  listed but cannot be chosen.
+- A playlist you added to shows under **Playlists from this selection**. If beat50 did not create it, the
+  editor only adds tracks to it: its name and its tracks stay as they are.
+
+### Changed
+
+- The permission notice says beat50 also adds tracks to your private playlists, so it is asked again.
+
 ## 3.1.0 — 2026-10-14
 
 ### Changed

@@ -1,4 +1,7 @@
-"""The user's marks per selection: starred tracks and the playlists created from them.
+"""The user's marks per selection: starred tracks and the playlists made from them.
+
+A playlist is recorded in the selection it was created from, or that added tracks to it. One beat50 did not
+create (one of the user's own) is marked `external`: beat50 only adds tracks to it.
 
 Kept apart from the selection file. An in-process lock keeps two quick clicks from losing a star.
 """
@@ -53,8 +56,15 @@ def add_playlist(selection, playlist):
 
 
 def find_playlist(selection, playlist_id):
-    """A playlist beat50 created from this selection, or None: only those can be edited."""
+    """A playlist recorded in this selection, or None: only those can be opened and edited."""
     return next((p for p in read(selection)["playlists"] if p["id"] == playlist_id), None)
+
+
+def created_by_beat50(playlist_id):
+    """Whether any selection recorded this playlist as created by beat50 (not as `external`)."""
+    files = config.MARKS_DIR.glob("*.json") if config.MARKS_DIR.exists() else ()
+    return any(p["id"] == playlist_id and not p.get("external")
+               for f in files for p in read(f.stem)["playlists"])
 
 
 def update_playlist(selection, playlist_id, **fields):

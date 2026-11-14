@@ -1,7 +1,9 @@
-"""beat50's only writes to the user's Beatport account: creating private playlists and editing them.
+"""beat50's only writes to the user's Beatport account: creating private playlists, editing them and adding
+tracks to the user's own private playlists.
 
-It only edits playlists it created (the app checks that against its records). It never deletes a playlist,
-never touches others and never changes whether a playlist is public.
+It only renames or removes tracks from playlists it created (the app checks that against its records). In the
+user's other playlists it only adds tracks, and only to private ones they own. It never deletes a playlist and
+never changes whether a playlist is public.
 """
 import urllib.error
 
@@ -103,6 +105,64 @@ def read_playlist(client, playlist_id):
                                  "artists": [a.get("name") for a in x["track"].get("artists") or []]}
               for x in items}
     return {"name": pl.get("name"), "track_ids": [x["track"]["id"] for x in items], "tracks": tracks}
+
+
+def list_playlists(client):
+    """The user's own playlists, most recently updated first: [{"id", "name", "track_count", "is_public"}].
+
+    Public ones are listed too, so the user sees them, but add_to_playlist refuses them.
+    """
+    try:
+        items = client.paged("/my/playlists/")
+    except SESSION_ENDED:
+        raise
+    except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError) as e:
+        raise PlaylistError("list_failed", f"Beatport did not answer properly while listing your playlists: {e}",
+                            detail=str(e)) from e
+    own = sorted((p for p in items if p.get("is_owner") is True), key=lambda p: p.get("updated_date") or "",
+                 reverse=True)
+    return [{"id": p["id"], "name": p.get("name") or "", "track_count": p.get("track_count") or 0,
+             "is_public": p.get("is_public") is not False} for p in own]
+
+
+def add_to_playlist(client, playlist_id, track_ids):
+    """Adds to one of the user's private playlists the tracks it does not have yet, at the end, in this order.
+
+    Checks against the playlist as it is on Beatport now, so tracks already in it (added by beat50 or on
+    beatport.com) are never added twice. Returns {"id", "name", "track_ids" (as it ends up, or None if it could
+    not be read again), "added" (the ones that got in), "already" (how many were in it), "warnings"}.
+    """
+    if not track_ids:
+        raise PlaylistError("no_starred", "No tracks are starred.")
+    pl, items = _read(client, playlist_id)
+    name = pl.get("name")
+    if pl.get("is_owner") is False:
+        raise PlaylistError("not_owner", f"“{name}” is not one of your playlists: beat50 does not add to it.",
+                            name=name)
+    if pl.get("is_public") is not False:
+        raise PlaylistError("playlist_public", f"“{name}” is public: beat50 only adds tracks to private "
+                            "playlists.", name=name)
+    inside = {x["track"]["id"] for x in items}
+    wanted = list(dict.fromkeys(track_ids))
+    new = [t for t in wanted if t not in inside]
+    warnings = []
+    track_ids_now = [x["track"]["id"] for x in items]
+    if new:
+        try:
+            client.post(f"/my/playlists/{playlist_id}/tracks/bulk/", {"track_ids": new})
+        except SESSION_ENDED:
+            raise
+        except Exception as e:
+            warnings.append({"code": "add_failed", "detail": str(e)})
+        try:
+            track_ids_now = [x["track"]["id"] for x in _tracks(client, playlist_id)]
+        except Exception as e:
+            track_ids_now = None
+            warnings.append({"code": "count_unknown", "detail": str(e)})
+    got = set(track_ids_now or ())
+    added = [t for t in new if t in got]
+    return {"id": playlist_id, "name": name, "track_ids": track_ids_now, "added": added,
+            "already": len(wanted) - len(new), "warnings": warnings}
 
 
 def edit_playlist(client, playlist_id, name=None, remove=(), add=()):

@@ -233,13 +233,14 @@ def _toggle(kind, track_id, lang):
             f'aria-label="{i18n.t(lang, label)}">{_icon(icon)}</button>')
 
 
-def _outside_row(i, track_id, info, lang):
+def _outside_row(i, track_id, info, lang, removable=True):
     """A track added on beatport.com that is not in the selection: only its title, so it can be removed."""
     if info:
         title = f'{escape(", ".join(info.get("artists") or []))} — {escape(info.get("name") or "")}'
     else:
         title = f"Track {track_id}"
-    return (f'<li class="track outside"><span class="num">{i}</span>{_toggle("remove", track_id, lang)}'
+    toggle = _toggle("remove", track_id, lang) if removable else ""
+    return (f'<li class="track outside"><span class="num">{i}</span>{toggle}'
             f'<span class="cover"><span class="no-cover"></span></span><div class="t"><div class="n"><span class="name">'
             f'{title}</span></div><div class="r"><span>{i18n.t(lang, "outside_note")}</span></div></div></li>')
 
@@ -348,6 +349,23 @@ def _genres_dialog(profile, state, lang):
             f'<button class="main" data-genres-done>{i18n.t(lang, "genres_done")}</button></div></dialog>')
 
 
+def _playlist_dialog(lang):
+    """Where the starred tracks go: a new private playlist (its name) or one of the user's playlists, which the JS
+    lists from Beatport when that tab opens. Tracks already in it are left out (by the server)."""
+    return (f'<dialog id="pl-dialog" aria-labelledby="pl-dialog-title">'
+            f'<h2 id="pl-dialog-title">{_icon("playlist_add")}{i18n.t(lang, "pl_dialog_title")}</h2>'
+            f'<div class="seg pl-mode" role="group" aria-label="{i18n.t(lang, "pl_dialog_title")}">'
+            f'<button data-pl-mode="new" aria-pressed="true">{i18n.t(lang, "pl_mode_new")}</button>'
+            f'<button data-pl-mode="into" aria-pressed="false">{i18n.t(lang, "pl_mode_into")}</button></div>'
+            f'<div data-pl-pane="new"><label class="pl-field"><span>{i18n.t(lang, "playlist_name")}</span>'
+            f'<input id="pl-new-name" maxlength="100"></label>'
+            f'<p class="hint">{_icon("lock")}{i18n.t(lang, "pl_new_hint")}</p></div>'
+            f'<div data-pl-pane="into" hidden><p class="hint" id="pl-list-status" role="status"></p>'
+            f'<ul class="pl-pick" id="pl-list"></ul><p class="hint">{i18n.t(lang, "pl_into_hint")}</p></div>'
+            f'<div class="buttons"><button data-pl-cancel>{i18n.t(lang, "consent_cancel")}</button>'
+            f'<button class="main" data-pl-ok>{i18n.t(lang, "pl_ok_new")}</button></div></dialog>')
+
+
 # The record drawn as a spinning vinyl for the picking card: navy disc, blue grooves, amber label and a
 # light highlight arc so the rotation reads. Echoes the brand mark's colours; it spins through CSS only.
 PICK_DISC = ('<svg class="disc" viewBox="0 0 120 120" aria-hidden="true">'
@@ -398,13 +416,15 @@ def _editor(selection, crate, playlist, starred, lang, refresh):
     """A created playlist: its name, its tracks to remove and the selection's other tracks to add.
 
     The page only marks the changes; "Save changes" sends them together. With refresh, the page first asks
-    the server to check the playlist on Beatport and reloads if it changed there.
+    the server to check the playlist on Beatport and reloads if it changed there. In one of the user's own
+    playlists (`external`) beat50 only adds: the name cannot be changed and nothing can be removed.
     """
     by_id = {t["id"]: t for t in crate["tracks"]}
     outside = playlist.get("outside") or {}
+    own = not playlist.get("external")
     rows_in = "".join(
-        _row(i, by_id[t], lang, control=_toggle("remove", t, lang)) if t in by_id
-        else _outside_row(i, t, outside.get(str(t)), lang)
+        _row(i, by_id[t], lang, control=_toggle("remove", t, lang) if own else '<span class="toggle-gap"></span>')
+        if t in by_id else _outside_row(i, t, outside.get(str(t)), lang, own)
         for i, t in enumerate(playlist["track_ids"], 1))
     others = [t for t in crate["tracks"] if t["id"] not in set(playlist["track_ids"])]
     others.sort(key=lambda t: t["id"] not in starred)  # starred first, then selection order
@@ -415,11 +435,11 @@ def _editor(selection, crate, playlist, starred, lang, refresh):
     return (f'<header class="head editor"><a class="back" href="/crate/{escape(selection)}" '
             f'aria-label="{i18n.t(lang, "back")}">{_icon("arrow_back")}</a>'
             f'<label class="pl-name">{_icon("edit")}<input id="pl-name" value="{escape(playlist["name"])}" '
-            f'maxlength="100" aria-label="{i18n.t(lang, "playlist_name")}"></label>'
+            f'maxlength="100" aria-label="{i18n.t(lang, "playlist_name")}"{"" if own else " readonly"}></label>'
             f'<span class="private">{_icon("lock")}{i18n.t(lang, "private_tag")}</span>'
             f'<button class="main" data-action="save-playlist" data-playlist="{playlist["id"]}" disabled>'
             f'{_icon("save")}{i18n.t(lang, "save_changes")}</button></header>'
-            f'{sync}<p class="notice">{_icon("info")}{i18n.t(lang, "edit_hint")}</p>'
+            f'{sync}<p class="notice">{_icon("info")}{i18n.t(lang, "edit_hint" if own else "edit_hint_external")}</p>'
             f'<h2 class="section">{i18n.t(lang, "in_playlist", n=len(playlist["track_ids"]))}</h2>'
             f'<ol class="tracks">{rows_in}</ol>'
             f'<h2 class="section">{i18n.t(lang, "add_from_selection")}</h2><ol class="tracks">{rows_add}</ol>'
@@ -440,7 +460,7 @@ def render_page(selection, crate, selections, state, token, today, marks=None, l
     side = (f'<aside class="side"><div class="brand">{BRAND_MARK}<span>beat50</span>{help_btn}</div>'
             f'<h2 class="side-h">{i18n.t(lang, "selections")}</h2><nav class="sels">{links}</nav>'
             f'{_playlists(marks, lang, selection, playlist)}{_status(state, lang)}</aside>')
-    marker = player = ""
+    marker = player = pl_dialog = ""
     if playlist is not None:
         page_title = f"beat50 · {playlist['name']}"
         if playlist.get("gone"):
@@ -484,6 +504,7 @@ def render_page(selection, crate, selections, state, token, today, marks=None, l
                  + f'<div class="filters">{_genres(crate, lang)}{create}</div>{notice}<ol class="tracks">{rows}</ol>'
                  '<audio id="player" preload="none"></audio>')
         player = _player()
+        pl_dialog = _playlist_dialog(lang)
     main = f'<main class="list"{marker}>{inner}</main>{player}'
     # While a selection is made the whole window waits: the app underneath is inert and the card sits on top.
     inert = " inert" if state.get("running") else ""
@@ -496,6 +517,6 @@ def render_page(selection, crate, selections, state, token, today, marks=None, l
             f' data-consent="{"1" if state.get("consent") else "0"}" data-login="{"1" if state.get("login_pending") else "0"}"'
             f' data-help="{"0" if state.get("help_seen") else "1"}">'
             f'{_sprite()}<div class="app"{inert}>{side}{main}</div>{_progress(state, lang)}{_action_loading()}{_toast()}'
-            f'{_help(lang)}{_consent(lang)}{_genres_dialog(profile or {}, state, lang)}'
+            f'{_help(lang)}{_consent(lang)}{_genres_dialog(profile or {}, state, lang)}{pl_dialog}'
             f'<script id="texts" type="application/json">{texts}</script>'
             '<script src="/static/app.js"></script></body></html>')

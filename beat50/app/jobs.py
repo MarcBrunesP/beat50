@@ -158,15 +158,19 @@ def abort_login():
         webkit.close(window)
 
 
+def _starred(selection, genres):
+    """The selection's starred tracks in selection order; with genres (the app's filter), only those genres."""
+    crate = json.loads((config.CRATES_DIR / f"{selection}.json").read_text())
+    starred = set(marks.read(selection)["starred"])
+    return [t["id"] for t in crate["tracks"] if t["id"] in starred and (not genres or t.get("genre") in genres)]
+
+
 def create_playlist(selection, name, genres=None):
     """Creates the private Beatport playlist with the selection's starred tracks, in selection order.
 
     With genres (the app's filter), only the starred tracks of those genres.
     """
-    crate = json.loads((config.CRATES_DIR / f"{selection}.json").read_text())
-    starred = set(marks.read(selection)["starred"])
-    ids = [t["id"] for t in crate["tracks"]
-           if t["id"] in starred and (not genres or t.get("genre") in genres)]
+    ids = _starred(selection, genres)
     playlists.valid_name(name)  # name and selection are checked before reading the session
     if not ids:
         raise playlists.PlaylistError("no_starred", "No tracks are starred.")
@@ -182,8 +186,56 @@ def create_playlist(selection, name, genres=None):
     return result
 
 
+def list_playlists():
+    """The user's own playlists on Beatport, for choosing one to add the starred tracks to."""
+    with _Working(), state.lock():
+        try:
+            result = playlists.list_playlists(_client())
+        except (auth.SessionExpired, TokenExpired):
+            _session("expired")
+            raise
+        _session("active")
+    return result
+
+
+def add_to_playlist(selection, playlist_id, genres=None):
+    """Adds the selection's starred tracks (with genres, only those genres) to one of the user's private
+    playlists, leaving out the ones already in it, and records the playlist in this selection.
+
+    A playlist beat50 did not create is recorded as `external`: beat50 only adds tracks to it.
+    """
+    ids = _starred(selection, genres)
+    if not ids:
+        raise playlists.PlaylistError("no_starred", "No tracks are starred.")
+    with _Working(), state.lock():
+        try:
+            result = playlists.add_to_playlist(_client(), playlist_id, ids)
+        except (auth.SessionExpired, TokenExpired):
+            _session("expired")
+            raise
+        except playlists.PlaylistError as e:
+            if e.code == "playlist_gone" and marks.find_playlist(selection, playlist_id):
+                marks.update_playlist(selection, playlist_id, gone=True)
+            raise
+        _session("active")
+    record = marks.find_playlist(selection, playlist_id)
+    if record is None:
+        marks.add_playlist(selection, {"id": playlist_id, "name": result["name"],
+                                       "track_ids": result["track_ids"] or [], "added_at": state.now(),
+                                       **({} if marks.created_by_beat50(playlist_id) else {"external": True})})
+    else:
+        fields = {"name": result["name"] or record["name"], "edited_at": state.now(), "gone": False}
+        if result["track_ids"] is not None:
+            fields["track_ids"] = result["track_ids"]
+        marks.update_playlist(selection, playlist_id, **fields)
+    return result
+
+
 def edit_playlist(selection, playlist_id, name, remove=(), add=()):
-    """Renames a playlist beat50 created and removes / adds tracks of its selection, all in one save."""
+    """Renames a playlist beat50 created and removes / adds tracks of its selection, all in one save.
+
+    In a playlist beat50 did not create (`external`) it only adds.
+    """
     playlist = marks.find_playlist(selection, playlist_id)
     if playlist is None:
         raise Beat50Error("not_found", "beat50 did not create that playlist.")
@@ -192,6 +244,8 @@ def edit_playlist(selection, playlist_id, name, remove=(), add=()):
         raise Beat50Error("not_in_selection", "That track is not in this selection.")
     clean = playlists.valid_name(name)
     new_name = clean if clean != playlist["name"] else None
+    if playlist.get("external") and (new_name is not None or remove):
+        raise Beat50Error("add_only", "beat50 did not create that playlist: it only adds tracks to it.")
     if new_name is None and not remove and not add:
         raise playlists.PlaylistError("no_changes", "There is nothing to save.")
     with _Working(), state.lock():

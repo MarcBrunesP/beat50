@@ -25,15 +25,15 @@ a selection is made when the user asks for it.
 | `profile.py` | Taste profile: weighted labels, artists, genres, BPM and key → `profile.json`; `apply_prefs` applies the Genres choices |
 | `discover.py` | Candidates published in the period → `candidates.json` |
 | `rank.py` | Scoring, exclusions, genre quotas, diversity → `crates/<code>.json` |
-| `playlists.py` | Creates private playlists and edits them: beat50's only writes to Beatport |
+| `playlists.py` | Creates private playlists, edits them and adds tracks to the user's private ones: beat50's only writes to Beatport |
 | `errors.py` | Errors with a code, so the app can show them translated |
 | `cli.py` | `login`, `ingest`, `generate`, `app` |
 | `app/server.py` | Local HTTP server: routes, security, lifecycle |
 | `app/views.py` | The page's HTML |
 | `app/i18n.py` | English and Spanish texts, dates and error messages |
-| `app/jobs.py` | Long-running work: selections, session check, sign-in, playlist creation |
+| `app/jobs.py` | Long-running work: selections, session check, sign-in, playlists (create, list, add, edit) |
 | `app/state.py` | `state.json` and the process lock |
-| `app/marks.py` | Stars and created playlists per selection |
+| `app/marks.py` | Stars and the playlists made or added to from each selection |
 | `app/consent.py` | The user's permission to read the Beatport session |
 | `app/trash.py` | Moves a deleted selection's files to the Mac's Trash |
 | `app/static/` | CSS and JavaScript of the page |
@@ -67,7 +67,7 @@ Base `https://api.beatport.com/v4`, header `Authorization: Bearer <token>`.
 
 | Use | Request | Notes |
 |---|---|---|
-| Playlists | `GET /my/playlists/` | `id`, `name`, `updated_date`, … |
+| Playlists | `GET /my/playlists/` | `id`, `name`, `updated_date`, `track_count`, `is_public`, `is_owner`, … |
 | Playlist tracks | `GET /my/playlists/{id}/tracks/` | each item `{id, position, track, tombstoned}` |
 | Purchases | `GET /my/downloads/` | each item is the track, with `purchase_date`, without `isrc` |
 | Catalog | `GET /catalog/tracks/` | `label_id`, `artist_id` accept comma-separated lists; `publish_date=YYYY-MM-DD:YYYY-MM-DD` |
@@ -123,7 +123,7 @@ name before 3.0, so renaming it to beat50 did not lose any data or sign anyone o
 | `session.json` | Last token, mode 0600 |
 | `library.json`, `profile.json`, `candidates.json` | Last library, profile and candidates |
 | `crates/<code>.json` | One file per selection. Files named `YYYY-MM` come from an earlier version and are still shown |
-| `marks/<code>.json` | `{"starred": [...], "playlists": [{id, name, track_ids, created_at}]}` |
+| `marks/<code>.json` | `{"starred": [...], "playlists": [{id, name, track_ids, created_at or added_at, external?}]}` |
 | `state.json` | Running job, last selection result, session status, `genre_prefs` (`{"levels": {"<genre id>": level}, "only": id or null}`) |
 | `consent.json` | `{"session": true, "granted_at"}` once the user accepts the notice; deleted when withdrawn |
 | `.lock` | Process lock (`flock`) |
@@ -144,11 +144,12 @@ read from `crates/`, its tracks may be picked again.
   embedded in the page, so no other website can trigger actions.
 - Routes: `GET /`, `/crate/<code>`, `/static/*`, `/api/state`, `/api/health`; `POST /api/consent` (`on`),
   `/api/generate` (`since`, `until`), `/api/session/check`, `/api/login/start`, `/api/star/<code>/<track>`
-  (`on`), `/api/playlist/<code>` (`name`, `genres`), `/api/playlist/<code>/<id>` (`name`, `remove`, `add`),
+  (`on`), `/api/playlist/<code>` (`name` or `into`, `genres`), `/api/playlists` (the user's own playlists),
+  `/api/playlist/<code>/<id>` (`name`, `remove`, `add`),
   `/api/selection/<code>/delete`, `/api/genres` (`levels`, `only`: the Genres dialog's choices, saved whole on
   every change; local only, 409 while busy).
   Also `GET /crate/<code>/playlist/<id>`, the playlist editor.
-- Consent: the routes that read the session (`generate`, `session/check`, `login/start`, `playlist/*`)
+- Consent: the routes that read the session (`generate`, `session/check`, `login/start`, `playlist/*`, `playlists`)
   answer 409 `consent_required` until the user accepts the notice in the page, which explains the Beatport
   window, what is read, what beat50 never does and where the session is kept. The page asks before the
   first such action and then carries it out; **Withdraw permission** deletes `consent.json`, not the
@@ -175,6 +176,14 @@ read from `crates/`, its tracks may be picked again.
 - Playlists are always private: if Beatport returns one that is not `is_public: false`, beat50 stops
   before adding tracks and says so. Once a playlist exists it is always recorded, even if adding or
   counting tracks failed, so a retry does not duplicate it.
+- Adding to an existing playlist: the dialog behind **Create Beatport playlist** lists the user's own playlists
+  (`POST /api/playlists`, `playlists.list_playlists`: `is_owner` true, newest first; public ones listed but not
+  selectable). `POST /api/playlist/<code>` with `{into}` runs `playlists.add_to_playlist`: it reads the playlist on
+  Beatport, refuses one that is public (`is_public` not false) or not the user's (`is_owner` false) before writing,
+  and adds at the end only the starred tracks not already in it, by track id and in selection order. If they are
+  all there, nothing is written. The playlist is then recorded in that selection's `marks/`; one that no
+  selection recorded as created by beat50 is `external`, and its editor only adds (name read-only, no remove;
+  `jobs.edit_playlist` refuses a rename or a removal with `add_only`). Consent version 3 says so.
 - Editing (`/crate/<code>/playlist/<id>`, saved with `POST /api/playlist/<code>/<id>` `{name, remove, add}`):
   only playlists recorded in `marks/` can be opened or saved. The page marks changes and sends them
   together. `playlists.edit_playlist` first reads the playlist as it is on Beatport, renames it if the name

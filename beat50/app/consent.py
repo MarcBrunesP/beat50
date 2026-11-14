@@ -12,8 +12,8 @@ from ..errors import Beat50Error
 from . import state
 
 # Raised whenever the notice says something new, so a consent given to older wording is asked again.
-# 2: beat50 also edits the playlists it created.
-VERSION = 2
+# 2: beat50 also edits the playlists it created. 3: it also adds tracks to the user's own private playlists.
+VERSION = 3
 
 
 def granted():

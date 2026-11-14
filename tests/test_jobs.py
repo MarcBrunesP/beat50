@@ -528,3 +528,124 @@ def test_generate_applies_the_genre_preferences_and_records_them(data_dir, monke
     assert second["tracks"] == [] and second["short"] is True  # only genre 5 may enter, and no candidate is
     # profile.json keeps the library's weights, not the choices
     assert "genre_only" not in json.loads((data_dir / "profile.json").read_text())
+
+
+def _added(pid, track_ids, added, already=0):
+    return {"id": pid, "name": "Warm-up", "track_ids": track_ids, "added": added, "already": already, "warnings": []}
+
+
+def test_add_to_playlist_sends_the_stars_and_records_it_as_external(data_dir, monkeypatch):
+    _crate_with(data_dir, [1, 2, 3])
+    marks.set_star(SELECTION, 3, True)
+    marks.set_star(SELECTION, 1, True)
+    requested = []
+
+    def add(client, pid, ids):
+        assert jobs.busy()
+        requested.append((pid, ids))
+        return _added(pid, [7, 1, 3], [3], already=1)
+    monkeypatch.setattr(jobs, "_client", lambda: object())
+    monkeypatch.setattr(jobs.playlists, "add_to_playlist", add)
+    r = jobs.add_to_playlist(SELECTION, 5)
+    assert requested == [(5, [1, 3])] and r["added"] == [3]
+    saved = marks.find_playlist(SELECTION, 5)
+    assert saved["external"] is True and saved["track_ids"] == [7, 1, 3] and saved["name"] == "Warm-up"
+    assert state.read()["session"]["status"] == "active"
+    assert state.lock_owner() is None and not jobs.busy()
+
+
+def test_add_to_playlist_of_one_beat50_created_elsewhere_is_not_external(data_dir, monkeypatch):
+    _crate_with(data_dir, [1, 2])
+    marks.add_playlist("2026-08", {"id": 5, "name": "Warm-up", "track_ids": [9], "created_at": "t"})
+    marks.set_star(SELECTION, 2, True)
+    monkeypatch.setattr(jobs, "_client", lambda: object())
+    monkeypatch.setattr(jobs.playlists, "add_to_playlist", lambda c, pid, ids: _added(pid, [9, 2], [2]))
+    jobs.add_to_playlist(SELECTION, 5)
+    assert "external" not in marks.find_playlist(SELECTION, 5)
+
+
+def test_add_to_playlist_already_recorded_here_updates_the_record(data_dir, monkeypatch):
+    _with_playlist(data_dir)
+    marks.update_playlist(SELECTION, 9, gone=True)
+    marks.set_star(SELECTION, 3, True)
+    monkeypatch.setattr(jobs, "_client", lambda: object())
+    monkeypatch.setattr(jobs.playlists, "add_to_playlist", lambda c, pid, ids: _added(pid, [1, 2, 3], [3]))
+    jobs.add_to_playlist(SELECTION, 9)
+    saved = marks.read(SELECTION)["playlists"]
+    assert len(saved) == 1 and saved[0]["track_ids"] == [1, 2, 3] and saved[0]["gone"] is False
+    assert saved[0]["edited_at"] and "external" not in saved[0]
+
+
+def test_add_to_playlist_only_with_the_stars_of_the_filtered_genres(data_dir, monkeypatch):
+    _crate_with_genres(data_dir)
+    for i in (1, 2, 3):
+        marks.set_star(SELECTION, i, True)
+    requested = []
+    monkeypatch.setattr(jobs, "_client", lambda: object())
+    monkeypatch.setattr(jobs.playlists, "add_to_playlist",
+                        lambda c, pid, ids: requested.append(ids) or _added(pid, ids, ids))
+    jobs.add_to_playlist(SELECTION, 5, genres=["House"])
+    assert requested == [[1, 3]]
+
+
+def test_add_to_playlist_without_stars_does_not_read_the_session(data_dir, monkeypatch):
+    _crate_with(data_dir, [1])
+    monkeypatch.setattr(jobs, "_client", lambda: pytest.fail("must not read the session"))
+    with pytest.raises(playlists.PlaylistError) as err:
+        jobs.add_to_playlist(SELECTION, 5)
+    assert err.value.code == "no_starred"
+
+
+def test_add_to_playlist_with_an_expired_session_records_nothing(data_dir, monkeypatch):
+    _crate_with(data_dir, [1])
+    marks.set_star(SELECTION, 1, True)
+
+    def no_session():
+        raise auth.SessionExpired("session_expired", "No session")
+    monkeypatch.setattr(jobs, "_client", no_session)
+    with pytest.raises(auth.SessionExpired):
+        jobs.add_to_playlist(SELECTION, 5)
+    assert marks.read(SELECTION)["playlists"] == []
+    assert state.read()["session"]["status"] == "expired"
+
+
+def test_add_to_playlist_refused_by_beatport_records_nothing(data_dir, monkeypatch):
+    _crate_with(data_dir, [1])
+    marks.set_star(SELECTION, 1, True)
+
+    def public(c, pid, ids):
+        raise playlists.PlaylistError("playlist_public", "public", name="Live")
+    monkeypatch.setattr(jobs, "_client", lambda: object())
+    monkeypatch.setattr(jobs.playlists, "add_to_playlist", public)
+    with pytest.raises(playlists.PlaylistError):
+        jobs.add_to_playlist(SELECTION, 5)
+    assert marks.read(SELECTION)["playlists"] == []
+
+
+def test_list_playlists_reads_them_under_the_lock(data_dir, monkeypatch):
+    def listed(client):
+        assert jobs.busy() and state.lock_owner() is not None
+        return [{"id": 5}]
+    monkeypatch.setattr(jobs, "_client", lambda: object())
+    monkeypatch.setattr(jobs.playlists, "list_playlists", listed)
+    assert jobs.list_playlists() == [{"id": 5}]
+    assert state.read()["session"]["status"] == "active" and state.lock_owner() is None
+
+
+@pytest.mark.parametrize("name, remove", [("Renamed", []), ("Old", [1])])
+def test_in_an_external_playlist_beat50_only_adds(data_dir, monkeypatch, name, remove):
+    _with_playlist(data_dir)
+    marks.update_playlist(SELECTION, 9, external=True)
+    monkeypatch.setattr(jobs, "_client", lambda: pytest.fail("must not read the session"))
+    with pytest.raises(Beat50Error) as err:
+        jobs.edit_playlist(SELECTION, 9, name, remove=remove, add=[3])
+    assert err.value.code == "add_only"
+
+
+def test_an_external_playlist_can_still_get_tracks_added(data_dir, monkeypatch):
+    _with_playlist(data_dir)
+    marks.update_playlist(SELECTION, 9, external=True)
+    monkeypatch.setattr(jobs, "_client", lambda: object())
+    monkeypatch.setattr(jobs.playlists, "edit_playlist", lambda c, pid, name=None, remove=(), add=():
+                        {"id": pid, "name": "Old", "track_ids": [1, 2, 3], "warnings": []})
+    assert jobs.edit_playlist(SELECTION, 9, "Old", add=[3])["track_ids"] == [1, 2, 3]

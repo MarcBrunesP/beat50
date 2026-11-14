@@ -1,9 +1,12 @@
 import io
+import json
 import urllib.error
+from pathlib import Path
 
 import pytest
 
 from beat50 import playlists
+from beat50.client import TokenExpired
 from beat50.errors import Beat50Error
 
 
@@ -287,3 +290,102 @@ def test_edit_compares_the_name_with_the_one_on_beatport():
     pl2.name = "Peak"
     playlists.edit_playlist(pl2, 7, name="Peak", remove=[1])
     assert not any(c[0] == "PATCH" for c in pl2.calls)
+
+
+class FakeMine(FakePlaylist):
+    """One of the user's own playlists: public or not, and maybe not theirs at all."""
+
+    def __init__(self, tracks, public=False, owner=True, **kw):
+        super().__init__(tracks, **kw)
+        self.public, self.owner = public, owner
+
+    def get(self, path, **kw):
+        return dict(super().get(path), is_public=self.public, is_owner=self.owner)
+
+
+def _writes(c):
+    return [(m, p, b) for m, p, b in c.calls if m != "GET"]
+
+
+def test_add_to_playlist_leaves_out_what_is_already_in_it():
+    c = FakeMine([1, 2])
+    r = playlists.add_to_playlist(c, 7, [3, 2, 4, 3])
+    assert _writes(c) == [("POST", "/my/playlists/7/tracks/bulk/", {"track_ids": [3, 4]})]
+    assert r == {"id": 7, "name": "old", "track_ids": [1, 2, 3, 4], "added": [3, 4], "already": 1, "warnings": []}
+
+
+def test_add_to_playlist_with_everything_already_in_it_writes_nothing():
+    c = FakeMine([1, 2])
+    r = playlists.add_to_playlist(c, 7, [2, 1])
+    assert _writes(c) == []
+    assert r["added"] == [] and r["already"] == 2 and r["track_ids"] == [1, 2]
+
+
+@pytest.mark.parametrize("public, owner, code", [(True, True, "playlist_public"), (None, True, "playlist_public"),
+                                                 (False, False, "not_owner")])
+def test_add_to_playlist_only_writes_to_the_users_private_playlists(public, owner, code):
+    c = FakeMine([1], public=public, owner=owner)
+    with pytest.raises(playlists.PlaylistError) as err:
+        playlists.add_to_playlist(c, 7, [2])
+    assert err.value.code == code and err.value.params == {"name": "old"}
+    assert _writes(c) == []
+
+
+def test_add_to_playlist_of_one_gone_from_beatport():
+    with pytest.raises(playlists.PlaylistError) as err:
+        playlists.add_to_playlist(FakeMine([1], gone=True), 7, [2])
+    assert err.value.code == "playlist_gone"
+
+
+def test_add_to_playlist_without_tracks_does_not_call_beatport():
+    c = FakeMine([1])
+    with pytest.raises(playlists.PlaylistError) as err:
+        playlists.add_to_playlist(c, 7, [])
+    assert err.value.code == "no_starred" and c.calls == []
+
+
+def test_add_to_playlist_reports_a_failed_add_and_a_failed_reread():
+    r = playlists.add_to_playlist(FakeMine([1], fail={"add"}), 7, [2])
+    assert [w["code"] for w in r["warnings"]] == ["add_failed"] and r["added"] == [] and r["track_ids"] == [1]
+    r = playlists.add_to_playlist(FakeMine([1], fail={"reread"}), 7, [2])
+    assert [w["code"] for w in r["warnings"]] == ["count_unknown"] and r["track_ids"] is None and r["added"] == []
+
+
+def test_an_expired_session_while_adding_is_not_hidden_as_a_warning():
+    c = FakeMine([1])
+
+    def expired(path, body):
+        raise TokenExpired("session_expired", "Beatport answered 401: sign in again.")
+    c.post = expired
+    with pytest.raises(TokenExpired):
+        playlists.add_to_playlist(c, 7, [2])
+
+
+class FakeList:
+    def __init__(self, items=None, fails=None):
+        self.items, self.fails = items, fails
+
+    def paged(self, path, **kw):
+        assert path == "/my/playlists/"
+        if self.fails:
+            raise self.fails
+        return self.items
+
+
+def test_list_playlists_gives_only_the_users_own_newest_first():
+    fixture = json.loads((Path(__file__).parent / "fixtures" / "my_playlists.json").read_text())["results"]
+    items = fixture + [
+        dict(fixture[0], id=3, name="Followed", is_owner=False, updated_date="2030-01-01T00:00:00"),
+        dict(fixture[0], id=4, name="Live", is_public=True, updated_date="2029-01-01T00:00:00")]
+    r = playlists.list_playlists(FakeList(items))
+    assert [p["name"] for p in r][0] == "Live" and "Followed" not in [p["name"] for p in r]
+    assert r[0] == {"id": 4, "name": "Live", "track_count": fixture[0]["track_count"], "is_public": True}
+    assert all(p["is_public"] is False for p in r[1:]) and len(r) == len(fixture) + 1
+
+
+def test_list_playlists_that_beatport_cannot_answer_says_so():
+    with pytest.raises(playlists.PlaylistError) as err:
+        playlists.list_playlists(FakeList(fails=_http(502)))
+    assert err.value.code == "list_failed"
+    with pytest.raises(TokenExpired):
+        playlists.list_playlists(FakeList(fails=TokenExpired("session_expired", "Beatport answered 401: sign in again.")))

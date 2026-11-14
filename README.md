@@ -46,19 +46,24 @@ it works; you can reopen them anytime with the **?** button beside the app's nam
    saved as you make them and the selection's heading says which ones it was made with.
 4. Each selection is saved with a code `YYYYMMDD_HHMMSS` and listed in the sidebar. Play the previews (▶ on
    the cover; the player with the progress bar opens under the track) and filter by genre.
-5. Star (★) what you like and click **Create Beatport playlist**: it creates an **always private**
-   playlist with the starred tracks in view (with a genre filter on, only those genres).
+5. Star (★) what you like and click **Create Beatport playlist**. Choose **New playlist** to create an
+   **always private** playlist with the starred tracks in view (with a genre filter on, only those genres),
+   or **Add to one of mine** to add them to one of your private playlists on Beatport (public ones are
+   listed but cannot be chosen). Tracks already in that playlist are never added again: beat50 checks it on
+   Beatport first and tells you how many were added and how many were already there.
 6. Click a playlist under **Playlists from this selection** to edit it: change its name, mark tracks to
    remove and tracks of the selection to add (starred ones first), then **Save changes**. Nothing changes
    on Beatport until you save. When it opens, beat50 checks the playlist on Beatport first, so a new
    name, tracks added on beatport.com (shown with their title, and removable) and edits made there are
-   kept. A playlist deleted on Beatport shows as such and can be removed from the list.
+   kept. A playlist deleted on Beatport shows as such and can be removed from the list. In one of your
+   playlists that beat50 did not create, it only adds tracks: the name and its tracks stay as they are.
 7. To delete a selection, click its bin (in the sidebar, on hover, or next to its title) and confirm. It goes to the Trash (Finder's
    **Put Back** restores it) with its stars and the record of its playlists; the playlists stay on
    Beatport, and its tracks may show up again in new selections.
 
-Creating and editing its own playlists is all beat50 writes to your account. It never deletes a
-playlist, never touches the others and never makes one public.
+Creating and editing its own playlists, and adding tracks to your private ones, is all beat50 writes to
+your account. It never deletes a playlist, never renames or removes tracks from the ones it did not create,
+never adds to public ones and never makes one public.
 
 Switch the language with **ES / EN** in the sidebar. Closing the window while a selection is being made
 asks first, because it would stop it.

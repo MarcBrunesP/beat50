@@ -20,7 +20,8 @@ MAX_PERIOD_DAYS = 366
 # Errors whose cause is not the request itself: a retry later or a sign-in may fix them.
 CONFLICTS = {"busy", "session_expired", "login_already", "consent_required"}
 # Routes that read the Beatport session (in a window of beat50's): only with the user's consent.
-SESSION_ROUTES = ("/api/generate", "/api/session/check", "/api/login/start", "/api/playlist/")
+SESSION_ROUTES = ("/api/generate", "/api/session/check", "/api/login/start", "/api/playlist/",
+                  "/api/playlists")
 
 
 def _period(body):
@@ -201,6 +202,10 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/login/start":
             jobs.login_start()
             return self._json(200, {"ok": True})
+        if path == "/api/playlists":  # the user's own playlists, to add the starred tracks to one
+            if jobs.busy() or state.lock_owner():
+                raise state.Busy("busy", "beat50 is already busy.")
+            return self._json(200, {"playlists": jobs.list_playlists()})
         if path.startswith("/api/star/"):
             parts = path[len("/api/star/"):].split("/")
             crate = _crate(parts[0]) if len(parts) == 2 else None
@@ -222,11 +227,16 @@ class Handler(BaseHTTPRequestHandler):
                 return self._playlist_action(selection, int(playlist_id), action, body)
             if jobs.busy() or state.lock_owner():
                 raise state.Busy("busy", "beat50 is already busy.")
-            if not isinstance(body.get("name"), str):
-                raise Beat50Error("name_required", "The playlist needs a name.")
             genres = body.get("genres")
             if genres is not None and not (isinstance(genres, list) and all(isinstance(g, str) for g in genres)):
                 raise Beat50Error("bad_request", "\"genres\" must be a list of strings.")
+            if "into" in body:  # add to one of the user's playlists instead of creating one
+                if not _ids([body["into"]]):
+                    raise Beat50Error("bad_request", "\"into\" must be a playlist id.")
+                r = jobs.add_to_playlist(selection, body["into"], genres=genres or None)
+                return self._json(200, {"ok": True, "message": _added_message(self._lang(), r)})
+            if not isinstance(body.get("name"), str):
+                raise Beat50Error("name_required", "The playlist needs a name.")
             r = jobs.create_playlist(selection, body["name"], genres=genres or None)
             return self._json(200, {"ok": True, "message": _playlist_message(self._lang(), r)})
         if path.startswith("/api/selection/") and path.endswith("/delete"):  # only local: no permission needed
@@ -279,6 +289,17 @@ def _playlist_message(lang, r):
     message = i18n.t(lang, "playlist_created", name=r["name"], n=len(r["track_ids"]))
     if len(r["track_ids"]) < r["requested"]:
         message += i18n.t(lang, "playlist_partial", n=len(r["track_ids"]), total=r["requested"])
+    for w in r.get("warnings", []):
+        message += i18n.t(lang, f"warn_{w['code']}", detail=w.get("detail", ""))
+    return message
+
+
+def _added_message(lang, r):
+    if not r["added"] and r["already"] and not r["warnings"]:
+        return i18n.t(lang, "playlist_all_already", name=r["name"], n=r["already"])
+    message = i18n.t(lang, "playlist_added", name=r["name"], n=len(r["added"]))
+    if r["already"]:
+        message += i18n.t(lang, "playlist_already", n=r["already"])
     for w in r.get("warnings", []):
         message += i18n.t(lang, f"warn_{w['code']}", detail=w.get("detail", ""))
     return message
