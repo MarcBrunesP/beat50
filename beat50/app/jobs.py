@@ -250,7 +250,10 @@ def edit_playlist(selection, playlist_id, name, remove=(), add=()):
         raise playlists.PlaylistError("no_changes", "There is nothing to save.")
     with _Working(), state.lock():
         try:
-            result = playlists.edit_playlist(_client(), playlist_id, name=new_name, remove=remove, add=add)
+            if playlist.get("external"):  # checks again on Beatport that it is still the user's and private
+                result = playlists.add_to_playlist(_client(), playlist_id, add)
+            else:
+                result = playlists.edit_playlist(_client(), playlist_id, name=new_name, remove=remove, add=add)
         except (auth.SessionExpired, TokenExpired):
             _session("expired")
             raise

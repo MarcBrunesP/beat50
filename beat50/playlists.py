@@ -136,7 +136,10 @@ def add_to_playlist(client, playlist_id, track_ids):
         raise PlaylistError("no_starred", "No tracks are starred.")
     pl, items = _read(client, playlist_id)
     name = pl.get("name")
-    if pl.get("is_owner") is False:
+    owner = pl.get("is_owner")
+    if owner is None:  # the playlist's own record may not say: the list of the user's playlists does
+        owner = any(p["id"] == playlist_id for p in list_playlists(client))
+    if owner is not True:  # fail closed: only a playlist Beatport says is the user's
         raise PlaylistError("not_owner", f"“{name}” is not one of your playlists: beat50 does not add to it.",
                             name=name)
     if pl.get("is_public") is not False:

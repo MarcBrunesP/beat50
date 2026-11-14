@@ -642,10 +642,26 @@ def test_in_an_external_playlist_beat50_only_adds(data_dir, monkeypatch, name, r
     assert err.value.code == "add_only"
 
 
-def test_an_external_playlist_can_still_get_tracks_added(data_dir, monkeypatch):
+def test_an_external_playlist_gets_tracks_added_with_the_same_checks_as_adding(data_dir, monkeypatch):
     _with_playlist(data_dir)
     marks.update_playlist(SELECTION, 9, external=True)
+    added = []
     monkeypatch.setattr(jobs, "_client", lambda: object())
-    monkeypatch.setattr(jobs.playlists, "edit_playlist", lambda c, pid, name=None, remove=(), add=():
-                        {"id": pid, "name": "Old", "track_ids": [1, 2, 3], "warnings": []})
+    monkeypatch.setattr(jobs.playlists, "edit_playlist", lambda *a, **kw: pytest.fail("must go through adding"))
+    monkeypatch.setattr(jobs.playlists, "add_to_playlist", lambda c, pid, ids: added.append((pid, list(ids))) or
+                        _added(pid, [1, 2, 3], [3]))
     assert jobs.edit_playlist(SELECTION, 9, "Old", add=[3])["track_ids"] == [1, 2, 3]
+    assert added == [(9, [3])] and marks.find_playlist(SELECTION, 9)["track_ids"] == [1, 2, 3]
+
+
+def test_an_external_playlist_made_public_on_beatport_gets_nothing_from_the_editor(data_dir, monkeypatch):
+    _with_playlist(data_dir)
+    marks.update_playlist(SELECTION, 9, external=True)
+
+    def public(c, pid, ids):
+        raise playlists.PlaylistError("playlist_public", "public", name="Old")
+    monkeypatch.setattr(jobs, "_client", lambda: object())
+    monkeypatch.setattr(jobs.playlists, "add_to_playlist", public)
+    with pytest.raises(playlists.PlaylistError) as err:
+        jobs.edit_playlist(SELECTION, 9, "Old", add=[3])
+    assert err.value.code == "playlist_public" and marks.find_playlist(SELECTION, 9)["track_ids"] == [1, 2]

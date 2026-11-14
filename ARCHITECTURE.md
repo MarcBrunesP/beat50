@@ -179,11 +179,13 @@ read from `crates/`, its tracks may be picked again.
 - Adding to an existing playlist: the dialog behind **Create Beatport playlist** lists the user's own playlists
   (`POST /api/playlists`, `playlists.list_playlists`: `is_owner` true, newest first; public ones listed but not
   selectable). `POST /api/playlist/<code>` with `{into}` runs `playlists.add_to_playlist`: it reads the playlist on
-  Beatport, refuses one that is public (`is_public` not false) or not the user's (`is_owner` false) before writing,
+  Beatport, refuses one that is public (`is_public` not false) or not the user's (`is_owner` not true; when the record
+  leaves it out, the list of the user's playlists decides) before writing,
   and adds at the end only the starred tracks not already in it, by track id and in selection order. If they are
   all there, nothing is written. The playlist is then recorded in that selection's `marks/`; one that no
   selection recorded as created by beat50 is `external`, and its editor only adds (name read-only, no remove;
-  `jobs.edit_playlist` refuses a rename or a removal with `add_only`). Consent version 3 says so.
+  `jobs.edit_playlist` refuses a rename or a removal with `add_only` and adds through `add_to_playlist`, so the
+  same checks run again). Consent version 3 says so.
 - Editing (`/crate/<code>/playlist/<id>`, saved with `POST /api/playlist/<code>/<id>` `{name, remove, add}`):
   only playlists recorded in `marks/` can be opened or saved. The page marks changes and sends them
   together. `playlists.edit_playlist` first reads the playlist as it is on Beatport, renames it if the name

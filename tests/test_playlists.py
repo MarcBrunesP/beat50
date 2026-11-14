@@ -293,14 +293,22 @@ def test_edit_compares_the_name_with_the_one_on_beatport():
 
 
 class FakeMine(FakePlaylist):
-    """One of the user's own playlists: public or not, and maybe not theirs at all."""
+    """One of the user's own playlists: public or not, and maybe not theirs at all. With owner None its record
+    does not say, and `listed` is what the list of the user's playlists answers."""
 
-    def __init__(self, tracks, public=False, owner=True, **kw):
+    def __init__(self, tracks, public=False, owner=True, listed=(), **kw):
         super().__init__(tracks, **kw)
-        self.public, self.owner = public, owner
+        self.public, self.owner, self.listed = public, owner, list(listed)
 
     def get(self, path, **kw):
-        return dict(super().get(path), is_public=self.public, is_owner=self.owner)
+        record = dict(super().get(path), is_public=self.public)
+        return record if self.owner is None else dict(record, is_owner=self.owner)
+
+    def paged(self, path, **kw):
+        if path == "/my/playlists/":
+            self.calls.append(("GET", path, None))
+            return self.listed
+        return super().paged(path, **kw)
 
 
 def _writes(c):
@@ -322,7 +330,8 @@ def test_add_to_playlist_with_everything_already_in_it_writes_nothing():
 
 
 @pytest.mark.parametrize("public, owner, code", [(True, True, "playlist_public"), (None, True, "playlist_public"),
-                                                 (False, False, "not_owner")])
+                                                 (False, False, "not_owner"), (False, "yes", "not_owner"),
+                                                 (False, None, "not_owner")])
 def test_add_to_playlist_only_writes_to_the_users_private_playlists(public, owner, code):
     c = FakeMine([1], public=public, owner=owner)
     with pytest.raises(playlists.PlaylistError) as err:
@@ -389,3 +398,13 @@ def test_list_playlists_that_beatport_cannot_answer_says_so():
     assert err.value.code == "list_failed"
     with pytest.raises(TokenExpired):
         playlists.list_playlists(FakeList(fails=TokenExpired("session_expired", "Beatport answered 401: sign in again.")))
+
+
+def test_add_to_playlist_whose_record_does_not_say_whose_it_is_asks_the_list():
+    c = FakeMine([1], owner=None, listed=[{"id": 7, "is_owner": True}, {"id": 8, "is_owner": False}])
+    r = playlists.add_to_playlist(c, 7, [2])
+    assert ("GET", "/my/playlists/", None) in c.calls and r["added"] == [2]
+    c = FakeMine([1], owner=None, listed=[{"id": 7, "is_owner": False}])
+    with pytest.raises(playlists.PlaylistError) as err:
+        playlists.add_to_playlist(c, 7, [2])
+    assert err.value.code == "not_owner" and _writes(c) == []
