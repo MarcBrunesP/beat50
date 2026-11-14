@@ -133,7 +133,8 @@ second one in `--star` and, between them when the slide is a step, a 26 px `--fa
   and a 24 px bordered **Only** button that fills `--accent` when on. A switched-off genre dims its name to `--off`.
   Reset sits left, Done right.
 - **Playlist dialog** (`#pl-dialog`): a 520 px dialog like the consent sheet. A `.seg` control picks **New
-  playlist** (a 32 px name input on `--bg`, and a lock hint) or **Add to one of mine** (a scrolling list, at most
+  playlist** (a 32 px name input on `--bg`, and a lock hint) or **Add to one of mine** (a 32 px search field on `--bg` with a search icon, its border `--accent` on focus,
+  above a scrolling list, at most
   280 px, of 34 px rows: name, track count in `--soft`, and a `--chip` "Public" tag on the disabled public ones; the
   chosen row gets an `--accent` border on `--accent-soft`). Cancel and Create / Add sit right. In the editor of a
   playlist beat50 did not create, the name input is read-only (no border or background) and a 32 px gap keeps the

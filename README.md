@@ -49,7 +49,7 @@ it works; you can reopen them anytime with the **?** button beside the app's nam
 5. Star (★) what you like and click **Create Beatport playlist**. Choose **New playlist** to create an
    **always private** playlist with the starred tracks in view (with a genre filter on, only those genres),
    or **Add to one of mine** to add them to one of your private playlists on Beatport (public ones are
-   listed but cannot be chosen). Tracks already in that playlist are never added again: beat50 checks it on
+   listed but cannot be chosen; type in the search box to find one by name). Tracks already in that playlist are never added again: beat50 checks it on
    Beatport first and tells you how many were added and how many were already there.
 6. Click a playlist under **Playlists from this selection** to edit it: change its name, mark tracks to
    remove and tracks of the selection to add (starred ones first), then **Save changes**. Nothing changes

@@ -161,6 +161,29 @@ const plDialog = document.getElementById('pl-dialog');
 let plMode = 'new';
 let plInto = null;
 let plListed = false;
+const plSearch = document.getElementById('pl-search');
+
+// For matching names: lower case and without accents, so "tecno" or "PEAK" find "Peak Técno".
+const plain = (s) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+
+// Shows only the playlists whose name has every word typed. A chosen one that gets hidden is unchosen, so the
+// tracks never go to a playlist out of sight.
+function filterPlaylists() {
+  const words = plain(plSearch.value).split(/\s+/).filter(Boolean);
+  let shown = 0;
+  document.querySelectorAll('#pl-list li').forEach((li) => {
+    const name = plain(li.querySelector('.pl-n').textContent);
+    li.hidden = !words.every((w) => name.includes(w));
+    if (!li.hidden) shown += 1;
+    if (li.hidden && li.querySelector('[aria-pressed="true"]')) {
+      li.querySelector('[data-into]').setAttribute('aria-pressed', 'false');
+      plInto = null;
+    }
+  });
+  const status = document.getElementById('pl-list-status');
+  status.textContent = shown || !document.querySelector('#pl-list li') ? '' : text('pl_no_match', {q: tidy(plSearch.value)});
+  updatePlaylistOk();
+}
 
 function setPlaylistMode(mode) {
   plMode = mode;
@@ -195,6 +218,7 @@ async function listPlaylists() {
   }
   plListed = true;
   status.textContent = data.playlists.length ? '' : TEXTS.pl_none;
+  plSearch.closest('label').hidden = !data.playlists.length;
   data.playlists.forEach((pl) => {  // built with textContent: names come from Beatport
     const b = document.createElement('button');
     b.dataset.into = pl.id;
@@ -216,11 +240,17 @@ async function listPlaylists() {
     li.append(b);
     list.append(li);
   });
+  if (data.playlists.length) {
+    filterPlaylists();  // what was typed while the list was loading
+    plSearch.focus();
+  }
 }
 
 function openPlaylistDialog(button) {
   plInto = null;
   plListed = false;
+  plSearch.value = '';
+  plSearch.closest('label').hidden = true;
   document.getElementById('pl-new-name').value = button.dataset.suggested;
   setPlaylistMode('new');
   plDialog.showModal();
@@ -244,6 +274,13 @@ if (plDialog) {
     act(document.querySelector('[data-action="playlist"]'), body);
   });
   document.getElementById('pl-new-name').addEventListener('input', updatePlaylistOk);
+  plSearch.addEventListener('input', filterPlaylists);
+  plSearch.addEventListener('keydown', (e) => {  // Enter picks the only playlist left that can be chosen
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    const left = [...document.querySelectorAll('#pl-list li:not([hidden]) [data-into]:not(:disabled)')];
+    if (left.length === 1) left[0].click();
+  });
   document.getElementById('pl-new-name').addEventListener('keydown', (e) => {
     const ok = plDialog.querySelector('[data-pl-ok]');
     if (e.key === 'Enter' && !ok.disabled) ok.click();

@@ -701,3 +701,11 @@ def test_in_one_of_the_users_playlists_the_editor_only_adds():
     assert "data-remove=" not in html and "data-add=" in html and "X — Other" in html
     assert "beat50 did not create this playlist: it only adds tracks to it." in html
     assert "readonly" not in _edit_page() and "data-remove=" in _edit_page()
+
+
+def test_the_users_playlists_can_be_searched_by_name():
+    html = _page()
+    assert '<input type="search" id="pl-search" placeholder="Search by name" aria-label="Search by name"' in html
+    assert '"pl_no_match": "No playlist matches “{q}”."' in html
+    es = _page(lang="es")
+    assert 'placeholder="Buscar por nombre"' in es and '"pl_no_match": "Ninguna playlist coincide con «{q}»."' in es

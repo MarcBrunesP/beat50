@@ -3,6 +3,13 @@
 What changed in each version of beat50 (called beatcrate before 3.0). The format follows [Keep a Changelog](https://keepachangelog.com/)
 and versions follow [Semantic Versioning](https://semver.org/). The version lives in `pyproject.toml`.
 
+## Unreleased
+
+### Added
+
+- **Add to one of mine** has a search box: type part of a name and only the playlists that match stay in the list
+  (every word counts, without caring about capitals or accents). Enter picks the only one left.
+
 ## 3.2.0 — 2026-11-14
 
 ### Added

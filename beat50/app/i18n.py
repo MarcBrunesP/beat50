@@ -116,6 +116,8 @@ TEXTS = {
         "pl_listing": "Reading your playlists on Beatport…",
         "pl_none": "You have no playlists on Beatport.",
         "pl_public": "Public",
+        "pl_search": "Search by name",
+        "pl_no_match": "No playlist matches “{q}”.",
         "adding": "Adding the tracks on Beatport…",
         "edit_hint_external": "beat50 did not create this playlist: it only adds tracks to it. Mark what to add, then save.",
         "error_list_failed": "Beatport did not answer properly while listing your playlists: {detail}",
@@ -282,6 +284,8 @@ TEXTS = {
         "pl_listing": "Leyendo tus playlists en Beatport…",
         "pl_none": "No tienes playlists en Beatport.",
         "pl_public": "Pública",
+        "pl_search": "Buscar por nombre",
+        "pl_no_match": "Ninguna playlist coincide con «{q}».",
         "adding": "Añadiendo los tracks en Beatport…",
         "edit_hint_external": "Esta playlist no la creó beat50: solo le añade tracks. Marca lo que quieras añadir y guarda.",
         "error_list_failed": "Beatport no respondió bien al listar tus playlists: {detail}",
@@ -354,7 +358,7 @@ TEXTS = {
 
 JS_KEYS = ("making", "phase_library", "phase_discover", "phase_rank", "js_closed", "js_error",
            "listen", "pause", "creating", "saving", "checking", "js_delete", "created", "adding", "pl_ok_new",
-           "pl_ok_into", "pl_listing", "pl_none", "pl_public")
+           "pl_ok_into", "pl_listing", "pl_none", "pl_public", "pl_no_match")
 
 
 def pick(cookie_header, accept_language):

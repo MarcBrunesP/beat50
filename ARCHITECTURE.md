@@ -178,7 +178,8 @@ read from `crates/`, its tracks may be picked again.
   counting tracks failed, so a retry does not duplicate it.
 - Adding to an existing playlist: the dialog behind **Create Beatport playlist** lists the user's own playlists
   (`POST /api/playlists`, `playlists.list_playlists`: `is_owner` true, newest first; public ones listed but not
-  selectable). `POST /api/playlist/<code>` with `{into}` runs `playlists.add_to_playlist`: it reads the playlist on
+  selectable). The page filters that list by name as the user types (every word, ignoring case and accents);
+  a chosen playlist the filter hides is unchosen. `POST /api/playlist/<code>` with `{into}` runs `playlists.add_to_playlist`: it reads the playlist on
   Beatport, refuses one that is public (`is_public` not false) or not the user's (`is_owner` not true; when the record
   leaves it out, the list of the user's playlists decides) before writing,
   and adds at the end only the starred tracks not already in it, by track id and in selection order. If they are

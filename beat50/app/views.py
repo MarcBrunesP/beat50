@@ -34,6 +34,7 @@ ICONS = {
     "remove": '<path d="M6 12h12"/>',
     "remove_moderator": '<path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/><path d="M5 5l14 14"/>',
     "save": '<path d="M5 12l5 5L20 7"/>',
+    "search": '<circle cx="11" cy="11" r="6"/><path d="M15.5 15.5L20 20"/>',
     "star": '<path d="M12 2.5l2.9 6.1 6.7.8-4.9 4.6 1.3 6.6L12 17.4l-6 3.2 1.3-6.6L2.4 9.4l6.7-.8z"/>',
     "sync": '<path d="M20 12a8 8 0 0 1-14 5.3M4 12a8 8 0 0 1 14-5.3"/><path d="M18 3v4h-4M6 21v-4h4"/>',
     "trash": '<path d="M4 7h16M10 11v6M14 11v6"/><path d="M6 7l1 12.2a2 2 0 0 0 2 1.8h6a2 2 0 0 0 2-1.8L18 7"/>'
@@ -360,7 +361,10 @@ def _playlist_dialog(lang):
             f'<div data-pl-pane="new"><label class="pl-field"><span>{i18n.t(lang, "playlist_name")}</span>'
             f'<input id="pl-new-name" maxlength="100"></label>'
             f'<p class="hint">{_icon("lock")}{i18n.t(lang, "pl_new_hint")}</p></div>'
-            f'<div data-pl-pane="into" hidden><p class="hint" id="pl-list-status" role="status"></p>'
+            f'<div data-pl-pane="into" hidden><label class="pl-search" hidden>{_icon("search")}'
+            f'<input type="search" id="pl-search" placeholder="{i18n.t(lang, "pl_search")}" '
+            f'aria-label="{i18n.t(lang, "pl_search")}" autocomplete="off"></label>'
+            f'<p class="hint" id="pl-list-status" role="status"></p>'
             f'<ul class="pl-pick" id="pl-list"></ul><p class="hint">{i18n.t(lang, "pl_into_hint")}</p></div>'
             f'<div class="buttons"><button data-pl-cancel>{i18n.t(lang, "consent_cancel")}</button>'
             f'<button class="main" data-pl-ok>{i18n.t(lang, "pl_ok_new")}</button></div></dialog>')
