@@ -738,6 +738,7 @@ def test_my_list_shows_each_playlist_with_its_summary_escaped():
                            "bpm_range": [], "genres": [], "image": None}], "en")
     assert 'href="/playlists/5"' in html and "Peak &lt;i&gt;" in html and "javascript" not in html
     assert "27 tracks · 140 min · 67–142 BPM" in html and "Public on Beatport" in html
+    assert 'class="r"' not in html and '<span class="genre-name" title="Techno">Techno</span>' in html
     assert "no playlists of your own" in views.my_list([], "en")
 
 

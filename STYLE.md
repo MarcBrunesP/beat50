@@ -116,7 +116,8 @@ second one in `--star` and, between them when the slide is a step, a 26 px `--fa
   key chip, date · 36 px star. Playing row: `--accent-soft` background and the name in `--accent-text`. Below
   1100 px the genre name is dropped from the row (it is already in the filter row).
 - **My playlists**: a sidebar row above the selections (`queue_music` icon), on while the manager is open. The list
-  uses track rows (cover, name, "N tracks · N min · low–high BPM", genres, and the private / public tag on the right).
+  uses track rows with two lines like a track's (name, then "N tracks · N min · low–high BPM"), the genres on the right
+  where a track has its label (dropped below 1100 px like a track's genre) and the private / public tag.
   A playlist's toolbar has back, its name with "N tracks · N min", the tag and **Save order** (primary); below it, in
   the filter row, **Sort by BPM**, **Sort by key** and **Undo changes** (secondary). Each row starts with a 32 px
   handle (`.handle`, the `drag` glyph in `--faint`, `--chip` tile on hover or focus, grab cursor); the row being

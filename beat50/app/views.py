@@ -473,9 +473,11 @@ def my_list(playlists, lang):
         genres = escape(", ".join(p.get("genres") or []))
         tag = (f'<span class="private">{_icon("eye")}{i18n.t(lang, "public_tag")}</span>' if p["is_public"] else
                f'<span class="private">{_icon("lock")}{i18n.t(lang, "private_tag")}</span>')
+        # Two lines like a track row (name, summary), with the genres on the right where a track has its label.
         return (f'<li><a class="track my-pl" href="/playlists/{int(p["id"])}"><span class="cover">{img}</span>'
                 f'<div class="t"><div class="n"><span class="name">{escape(p["name"])}</span></div>'
-                f'<div class="a">{escape(" · ".join(parts))}</div><div class="r">{genres}</div></div>{tag}</a></li>')
+                f'<div class="a">{escape(" · ".join(parts))}</div></div>'
+                f'<div class="m"><span class="genre-name" title="{genres}">{genres}</span></div>{tag}</a></li>')
     return f'<ul class="my-pls">{"".join(item(p) for p in playlists)}</ul>'
 
 

@@ -3,6 +3,13 @@
 What changed in each version of beat50 (called beatcrate before 3.0). The format follows [Keep a Changelog](https://keepachangelog.com/)
 and versions follow [Semantic Versioning](https://semver.org/). The version lives in `pyproject.toml`.
 
+## Unreleased
+
+### Changed
+
+- **My playlists** shows each playlist on two lines, like a track, with its genres on the right: the list breathes the
+  same as a playlist's tracks.
+
 ## 3.4.0 — 2026-11-17
 
 ### Added
