@@ -427,13 +427,13 @@ def test_the_edit_page_in_spanish():
 
 def test_the_notice_says_beat50_edits_its_own_playlists_and_only_adds_to_the_others():
     html = _page(state={"consent": False})
-    assert "edit the ones it created and add tracks to your private playlists" in html
+    assert "edit the ones it created, and add tracks to your private playlists or put them in another order" in html
     assert "never deletes a playlist, never renames or removes tracks from the ones it did not create" in html
-    assert "never adds to public ones" in html
+    assert "never adds to or reorders public ones" in html
     assert "changes your playlists" not in html
     es = _page(state={"consent": False}, lang="es")
-    assert "editar las que creó y añadir tracks a tus playlists privadas" in es
-    assert "nunca añade a las públicas" in es and "no modifica tus playlists" not in es
+    assert "editar las que creó, y añadir tracks a tus playlists privadas o cambiar su orden" in es
+    assert "nunca añade ni reordena en las públicas" in es and "no modifica tus playlists" not in es
 
 
 def test_a_playlist_deleted_on_beatport_is_shown_as_such():
@@ -709,3 +709,49 @@ def test_the_users_playlists_can_be_searched_by_name():
     assert '"pl_no_match": "No playlist matches “{q}”."' in html
     es = _page(lang="es")
     assert 'placeholder="Buscar por nombre"' in es and '"pl_no_match": "Ninguna playlist coincide con «{q}»."' in es
+
+
+def _mine(owner=True, private=True):
+    track = {"id": 101, "name": "Let You Go", "mix_name": "Original Mix", "artists": ["Son Of Sam"], "label": "HoneyPot",
+             "genre": "UK Garage / Bassline", "bpm": 104, "key": "8A", "length": "3:04", "length_ms": 184347,
+             "sample_url": "https://geo-samples.beatport.com/x.mp3", "image": "https://geo-media.beatport.com/c.jpg"}
+    return {"id": 7, "name": "Warm-up <b>", "owner": owner, "private": private,
+            "items": [{"item_id": 11, "track": track}, {"item_id": 12, "track": None}]}
+
+
+def test_the_sidebar_links_to_my_playlists_and_marks_it_on_its_page():
+    assert '<a class="sel" href="/playlists">' in _page()
+    html = views.render_page(None, None, [], {}, "T", date(2026, 9, 30), lang="es", my="list")
+    assert '<a class="sel on" href="/playlists">' in html and "Mis playlists" in html
+    assert 'id="my" data-my="list"' in html and 'data-action="my-load"' in html
+
+
+def test_a_playlist_page_waits_for_its_tracks_from_beatport():
+    html = views.render_page(None, None, [], {}, "T", date(2026, 9, 30), my=7)
+    assert 'id="my" data-my="7"' in html and 'id="player"' in html and 'id="player-bar"' in html
+
+
+def test_my_list_shows_each_playlist_with_its_summary_escaped():
+    html = views.my_list([{"id": 5, "name": "Peak <i>", "track_count": 27, "is_public": False, "length_ms": 8416363,
+                           "bpm_range": [67, 142], "genres": ["Techno"], "image": "javascript:x"},
+                          {"id": 6, "name": "Live", "track_count": 3, "is_public": True, "length_ms": 0,
+                           "bpm_range": [], "genres": [], "image": None}], "en")
+    assert 'href="/playlists/5"' in html and "Peak &lt;i&gt;" in html and "javascript" not in html
+    assert "27 tracks · 140 min · 67–142 BPM" in html and "Public on Beatport" in html
+    assert "no playlists of your own" in views.my_list([], "en")
+
+
+def test_my_tracks_in_a_private_playlist_of_the_users_can_be_reordered():
+    html = views.my_tracks(_mine(), "en")
+    assert 'id="order" data-editable' in html and html.count('class="handle"') == 2
+    assert 'data-item="11" data-bpm="104" data-key="8A"' in html and 'data-item="12"' in html
+    assert "Warm-up &lt;b&gt;" in html and 'data-action="save-order" data-playlist="7" disabled' in html
+    assert 'data-sort="bpm"' in html and 'data-sort="key"' in html and "no longer available" in html
+    assert ">3:04<" in html and 'data-src="https://geo-samples.beatport.com/x.mp3"' in html
+
+
+@pytest.mark.parametrize("owner, private, says", [(True, False, "is public"), (False, True, "is not yours")])
+def test_my_tracks_in_any_other_playlist_can_only_be_listened_to(owner, private, says):
+    html = views.my_tracks(_mine(owner, private), "en")
+    assert "data-editable" not in html and "handle" not in html and "save-order" not in html
+    assert "data-sort" not in html and says in html and 'class="play"' in html

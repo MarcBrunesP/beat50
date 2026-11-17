@@ -18,10 +18,10 @@ STATIC_FILES = {"app.css": "text/css; charset=utf-8", "app.js": "text/javascript
 SELECTION = re.compile(r"^(\d{8}_\d{6}|\d{4}-\d{2})$")
 MAX_PERIOD_DAYS = 366
 # Errors whose cause is not the request itself: a retry later or a sign-in may fix them.
-CONFLICTS = {"busy", "session_expired", "login_already", "consent_required"}
+CONFLICTS = {"busy", "session_expired", "login_already", "consent_required", "playlist_changed"}
 # Routes that read the Beatport session (in a window of beat50's): only with the user's consent.
 SESSION_ROUTES = ("/api/generate", "/api/session/check", "/api/login/start", "/api/playlist/",
-                  "/api/playlists")
+                  "/api/playlists", "/api/my/")
 
 
 def _period(body):
@@ -133,6 +133,10 @@ class Handler(BaseHTTPRequestHandler):
             if selections:
                 return self._send(302, "", "text/plain", {"Location": f"/crate/{selections[0][0]}"})
             return self._page(None, None)
+        if path == "/playlists":
+            return self._page(None, None, my="list")
+        if path.startswith("/playlists/") and _digits(path[len("/playlists/"):]):
+            return self._page(None, None, my=int(path[len("/playlists/"):]))
         if path.startswith("/crate/"):
             selection, _, rest = path[len("/crate/"):].partition("/playlist/")
             crate = _crate(selection)
@@ -143,12 +147,12 @@ class Handler(BaseHTTPRequestHandler):
                 return self._page(selection, crate, playlist)
         return self._fail(404, "not_found")
 
-    def _page(self, selection, crate, playlist=None):
+    def _page(self, selection, crate, playlist=None, my=None):
         st = dict(self._state(), consent=consent.granted())
         self.server.lang = self._lang()
         html = views.render_page(selection, crate, _selections(), st, self.server.token, date.today(),
                                  marks.read(selection) if selection else None, self.server.lang, playlist,
-                                 profile.read_profile())
+                                 profile.read_profile(), my)
         self._send(200, html, "text/html; charset=utf-8")
 
     def _body(self):
@@ -206,6 +210,8 @@ class Handler(BaseHTTPRequestHandler):
             if jobs.busy() or state.lock_owner():
                 raise state.Busy("busy", "beat50 is already busy.")
             return self._json(200, {"playlists": jobs.list_playlists()})
+        if path.startswith("/api/my/"):  # the playlist manager: the user's own playlists on Beatport
+            return self._my_action(path[len("/api/my/"):], body)
         if path.startswith("/api/star/"):
             parts = path[len("/api/star/"):].split("/")
             crate = _crate(parts[0]) if len(parts) == 2 else None
@@ -248,6 +254,25 @@ class Handler(BaseHTTPRequestHandler):
             _delete(selection)
             return self._json(200, {"ok": True})  # the page knows where to go: home if it was showing it
         return self._fail(404, "not_found")
+
+    def _my_action(self, rest, body):
+        """Listing the user's playlists, reading one or saving its order; each answers with the HTML to show."""
+        if jobs.busy() or state.lock_owner():
+            raise state.Busy("busy", "beat50 is already busy.")
+        if rest == "playlists":
+            return self._json(200, {"html": views.my_list(jobs.list_playlists(), self._lang())})
+        playlist_id, _, action = rest.removeprefix("playlist/").partition("/")
+        if not rest.startswith("playlist/") or not _digits(playlist_id) or action not in ("", "order"):
+            return self._fail(404, "not_found")
+        if not action:
+            return self._json(200, {"html": views.my_tracks(jobs.read_my_playlist(int(playlist_id)), self._lang())})
+        if not (_ids(body.get("item_ids")) and body["item_ids"]):
+            raise Beat50Error("bad_request", "\"item_ids\" must be the playlist's item ids.")
+        r = jobs.reorder_my_playlist(int(playlist_id), body["item_ids"])
+        message = i18n.t(self._lang(), "order_saved", name=r["name"] or "")
+        for w in r["warnings"]:
+            message += i18n.t(self._lang(), f"warn_{w['code']}", detail=w.get("detail", ""))
+        return self._json(200, {"ok": True, "message": message})
 
     def _playlist_action(self, selection, playlist_id, action, body):
         """Saving (no action), refreshing from Beatport or forgetting one of beat50's playlists."""

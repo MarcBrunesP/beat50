@@ -130,6 +130,31 @@ TEXTS = {
         "warn_rename_failed": " The name could not be changed: {detail}",
         "warn_remove_failed": " Some tracks could not be removed: {detail}",
         "error_playlist_gone": "That playlist no longer exists on Beatport.",
+        "my_playlists": "My playlists",
+        "my_detail": "Your playlists on Beatport. Open one to listen to it and put its tracks in order.",
+        "my_load": "Load from Beatport",
+        "my_loading": "Reading your playlists from Beatport…",
+        "my_none": "You have no playlists of your own on Beatport yet.",
+        "minutes": "{n} min",
+        "bpm_range": "{low}–{high} BPM",
+        "public_tag": "Public on Beatport",
+        "back_my": "Back to my playlists",
+        "sort_bpm": "Sort by BPM",
+        "sort_key": "Sort by key",
+        "order_reset": "Undo changes",
+        "save_order": "Save order",
+        "move_track": "Move (drag it, or ↑ ↓)",
+        "withdrawn": "Track no longer available on Beatport",
+        "order_hint": "Drag the tracks (or press ↑ ↓ on their handle) or sort them by BPM or key, then save. "
+                      "Nothing changes on Beatport until you save.",
+        "order_public": "This playlist is public: beat50 does not change it. You can listen to it.",
+        "order_not_owner": "This playlist is not yours: beat50 does not change it. You can listen to it.",
+        "order_saved": "Order of “{name}” saved on Beatport.",
+        "warn_order_unknown": " Could not check the new order; check it on beatport.com.",
+        "error_not_owner_order": "“{name}” is not one of your playlists: beat50 does not reorder it.",
+        "error_public_order": "“{name}” is public: beat50 only reorders private playlists.",
+        "error_playlist_changed": "“{name}” changed on Beatport since you opened it. Open it again and redo the order.",
+        "error_order_failed": "Beatport did not save the order of “{name}”: {detail}",
         "error_no_changes": "There is nothing to save.",
         "error_not_gone": "That playlist still exists on Beatport.",
         "forget_playlist": "Remove from this list",
@@ -173,11 +198,11 @@ TEXTS = {
         "consent_window": "beat50 opens Beatport in a window of its own, hidden except when you sign in, "
                           "and closes it when done.",
         "consent_reads": "It only reads your Beatport session (the access token), to read your purchases and "
-                         "playlists, create private playlists, edit the ones it created and add tracks to your "
-                         "private playlists.",
+                         "playlists, create private playlists, edit the ones it created, and add tracks to your "
+                         "private playlists or put them in another order.",
         "consent_never": "It never buys, never deletes a playlist, never renames or removes tracks from the ones "
-                         "it did not create, never adds to public ones, never makes one public, and sends nothing "
-                         "anywhere except to Beatport.",
+                         "it did not create, never adds to or reorders public ones, never makes one public, and "
+                         "sends nothing anywhere except to Beatport.",
         "consent_where": "Your session stays on this Mac, in beat50's own data: it is not shared with Safari "
                          "or your other browsers.",
         "consent_ok": "Accept and continue",
@@ -298,6 +323,31 @@ TEXTS = {
         "warn_rename_failed": " No se pudo cambiar el nombre: {detail}",
         "warn_remove_failed": " No se pudieron quitar algunos tracks: {detail}",
         "error_playlist_gone": "Esa playlist ya no existe en Beatport.",
+        "my_playlists": "Mis playlists",
+        "my_detail": "Tus playlists de Beatport. Abre una para escucharla y ordenar sus tracks.",
+        "my_load": "Cargar desde Beatport",
+        "my_loading": "Leyendo tus playlists en Beatport…",
+        "my_none": "Aún no tienes playlists propias en Beatport.",
+        "minutes": "{n} min",
+        "bpm_range": "{low}–{high} BPM",
+        "public_tag": "Pública en Beatport",
+        "back_my": "Volver a mis playlists",
+        "sort_bpm": "Ordenar por BPM",
+        "sort_key": "Ordenar por tonalidad",
+        "order_reset": "Deshacer cambios",
+        "save_order": "Guardar orden",
+        "move_track": "Mover (arrástralo, o ↑ ↓)",
+        "withdrawn": "Track que ya no está disponible en Beatport",
+        "order_hint": "Arrastra los tracks (o pulsa ↑ ↓ en su asa) u ordénalos por BPM o tonalidad, y guarda. "
+                      "Nada cambia en Beatport hasta que guardes.",
+        "order_public": "Esta playlist es pública: beat50 no la cambia. Puedes escucharla.",
+        "order_not_owner": "Esta playlist no es tuya: beat50 no la cambia. Puedes escucharla.",
+        "order_saved": "Orden de «{name}» guardado en Beatport.",
+        "warn_order_unknown": " No se pudo comprobar el nuevo orden; revísalo en beatport.com.",
+        "error_not_owner_order": "«{name}» no es una playlist tuya: beat50 no la reordena.",
+        "error_public_order": "«{name}» es pública: beat50 solo reordena playlists privadas.",
+        "error_playlist_changed": "«{name}» ha cambiado en Beatport desde que la abriste. Ábrela de nuevo y rehaz el orden.",
+        "error_order_failed": "Beatport no guardó el orden de «{name}»: {detail}",
         "error_no_changes": "No hay cambios que guardar.",
         "error_not_gone": "Esa playlist todavía existe en Beatport.",
         "forget_playlist": "Quitar de la lista",
@@ -341,11 +391,11 @@ TEXTS = {
         "consent_window": "beat50 abre Beatport en una ventana propia, oculta salvo al iniciar sesión, "
                           "y la cierra al terminar.",
         "consent_reads": "Solo lee tu sesión de Beatport (el token de acceso), para leer tus compras y "
-                         "playlists, crear playlists privadas, editar las que creó y añadir tracks a tus "
-                         "playlists privadas.",
+                         "playlists, crear playlists privadas, editar las que creó, y añadir tracks a tus "
+                         "playlists privadas o cambiar su orden.",
         "consent_never": "Nunca compra, nunca borra una playlist, no renombra ni quita tracks de las que no creó, "
-                         "nunca añade a las públicas, nunca hace pública ninguna y no envía nada a ningún sitio "
-                         "que no sea Beatport.",
+                         "nunca añade ni reordena en las públicas, nunca hace pública ninguna y no envía nada a "
+                         "ningún sitio que no sea Beatport.",
         "consent_where": "Tu sesión se queda en este Mac, en los datos propios de beat50: no se comparte con "
                          "Safari ni con tus otros navegadores.",
         "consent_ok": "Aceptar y continuar",
@@ -358,7 +408,7 @@ TEXTS = {
 
 JS_KEYS = ("making", "phase_library", "phase_discover", "phase_rank", "js_closed", "js_error",
            "listen", "pause", "creating", "saving", "checking", "js_delete", "created", "adding", "pl_ok_new",
-           "pl_ok_into", "pl_listing", "pl_none", "pl_public", "pl_no_match")
+           "pl_ok_into", "pl_listing", "pl_none", "pl_public", "pl_no_match", "my_loading")
 
 
 def pick(cookie_header, accept_language):

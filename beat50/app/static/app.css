@@ -229,6 +229,17 @@ a.sel:hover:not(.on), .playlists a.pl:hover:not(.on) { background: var(--line); 
 .toggle-gap { width: 32px; flex: none; }  /* where the remove button would be, in a playlist beat50 only adds to */
 .pl-name input[readonly] { border-color: transparent; background: transparent; }
 
+/* Playlist manager: the link above the selections, the list of the user's playlists and the rows to reorder. */
+.sels.mine { margin-bottom: 14px; }
+.sels.mine .sel span { display: inline-flex; align-items: center; gap: 8px; }
+.my-pls { margin: 0; padding: 0; list-style: none; }
+.my-pl { color: inherit; text-decoration: none; }
+.handle { width: 32px; height: 32px; flex: none; padding: 0; border: 0; border-radius: 8px; background: transparent;
+          color: var(--faint); cursor: grab; }
+.handle:hover, .handle:focus-visible { background: var(--chip); color: var(--text); }
+#order[data-editable] > li { cursor: grab; }
+#order > li.dragging { opacity: .5; background: var(--accent-soft); }
+
 /* Consent sheet */
 #consent { width: 520px; max-width: calc(100vw - 40px); padding: 24px 24px 20px; border: 0; border-radius: 14px;
            background: var(--raised); color: var(--text); box-shadow: 0 16px 40px var(--shadow); }

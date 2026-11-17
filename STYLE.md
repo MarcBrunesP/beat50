@@ -115,6 +115,12 @@ second one in `--star` and, between them when the slide is a step, a 26 px `--fa
   artists, "Picked for …" line with the sparkle icon and the optional "in <playlist>" tag · genre, label, BPM chip,
   key chip, date · 36 px star. Playing row: `--accent-soft` background and the name in `--accent-text`. Below
   1100 px the genre name is dropped from the row (it is already in the filter row).
+- **My playlists**: a sidebar row above the selections (`queue_music` icon), on while the manager is open. The list
+  uses track rows (cover, name, "N tracks · N min · low–high BPM", genres, and the private / public tag on the right).
+  A playlist's toolbar has back, its name with "N tracks · N min", the tag and **Save order** (primary); below it, in
+  the filter row, **Sort by BPM**, **Sort by key** and **Undo changes** (secondary). Each row starts with a 32 px
+  handle (`.handle`, the `drag` glyph in `--faint`, `--chip` tile on hover or focus, grab cursor); the row being
+  dragged dims to 50 % on `--accent-soft`. The track row also shows the length chip after the key.
 - **Editor toggles**: 32 px circles; on = red (remove) or green (add) fill with white icon. A row marked to remove
   dims to 60 % and strikes the name; a row marked to add tints `--green-soft`.
 - **Picking card** (`#picking` › `#progress`): while a selection runs, an `--overlay` scrim over the whole window

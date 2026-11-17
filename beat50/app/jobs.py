@@ -198,6 +198,30 @@ def list_playlists():
     return result
 
 
+def read_my_playlist(playlist_id):
+    """One of the user's playlists as it is on Beatport now, for the playlist manager."""
+    with _Working(), state.lock():
+        try:
+            result = playlists.read_items(_client(), playlist_id)
+        except (auth.SessionExpired, TokenExpired):
+            _session("expired")
+            raise
+        _session("active")
+    return result
+
+
+def reorder_my_playlist(playlist_id, item_ids):
+    """Saves the order the user left in the manager; only in the user's private playlists (playlists.py checks)."""
+    with _Working(), state.lock():
+        try:
+            result = playlists.reorder_playlist(_client(), playlist_id, item_ids)
+        except (auth.SessionExpired, TokenExpired):
+            _session("expired")
+            raise
+        _session("active")
+    return result
+
+
 def add_to_playlist(selection, playlist_id, genres=None):
     """Adds the selection's starred tracks (with genres, only those genres) to one of the user's private
     playlists, leaving out the ones already in it, and records the playlist in this selection.

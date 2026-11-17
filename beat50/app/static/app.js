@@ -1,4 +1,5 @@
-// beat50/app/static/app.js — actions, consent, progress, genre filter, stars, playlist dialog and editor, player.
+// beat50/app/static/app.js — actions, consent, progress, genre filter, stars, playlist dialog and editor, playlist
+// manager, player.
 const token = document.querySelector('meta[name="bc-token"]').content;
 const TEXTS = JSON.parse(document.getElementById('texts').textContent);
 
@@ -38,10 +39,12 @@ const ROUTES = {
   'save-playlist': (b) => '/api/playlist/' + document.body.dataset.selection + '/' + b.dataset.playlist,
   'forget-playlist': (b) => ROUTES['save-playlist'](b) + '/forget',
   'delete-selection': (b) => '/api/selection/' + b.dataset.selection + '/delete',
+  'save-order': (b) => '/api/my/playlist/' + b.dataset.playlist + '/order',
 };
 
 // Actions that read the Beatport session: the first time, the user has to accept.
-const SESSION_ACTIONS = new Set(['generate', 'check', 'login-start', 'playlist', 'save-playlist']);
+const SESSION_ACTIONS = new Set(['generate', 'check', 'login-start', 'playlist', 'save-playlist', 'my-load',
+                                 'save-order']);
 const consent = document.getElementById('consent');
 let afterConsent = null;
 
@@ -72,10 +75,10 @@ consent.querySelector('[data-consent-ok]').addEventListener('click', async () =>
 });
 
 // While an action runs, every action button (and the playlist editor's controls) waits.
-const LOCKABLE = '[data-action], button.toggle, #pl-name';
+const LOCKABLE = '[data-action], button.toggle, #pl-name, button.handle, [data-sort], [data-order-reset]';
 
 // Actions that talk to Beatport show a centred overlay while they run; the message depends on the action.
-const LOADING_TEXT = {'playlist': 'creating', 'save-playlist': 'saving', 'check': 'checking'};
+const LOADING_TEXT = {'playlist': 'creating', 'save-playlist': 'saving', 'check': 'checking', 'save-order': 'saving'};
 
 // `next`: where to go once it worked, when the server does not say (by default, reload the page).
 async function act(button, body, next) {
@@ -97,9 +100,9 @@ async function act(button, body, next) {
   if (overlay) overlay.hidden = true;
   if (!r.ok) {
     alert(data.error || text('js_error', {status: r.status}));
-    if (button.dataset.action === 'save-playlist') {  // keep what the user marked, so they can try again
-      locked.forEach((el) => { el.disabled = false; });
-      return updateSave();
+    if (button.dataset.action === 'save-playlist' || button.dataset.action === 'save-order') {
+      locked.forEach((el) => { el.disabled = false; });  // keep what the user marked, so they can try again
+      return button.dataset.action === 'save-order' ? updateOrder() : updateSave();
     }
   } else if (data.message) {
     alert(data.message);
@@ -336,6 +339,113 @@ async function refreshPlaylist() {
 
 if (document.querySelector('main[data-refresh]')) refreshPlaylist();
 
+// Playlist manager: the user's playlists and each one's tracks come from Beatport, so the page asks the server for
+// them (after consent) and shows the HTML it answers. In a private playlist of the user's the tracks can be dragged,
+// moved with ↑ ↓ on their handle or sorted by BPM or key; "Save order" sends the whole order at once.
+const my = document.getElementById('my');
+let baseline = [];
+
+const order = () => [...document.querySelectorAll('#order > li')].map((li) => Number(li.dataset.item));
+
+function updateOrder() {
+  const changed = order().join() !== baseline.join();
+  const save = document.querySelector('[data-action="save-order"]');
+  if (save) save.disabled = !changed;
+  const reset = document.querySelector('[data-order-reset]');
+  if (reset) reset.disabled = !changed;
+}
+
+function moved() {
+  document.querySelectorAll('#order > li .num').forEach((n, i) => { n.textContent = i + 1; });
+  updateOrder();
+}
+
+function arrange(lis) {
+  const list = document.getElementById('order');
+  lis.forEach((li) => list.append(li));
+  moved();
+}
+
+async function loadMy() {
+  const button = my.querySelector('[data-action="my-load"]');
+  if (button) button.disabled = true;
+  const overlay = document.getElementById('action-loading');
+  overlay.querySelector('.msg').textContent = TEXTS.my_loading;
+  overlay.hidden = false;
+  let r;
+  try {
+    r = await post(my.dataset.my === 'list' ? '/api/my/playlists' : '/api/my/playlist/' + my.dataset.my);
+  } catch (e) {
+    overlay.hidden = true;
+    return closed();
+  }
+  const data = await r.json().catch(() => ({}));
+  overlay.hidden = true;
+  if (!r.ok) {
+    if (button) button.disabled = false;
+    return alert(data.error || text('js_error', {status: r.status}));
+  }
+  my.innerHTML = data.html;  // built by the server, which escapes everything that comes from Beatport
+  document.querySelectorAll('#order[data-editable] > li').forEach((li) => { li.draggable = true; });
+  baseline = order();
+}
+
+if (my && document.body.dataset.consent === '1') loadMy();
+
+// Camelot keys in wheel order (1A, 1B, 2A…); a track without BPM or key goes last.
+const camelot = (k) => {
+  const m = /^(\d+)([AB])$/.exec(k || '');
+  return m ? Number(m[1]) * 2 + (m[2] === 'B' ? 1 : 0) : Infinity;
+};
+const SORTS = {bpm: (li) => Number(li.dataset.bpm) || Infinity, key: (li) => camelot(li.dataset.key)};
+
+let dragged = null;
+document.addEventListener('dragstart', (e) => {
+  const li = e.target.closest && e.target.closest('#order[data-editable] > li');
+  if (!li) return;
+  dragged = li;
+  li.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', li.dataset.item);
+});
+document.addEventListener('dragover', (e) => {
+  const li = dragged && e.target.closest && e.target.closest('#order > li');
+  if (!li) return;
+  e.preventDefault();
+  if (li === dragged) return;
+  const r = li.getBoundingClientRect();
+  li.parentNode.insertBefore(dragged, e.clientY < r.top + r.height / 2 ? li : li.nextSibling);
+});
+document.addEventListener('drop', (e) => { if (dragged) e.preventDefault(); });
+document.addEventListener('dragend', () => {
+  if (!dragged) return;
+  dragged.classList.remove('dragging');
+  dragged = null;
+  moved();
+});
+document.addEventListener('keydown', (e) => {
+  const handle = e.target.closest && e.target.closest('#order button.handle');
+  if (!handle || (e.key !== 'ArrowUp' && e.key !== 'ArrowDown')) return;
+  e.preventDefault();
+  const li = handle.closest('li');
+  const to = e.key === 'ArrowUp' ? li.previousElementSibling : li.nextElementSibling;
+  if (!to) return;
+  li.parentNode.insertBefore(li, e.key === 'ArrowUp' ? to : to.nextSibling);
+  handle.focus();
+  moved();
+});
+document.addEventListener('click', (e) => {
+  const sort = e.target.closest('[data-sort]');
+  if (sort) {
+    const by = SORTS[sort.dataset.sort];
+    return arrange([...document.querySelectorAll('#order > li')].sort((a, b) => by(a) - by(b)));
+  }
+  if (e.target.closest('[data-order-reset]')) {
+    const lis = new Map([...document.querySelectorAll('#order > li')].map((li) => [Number(li.dataset.item), li]));
+    arrange(baseline.map((id) => lis.get(id)));
+  }
+});
+
 // Progress: while a selection runs, the bar creeps on little by little and the phases follow the server; when it
 // ends, reload to show it. The same when the sign-in window closes.
 // Per phase: where the bar starts and where it heads (%), and the seconds to cover about two thirds of that
@@ -445,6 +555,8 @@ function run(button) {
     if (confirm(text('js_delete', {name: button.dataset.name}))) act(button, undefined, home);
     return;
   }
+  if (action === 'my-load') return loadMy();
+  if (action === 'save-order') return act(button, {item_ids: order()});
   if (action === 'save-playlist') {
     return act(button, {name: document.getElementById('pl-name').value, remove: marked('remove'),
                         add: marked('add')});
@@ -474,6 +586,12 @@ document.addEventListener('click', (e) => {
 if (player) {
   player.addEventListener('play', () => mark(true));
   player.addEventListener('pause', () => mark(false));
+  player.addEventListener('ended', () => {  // in the manager the previews follow the playlist's order
+    if (!my || !current) return;
+    let li = current.closest('.track').nextElementSibling;
+    while (li && !li.querySelector('button.play[data-src]')) li = li.nextElementSibling;
+    if (li) play(li.querySelector('button.play[data-src]'));
+  });
   player.addEventListener('timeupdate', () => {
     const d = player.duration;
     document.querySelector('#player-seek i').style.width =

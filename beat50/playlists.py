@@ -1,9 +1,9 @@
-"""beat50's only writes to the user's Beatport account: creating private playlists, editing them and adding
-tracks to the user's own private playlists.
+"""beat50's only writes to the user's Beatport account: creating private playlists, editing them, adding
+tracks to the user's own private playlists and putting their tracks in another order.
 
 It only renames or removes tracks from playlists it created (the app checks that against its records). In the
-user's other playlists it only adds tracks, and only to private ones they own. It never deletes a playlist and
-never changes whether a playlist is public.
+user's other playlists it only adds tracks or reorders them, and only in private ones they own. It never deletes a
+playlist and never changes whether a playlist is public.
 """
 import urllib.error
 
@@ -76,16 +76,17 @@ def create_playlist(client, name, track_ids):
             "requested": len(track_ids), "warnings": warnings}
 
 
-def _tracks(client, playlist_id):
-    """The playlist's items in order, as Beatport has them now."""
+def _tracks(client, playlist_id, every=False):
+    """The playlist's items in order, as Beatport has them now; with every, also the ones whose track Beatport
+    withdrew (no `track`), which still hold a position."""
     items = client.paged(f"/my/playlists/{playlist_id}/tracks/")
-    return [x for x in sorted(items, key=lambda x: x.get("position") or 0) if x.get("track")]
+    return [x for x in sorted(items, key=lambda x: x.get("position") or 0) if every or x.get("track")]
 
 
-def _read(client, playlist_id):
+def _read(client, playlist_id, every=False):
     """The playlist record and its items as Beatport has them now, with errors in the user's terms."""
     try:
-        return client.get(f"/my/playlists/{playlist_id}/") or {}, _tracks(client, playlist_id)
+        return client.get(f"/my/playlists/{playlist_id}/") or {}, _tracks(client, playlist_id, every)
     except SESSION_ENDED:
         raise
     except urllib.error.HTTPError as e:
@@ -122,7 +123,81 @@ def list_playlists(client):
     own = sorted((p for p in items if p.get("is_owner") is True), key=lambda p: p.get("updated_date") or "",
                  reverse=True)
     return [{"id": p["id"], "name": p.get("name") or "", "track_count": p.get("track_count") or 0,
-             "is_public": p.get("is_public") is not False} for p in own]
+             "is_public": p.get("is_public") is not False, "length_ms": p.get("length_ms") or 0,
+             "bpm_range": p.get("bpm_range") or [], "genres": p.get("genres") or [],
+             "image": next(iter(p.get("release_images") or []), None)} for p in own]
+
+
+def _summary(t):
+    """A track as the page shows it, with its Camelot key and its length for the manager."""
+    key = t.get("key") or {}
+    image = ((t.get("release") or {}).get("image") or {}).get("dynamic_uri") or ""
+    return {"id": t["id"], "name": t.get("name"), "mix_name": t.get("mix_name"),
+            "artists": [a.get("name") for a in t.get("artists") or []],
+            "label": ((t.get("release") or {}).get("label") or {}).get("name"),
+            "genre": (t.get("genre") or {}).get("name"), "bpm": t.get("bpm"),
+            "key": f"{key['camelot_number']}{key['camelot_letter']}" if key.get("camelot_number") and
+                   key.get("camelot_letter") else None,
+            "length": t.get("length"), "length_ms": t.get("length_ms"), "sample_url": t.get("sample_url"),
+            "image": image.replace("{w}x{h}", "120x120") or None}
+
+
+def _editable(pl, playlist_id, client):
+    """Whether beat50 may write in this playlist: the user's (fail closed) and private."""
+    owner = pl.get("is_owner")
+    if owner is None:  # the playlist's own record may not say: the list of the user's playlists does
+        owner = any(p["id"] == playlist_id for p in list_playlists(client))
+    return owner is True, pl.get("is_public") is False
+
+
+def read_items(client, playlist_id):
+    """One of the user's playlists for the manager, every item in order (a withdrawn track has `track` None):
+    {"id", "name", "owner", "private", "items": [{"item_id", "track"}]}."""
+    pl, items = _read(client, playlist_id, every=True)
+    owner, private = _editable(pl, playlist_id, client)
+    return {"id": playlist_id, "name": pl.get("name"), "owner": owner, "private": private,
+            "items": [{"item_id": x["id"], "track": _summary(x["track"]) if x.get("track") else None}
+                      for x in items]}
+
+
+def reorder_playlist(client, playlist_id, item_ids):
+    """Puts the items of one of the user's private playlists in this order (all of them, by item id).
+
+    Checks against the playlist as it is on Beatport now: it refuses one that is public or not the user's, and one
+    whose items changed since the page read them, so nothing added or removed meanwhile is lost. Returns {"id",
+    "name", "warnings"}; "order_unknown" when the order could not be read back as asked.
+    """
+    pl, items = _read(client, playlist_id, every=True)
+    name = pl.get("name")
+    owner, private = _editable(pl, playlist_id, client)
+    if not owner:
+        raise PlaylistError("not_owner_order", f"“{name}” is not one of your playlists: beat50 does not reorder it.",
+                            name=name)
+    if not private:
+        raise PlaylistError("public_order", f"“{name}” is public: beat50 only reorders private playlists.",
+                            name=name)
+    now = [x["id"] for x in items]
+    if len(item_ids) != len(now) or set(item_ids) != set(now):
+        raise PlaylistError("playlist_changed", f"“{name}” changed on Beatport since it was opened: open it again.",
+                            name=name)
+    warnings = []
+    if item_ids != now:
+        try:
+            client.patch(f"/my/playlists/{playlist_id}/tracks/bulk/",
+                         {"items": [{"position": n, "item_id": i} for n, i in enumerate(item_ids, 1)]})
+        except SESSION_ENDED:
+            raise
+        except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError) as e:
+            raise PlaylistError("order_failed", f"Beatport did not save the order of “{name}”: {e}",
+                                name=name, detail=str(e)) from e
+        try:
+            if [x["id"] for x in _tracks(client, playlist_id, every=True)] != list(item_ids):
+                warnings.append({"code": "order_unknown", "detail": ""})
+        except SESSION_ENDED:
+            raise
+        except Exception as e:
+            warnings.append({"code": "order_unknown", "detail": str(e)})
+    return {"id": playlist_id, "name": name, "warnings": warnings}
 
 
 def add_to_playlist(client, playlist_id, track_ids):
@@ -136,13 +211,11 @@ def add_to_playlist(client, playlist_id, track_ids):
         raise PlaylistError("no_starred", "No tracks are starred.")
     pl, items = _read(client, playlist_id)
     name = pl.get("name")
-    owner = pl.get("is_owner")
-    if owner is None:  # the playlist's own record may not say: the list of the user's playlists does
-        owner = any(p["id"] == playlist_id for p in list_playlists(client))
-    if owner is not True:  # fail closed: only a playlist Beatport says is the user's
+    owner, private = _editable(pl, playlist_id, client)
+    if not owner:  # fail closed: only a playlist Beatport says is the user's
         raise PlaylistError("not_owner", f"“{name}” is not one of your playlists: beat50 does not add to it.",
                             name=name)
-    if pl.get("is_public") is not False:
+    if not private:
         raise PlaylistError("playlist_public", f"“{name}” is public: beat50 only adds tracks to private "
                             "playlists.", name=name)
     inside = {x["track"]["id"] for x in items}

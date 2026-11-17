@@ -8,7 +8,7 @@ How beat50 works today. For using it, see [README.md](README.md).
 beat50 is a single-user Mac app. It reads the user's Beatport purchases and playlists, builds a taste
 profile, looks for new releases in a period, and picks 50 of them. The user browses each selection in the
 app's window (a local page served on 127.0.0.1), stars tracks and turns them into private Beatport
-playlists.
+playlists. **My playlists** shows the user's own playlists, plays their previews and puts their tracks in order.
 
 Everything runs on the user's Mac. There is no remote server, no account of ours and no background job:
 a selection is made when the user asks for it.
@@ -25,13 +25,13 @@ a selection is made when the user asks for it.
 | `profile.py` | Taste profile: weighted labels, artists, genres, BPM and key → `profile.json`; `apply_prefs` applies the Genres choices |
 | `discover.py` | Candidates published in the period → `candidates.json` |
 | `rank.py` | Scoring, exclusions, genre quotas, diversity → `crates/<code>.json` |
-| `playlists.py` | Creates private playlists, edits them and adds tracks to the user's private ones: beat50's only writes to Beatport |
+| `playlists.py` | Creates private playlists, edits them, adds tracks to the user's private ones and reorders them: beat50's only writes to Beatport |
 | `errors.py` | Errors with a code, so the app can show them translated |
 | `cli.py` | `login`, `ingest`, `generate`, `app` |
 | `app/server.py` | Local HTTP server: routes, security, lifecycle |
 | `app/views.py` | The page's HTML |
 | `app/i18n.py` | English and Spanish texts, dates and error messages |
-| `app/jobs.py` | Long-running work: selections, session check, sign-in, playlists (create, list, add, edit) |
+| `app/jobs.py` | Long-running work: selections, session check, sign-in, playlists (create, list, add, edit, read, reorder) |
 | `app/state.py` | `state.json` and the process lock |
 | `app/marks.py` | Stars and the playlists made or added to from each selection |
 | `app/consent.py` | The user's permission to read the Beatport session |
@@ -76,6 +76,7 @@ Base `https://api.beatport.com/v4`, header `Authorization: Bearer <token>`.
 | Add tracks | `POST /my/playlists/{id}/tracks/bulk/` `{"track_ids"}` | 200 |
 | Rename | `PATCH /my/playlists/{id}/` `{"name"}` | Leaves `is_public` as it was |
 | Remove tracks | `DELETE /my/playlists/{id}/tracks/bulk/` `{"item_ids"}` | Item ids from `/tracks/`, not track ids |
+| Reorder | `PATCH /my/playlists/{id}/tracks/bulk/` `{"items": [{"position", "item_id"}]}` | 200, returns the playlist. Not documented: found in beatport.com's own code and checked on a real private playlist (2026-11-17). beat50 sends every item, positions from 1; the item ids and `is_public` stay as they were |
 
 - `per_page` goes up to 1000; `count` saturates at 10000. Listing a genre with `genre_id` returns tens
   of thousands of tracks a month, so genres are covered through their charts instead.
@@ -147,9 +148,10 @@ read from `crates/`, its tracks may be picked again.
   (`on`), `/api/playlist/<code>` (`name` or `into`, `genres`), `/api/playlists` (the user's own playlists),
   `/api/playlist/<code>/<id>` (`name`, `remove`, `add`),
   `/api/selection/<code>/delete`, `/api/genres` (`levels`, `only`: the Genres dialog's choices, saved whole on
-  every change; local only, 409 while busy).
-  Also `GET /crate/<code>/playlist/<id>`, the playlist editor.
-- Consent: the routes that read the session (`generate`, `session/check`, `login/start`, `playlist/*`, `playlists`)
+  every change; local only, 409 while busy), `/api/my/playlists`, `/api/my/playlist/<id>` and
+  `/api/my/playlist/<id>/order` (`item_ids`), the playlist manager's.
+  Also `GET /crate/<code>/playlist/<id>`, the playlist editor, and `GET /playlists`, `/playlists/<id>`, the manager.
+- Consent: the routes that read the session (`generate`, `session/check`, `login/start`, `playlist/*`, `playlists`, `my/*`)
   answer 409 `consent_required` until the user accepts the notice in the page, which explains the Beatport
   window, what is read, what beat50 never does and where the session is kept. The page asks before the
   first such action and then carries it out; **Withdraw permission** deletes `consent.json`, not the
@@ -199,6 +201,27 @@ read from `crates/`, its tracks may be picked again.
   that answers 404 is marked `gone`: the sidebar strikes it through and the editor offers
   `/api/playlist/<code>/<id>/forget`, which drops the local record only (no consent needed). Renaming
   compares with the name on Beatport, not with the record.
+
+## Managing playlists
+
+**My playlists** (`/playlists`, linked at the top of the sidebar) works on the user's own playlists as they are on
+Beatport, with nothing kept locally: the page holds a place that app.js fills, after consent, with the HTML the
+server answers (`views.my_list`, `views.my_tracks`), so everything from Beatport is escaped on the server.
+
+- The list is `playlists.list_playlists` (`is_owner` true, newest first), each with its track count, length, BPM
+  range, genres and first cover. Public ones are listed too.
+- A playlist (`/playlists/<id>`) is read with `playlists.read_items`: every item in position order, including those
+  whose track Beatport withdrew (`track` null), which keep their place. Each track shows its preview, BPM, Camelot
+  key and length; the previews play one after another.
+- Only a playlist that is the user's (`is_owner` true; when the record leaves it out, the list of the user's
+  playlists decides) and private (`is_public` false) can be reordered. Its rows can be dragged, moved with ↑ ↓ on
+  their handle, or sorted by BPM or key (Camelot wheel order, unknowns last); **Save order** posts every item id in
+  the new order.
+- `playlists.reorder_playlist` reads the playlist again, refuses (before writing) one that is public or not the
+  user's, and one whose items are not exactly the ones sent (`playlist_changed`, 409: something was added or removed
+  on Beatport since the page read it). Then it sends the PATCH with every item and reads the order back; if it does
+  not match, the message warns. If the order did not change, nothing is written.
+- Any other playlist (public, or not the user's) is shown without handles, sort buttons or Save.
 
 ## Packaging
 

@@ -388,7 +388,9 @@ def test_list_playlists_gives_only_the_users_own_newest_first():
         dict(fixture[0], id=4, name="Live", is_public=True, updated_date="2029-01-01T00:00:00")]
     r = playlists.list_playlists(FakeList(items))
     assert [p["name"] for p in r][0] == "Live" and "Followed" not in [p["name"] for p in r]
-    assert r[0] == {"id": 4, "name": "Live", "track_count": fixture[0]["track_count"], "is_public": True}
+    assert r[0] == {"id": 4, "name": "Live", "track_count": fixture[0]["track_count"], "is_public": True,
+                    "length_ms": fixture[0]["length_ms"], "bpm_range": fixture[0]["bpm_range"],
+                    "genres": fixture[0]["genres"], "image": fixture[0]["release_images"][0]}
     assert all(p["is_public"] is False for p in r[1:]) and len(r) == len(fixture) + 1
 
 
@@ -408,3 +410,98 @@ def test_add_to_playlist_whose_record_does_not_say_whose_it_is_asks_the_list():
     with pytest.raises(playlists.PlaylistError) as err:
         playlists.add_to_playlist(c, 7, [2])
     assert err.value.code == "not_owner" and _writes(c) == []
+
+
+class FakeOrder:
+    """One of the user's playlists for the manager: items (item id, track id or None for a withdrawn track) that a
+    PATCH puts in the order it is sent, unless it fails or Beatport keeps another order."""
+
+    def __init__(self, items, public=False, owner=True, listed=(), patch_fails=None, keeps=False):
+        self.items, self.public, self.owner, self.listed = list(items), public, owner, list(listed)
+        self.patch_fails, self.keeps = patch_fails, keeps
+        self.calls = []
+
+    def get(self, path, **kw):
+        self.calls.append(("GET", path, None))
+        record = {"id": 7, "name": "Warm-up", "is_public": self.public}
+        return record if self.owner is None else dict(record, is_owner=self.owner)
+
+    def paged(self, path, **kw):
+        self.calls.append(("GET", path, None))
+        if path == "/my/playlists/":
+            return self.listed
+        fixture = json.loads((Path(__file__).parent / "fixtures" / "my_playlist_tracks.json").read_text())["results"]
+        rows = [{"id": i, "position": n, "tombstoned": t is None, "track": dict(fixture[0]["track"], id=t) if t else None}
+                for n, (i, t) in enumerate(self.items, 1)]
+        return rows[::-1]  # the order that counts is the position, not the order of the answer
+
+    def patch(self, path, body):
+        self.calls.append(("PATCH", path, body))
+        if self.patch_fails:
+            raise self.patch_fails
+        if not self.keeps:
+            by_id = dict(self.items)
+            self.items = [(x["item_id"], by_id[x["item_id"]]) for x in sorted(body["items"], key=lambda x: x["position"])]
+        return {"id": 7}
+
+
+def test_read_items_gives_every_item_in_order_with_what_the_manager_shows():
+    r = playlists.read_items(FakeOrder([(11, 101), (12, None), (13, 103)]), 7)
+    assert r["id"] == 7 and r["name"] == "Warm-up" and r["owner"] is True and r["private"] is True
+    assert [x["item_id"] for x in r["items"]] == [11, 12, 13] and r["items"][1]["track"] is None
+    t = r["items"][0]["track"]
+    assert t["id"] == 101 and t["key"] == "8A" and t["bpm"] == 104 and t["length"] == "3:04"
+    assert t["sample_url"].endswith(".mp3") and t["image"].endswith(".jpg") and "120x120" in t["image"]
+    assert t["artists"] == ["Son Of Sam", "I Just Will"]
+
+
+def test_reorder_sends_every_item_with_its_new_position_and_checks_it():
+    c = FakeOrder([(11, 101), (12, None), (13, 103)])
+    r = playlists.reorder_playlist(c, 7, [13, 11, 12])
+    assert _writes(c) == [("PATCH", "/my/playlists/7/tracks/bulk/", {"items": [
+        {"position": 1, "item_id": 13}, {"position": 2, "item_id": 11}, {"position": 3, "item_id": 12}]})]
+    assert r == {"id": 7, "name": "Warm-up", "warnings": []}
+    assert [i for i, _ in c.items] == [13, 11, 12]
+
+
+def test_reorder_in_the_same_order_writes_nothing():
+    c = FakeOrder([(11, 101), (12, 102)])
+    assert playlists.reorder_playlist(c, 7, [11, 12])["warnings"] == [] and _writes(c) == []
+
+
+@pytest.mark.parametrize("public, owner, listed, code", [
+    (True, True, (), "public_order"), (None, True, (), "public_order"), (False, False, (), "not_owner_order"),
+    (False, None, [{"id": 7, "is_owner": False}], "not_owner_order")])
+def test_reorder_only_writes_in_the_users_private_playlists(public, owner, listed, code):
+    c = FakeOrder([(11, 101), (12, 102)], public=public, owner=owner, listed=listed)
+    with pytest.raises(playlists.PlaylistError) as err:
+        playlists.reorder_playlist(c, 7, [12, 11])
+    assert err.value.code == code and err.value.params == {"name": "Warm-up"} and _writes(c) == []
+
+
+def test_reorder_asks_the_list_when_the_record_does_not_say_whose_it_is():
+    c = FakeOrder([(11, 101), (12, 102)], owner=None, listed=[{"id": 7, "is_owner": True}])
+    playlists.reorder_playlist(c, 7, [12, 11])
+    assert [i for i, _ in c.items] == [12, 11]
+
+
+@pytest.mark.parametrize("sent", [[12], [12, 11, 13], [12, 99], [11, 11]])
+def test_reorder_refuses_a_playlist_that_changed_since_it_was_read(sent):
+    c = FakeOrder([(11, 101), (12, 102)])
+    with pytest.raises(playlists.PlaylistError) as err:
+        playlists.reorder_playlist(c, 7, sent)
+    assert err.value.code == "playlist_changed" and _writes(c) == []
+
+
+def test_reorder_that_beatport_rejects_says_so_and_a_lost_session_is_not_hidden():
+    with pytest.raises(playlists.PlaylistError) as err:
+        playlists.reorder_playlist(FakeOrder([(11, 101), (12, 102)], patch_fails=_http(502)), 7, [12, 11])
+    assert err.value.code == "order_failed" and err.value.params["name"] == "Warm-up"
+    with pytest.raises(TokenExpired):
+        playlists.reorder_playlist(FakeOrder([(11, 101), (12, 102)], patch_fails=TokenExpired("session_expired", "x")),
+                                   7, [12, 11])
+
+
+def test_reorder_that_does_not_read_back_as_asked_warns():
+    r = playlists.reorder_playlist(FakeOrder([(11, 101), (12, 102)], keeps=True), 7, [12, 11])
+    assert r["warnings"] == [{"code": "order_unknown", "detail": ""}]

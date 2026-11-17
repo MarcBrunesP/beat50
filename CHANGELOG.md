@@ -3,6 +3,22 @@
 What changed in each version of beat50 (called beatcrate before 3.0). The format follows [Keep a Changelog](https://keepachangelog.com/)
 and versions follow [Semantic Versioning](https://semver.org/). The version lives in `pyproject.toml`.
 
+## Unreleased
+
+### Added
+
+- **My playlists** (at the top of the sidebar): every playlist of yours on Beatport, with its tracks, length, BPM
+  range and genres. Open one to play its previews one after another (each with its BPM, Camelot key and length) and
+  put its tracks in order for a set: drag them, move them with ↑ ↓ on their handle, or sort them by BPM or key.
+  **Save order** sends the new order to Beatport; nothing changes there until you save. beat50 checks the playlist
+  first and refuses if it changed on Beatport since you opened it. Only your private playlists can be reordered:
+  public ones (and anyone else's) are only listened to.
+
+### Changed
+
+- The permission notice says beat50 also puts the tracks of your private playlists in another order, so it is asked
+  again.
+
 ## 3.3.0 — 2026-11-14
 
 ### Added

@@ -18,6 +18,7 @@ ICONS = {
     "check": '<path d="M5 12l5 5L20 7"/>',
     "check_circle": '<circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/>',
     "close": '<path d="M6 6l12 12M18 6L6 18"/>',
+    "drag": '<path d="M9 6v.5M15 6v.5M9 12v.5M15 12v.5M9 18v.5M15 18v.5"/>',
     "edit": '<path d="M4 20h4l10.5-10.5a2.1 2.1 0 0 0-3-3L5 17z"/><path d="M13.5 6.5l3 3"/>',
     "error": '<circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16v.5"/>',
     "eye": '<circle cx="12" cy="12" r="3"/><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6z"/>',
@@ -34,8 +35,10 @@ ICONS = {
     "remove": '<path d="M6 12h12"/>',
     "remove_moderator": '<path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/><path d="M5 5l14 14"/>',
     "save": '<path d="M5 12l5 5L20 7"/>',
+    "queue_music": '<path d="M4 6h11M4 11h11M4 16h7"/><circle cx="17" cy="17" r="3"/><path d="M20 17V5h2"/>',
     "search": '<circle cx="11" cy="11" r="6"/><path d="M15.5 15.5L20 20"/>',
     "star": '<path d="M12 2.5l2.9 6.1 6.7.8-4.9 4.6 1.3 6.6L12 17.4l-6 3.2 1.3-6.6L2.4 9.4l6.7-.8z"/>',
+    "swap_vert": '<path d="M8 4v15M4 15l4 4 4-4M16 20V5M12 9l4-4 4 4"/>',
     "sync": '<path d="M20 12a8 8 0 0 1-14 5.3M4 12a8 8 0 0 1 14-5.3"/><path d="M18 3v4h-4M6 21v-4h4"/>',
     "trash": '<path d="M4 7h16M10 11v6M14 11v6"/><path d="M6 7l1 12.2a2 2 0 0 0 2 1.8h6a2 2 0 0 0 2-1.8L18 7"/>'
              '<path d="M9 7V4.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 .5.5V7"/>',
@@ -170,8 +173,9 @@ def _help(lang):
             f'<button class="main" data-help-done hidden>{i18n.t(lang, "help_done")}</button></div></dialog>')
 
 
-def _row(i, t, lang, starred=False, in_playlists=(), control=None):
-    """One track. `control` (the playlist editor's remove / add) goes first and replaces the star."""
+def _row(i, t, lang, starred=False, in_playlists=(), control=None, attrs=""):
+    """One track. `control` (the playlist editor's remove / add, the manager's handle) goes first and replaces the
+    star; `attrs` are extra attributes of the row (the manager's item id, BPM and key)."""
     preview, cover = _url(t.get("sample_url")), _url(t.get("image"))
     artists = escape(", ".join(t.get("artists") or []))
     name = escape((t.get("name") or "").strip())
@@ -182,6 +186,7 @@ def _row(i, t, lang, starred=False, in_playlists=(), control=None):
     meta = "".join(f'<span class="{cls}">{escape(str(x))}</span>' for cls, x in
                    (("genre-name", t.get("genre")), ("label", t.get("label")),
                     ("chip", f"{t['bpm']} BPM" if t.get("bpm") else None), ("chip", t.get("key")),
+                    ("chip", t.get("length")),
                     ("date", i18n.day(t["publish_date"], lang) if t.get("publish_date") else None)) if x)
     star = "" if control else (f'<button class="star{" on" if starred else ""}" data-star="{t["id"]}" '
                                f'aria-pressed="{"true" if starred else "false"}" aria-label="{i18n.t(lang, "star")}">'
@@ -191,7 +196,7 @@ def _row(i, t, lang, starred=False, in_playlists=(), control=None):
     reasons = escape(i18n.reasons(t, lang))
     picked = f'{_icon("auto_awesome")}<span>{i18n.t(lang, "picked_for", reasons=reasons)}</span>' if reasons else ""
     why = f'<div class="r">{picked}{tag}</div>' if reasons or tag else ""
-    return (f'<li class="track" data-genre="{escape(t.get("genre") or "")}"><span class="num">{i}</span>{control or ""}'
+    return (f'<li class="track" data-genre="{escape(t.get("genre") or "")}"{attrs}><span class="num">{i}</span>{control or ""}'
             f'<span class="cover">{img}{play}</span><div class="t"><div class="n"><span class="name">{name}</span>{mix}</div>'
             f'<div class="a">{artists}</div>{why}</div><div class="m">{meta}</div>{star}</li>')
 
@@ -450,8 +455,90 @@ def _editor(selection, crate, playlist, starred, lang, refresh):
             '<audio id="player" preload="none"></audio>')
 
 
+def _minutes(ms):
+    return round((ms or 0) / 60000)
+
+
+def my_list(playlists, lang):
+    """The user's own playlists on Beatport (playlists.list_playlists), each opening its page in the manager."""
+    if not playlists:
+        return f'<p class="notice">{_icon("info")}{i18n.t(lang, "my_none")}</p>'
+    def item(p):
+        cover = _url(p.get("image"))
+        img = f'<img src="{escape(cover)}" alt="" loading="lazy">' if cover else '<span class="no-cover"></span>'
+        bpm = p.get("bpm_range") or []
+        parts = [i18n.t(lang, "tracks", n=p["track_count"]), i18n.t(lang, "minutes", n=_minutes(p.get("length_ms")))]
+        if len(bpm) == 2 and bpm[0] and bpm[1]:
+            parts.append(i18n.t(lang, "bpm_range", low=bpm[0], high=bpm[1]))
+        genres = escape(", ".join(p.get("genres") or []))
+        tag = (f'<span class="private">{_icon("eye")}{i18n.t(lang, "public_tag")}</span>' if p["is_public"] else
+               f'<span class="private">{_icon("lock")}{i18n.t(lang, "private_tag")}</span>')
+        return (f'<li><a class="track my-pl" href="/playlists/{p["id"]}"><span class="cover">{img}</span>'
+                f'<div class="t"><div class="n"><span class="name">{escape(p["name"])}</span></div>'
+                f'<div class="a">{escape(" · ".join(parts))}</div><div class="r">{genres}</div></div>{tag}</a></li>')
+    return f'<ul class="my-pls">{"".join(item(p) for p in playlists)}</ul>'
+
+
+def _handle(lang):
+    return (f'<button class="handle" data-move aria-label="{i18n.t(lang, "move_track")}" '
+            f'title="{i18n.t(lang, "move_track")}">{_icon("drag")}</button>')
+
+
+def _withdrawn_row(i, item_id, control, lang):
+    """An item whose track Beatport withdrew: it keeps its place, so it can be moved but not played."""
+    return (f'<li class="track outside" data-item="{item_id}"><span class="num">{i}</span>{control}'
+            f'<span class="cover"><span class="no-cover"></span></span><div class="t"><div class="n">'
+            f'<span class="name">{i18n.t(lang, "withdrawn")}</span></div></div></li>')
+
+
+def my_tracks(pl, lang):
+    """One of the user's playlists in the manager: its tracks with preview, BPM, key and length, in the order they
+    are on Beatport. In a private playlist of the user's the rows can be dragged (or moved with ↑ ↓ on their
+    handle) and sorted by BPM or key; "Save order" sends the new order. Any other playlist is only listened to."""
+    editable = pl["owner"] and pl["private"]
+    gap = '<span class="toggle-gap"></span>'
+    rows = []
+    for i, item in enumerate(pl["items"], 1):
+        control = _handle(lang) if editable else gap
+        t = item["track"]
+        if t is None:
+            rows.append(_withdrawn_row(i, item["item_id"], control, lang))
+            continue
+        attrs = (f' data-item="{item["item_id"]}" data-bpm="{t.get("bpm") or ""}"'
+                 f' data-key="{escape(t.get("key") or "")}"')
+        rows.append(_row(i, t, lang, control=control, attrs=attrs))
+    tracks = [x["track"] for x in pl["items"] if x["track"]]
+    detail = " · ".join((i18n.t(lang, "tracks", n=len(pl["items"])),
+                         i18n.t(lang, "minutes", n=_minutes(sum(t.get("length_ms") or 0 for t in tracks)))))
+    tag = (f'<span class="private">{_icon("lock")}{i18n.t(lang, "private_tag")}</span>' if pl["private"] else
+           f'<span class="private">{_icon("eye")}{i18n.t(lang, "public_tag")}</span>')
+    save = (f'<button class="main" data-action="save-order" data-playlist="{pl["id"]}" disabled>'
+            f'{_icon("save")}{i18n.t(lang, "save_order")}</button>' if editable else "")
+    tools = (f'<div class="filters"><button class="create" data-sort="bpm">{_icon("swap_vert")}{i18n.t(lang, "sort_bpm")}'
+             f'</button><button class="create" data-sort="key">{_icon("swap_vert")}{i18n.t(lang, "sort_key")}</button>'
+             f'<button class="create" data-order-reset disabled>{i18n.t(lang, "order_reset")}</button></div>'
+             if editable else "")
+    hint = ("order_hint" if editable else "order_public" if pl["owner"] else "order_not_owner")
+    return (f'<header class="head editor"><a class="back" href="/playlists" aria-label="{i18n.t(lang, "back_my")}">'
+            f'{_icon("arrow_back")}</a><div class="title"><h1>{escape(pl["name"] or "")}</h1>'
+            f'<span class="detail">{escape(detail)}</span></div>{tag}{save}</header>{tools}'
+            f'<p class="notice">{_icon("info")}{i18n.t(lang, hint)}</p>'
+            f'<ol class="tracks" id="order"{" data-editable" if editable else ""}>{"".join(rows)}</ol>')
+
+
+def _my(my, lang):
+    """The manager's page: the list of the user's playlists or one of them. Both come from Beatport, so the page
+    holds a place the JS fills (my_list, my_tracks) once it has read them; it asks for consent first."""
+    head = ("" if my != "list" else
+            f'<header class="head"><div class="title"><h1>{i18n.t(lang, "my_playlists")}</h1>'
+            f'<span class="detail">{i18n.t(lang, "my_detail")}</span></div></header>')
+    return (f'{head}<div id="my" data-my="{escape(str(my))}"><p class="notice">'
+            f'<button class="create" data-action="my-load">{_icon("sync")}{i18n.t(lang, "my_load")}</button></p></div>'
+            '<audio id="player" preload="none"></audio>')
+
+
 def render_page(selection, crate, selections, state, token, today, marks=None, lang="en", playlist=None,
-                profile=None):
+                profile=None, my=None):
     marks = marks or {"starred": [], "playlists": []}
     off = " disabled" if state.get("running") or state.get("login_pending") else ""
     links = "".join(
@@ -461,11 +548,17 @@ def render_page(selection, crate, selections, state, token, today, marks=None, l
         for s, n in selections)
     help_btn = (f'<button class="brand-help" data-help-open aria-label="{i18n.t(lang, "help_open")}" '
                 f'title="{i18n.t(lang, "help_open")}">{_icon("help")}</button>')
-    side = (f'<aside class="side"><div class="brand">{BRAND_MARK}<span>beat50</span>{help_btn}</div>'
+    mine = (f'<nav class="sels mine"><a class="sel{" on" if my is not None else ""}" href="/playlists">'
+            f'<span>{_icon("queue_music")}{i18n.t(lang, "my_playlists")}</span></a></nav>')
+    side = (f'<aside class="side"><div class="brand">{BRAND_MARK}<span>beat50</span>{help_btn}</div>{mine}'
             f'<h2 class="side-h">{i18n.t(lang, "selections")}</h2><nav class="sels">{links}</nav>'
             f'{_playlists(marks, lang, selection, playlist)}{_status(state, lang)}</aside>')
     marker = player = pl_dialog = ""
-    if playlist is not None:
+    if my is not None:
+        page_title = f'beat50 · {i18n.t(lang, "my_playlists")}'
+        inner = _my(my, lang)
+        player = _player()
+    elif playlist is not None:
         page_title = f"beat50 · {playlist['name']}"
         if playlist.get("gone"):
             inner = _gone(selection, playlist, lang)

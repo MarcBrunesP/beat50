@@ -450,7 +450,7 @@ def test_period_error_codes(body, code):
 
 
 SESSION_ROUTES = ["/api/generate", "/api/session/check", "/api/login/start", "/api/playlist/2026-09",
-                  "/api/playlists"]
+                  "/api/playlists", "/api/my/playlists", "/api/my/playlist/7", "/api/my/playlist/7/order"]
 
 
 @pytest.mark.parametrize("path", SESSION_ROUTES)
@@ -459,7 +459,7 @@ def test_without_consent_nothing_reads_the_session(app, data_dir, monkeypatch, p
     consent.revoke()
     called = []
     for name in ("start_generation", "check_session", "login_start", "create_playlist", "list_playlists",
-                 "add_to_playlist"):
+                 "add_to_playlist", "read_my_playlist", "reorder_my_playlist"):
         monkeypatch.setattr(server.jobs, name, lambda *a, _n=name, **kw: called.append(_n))
     code, body, _ = _request(app, "POST", path, token=app.token, body={"name": "x"},
                              headers={"Accept-Language": "es-ES"})
@@ -758,3 +758,54 @@ def test_adding_to_a_public_playlist_is_refused_with_its_name(app, data_dir, mon
     code, body, _ = _request(app, "POST", "/api/playlist/2026-09", token=app.token, body={"into": 5})
     assert code == 400
     assert json.loads(body)["error"] == "“Live” is public: beat50 only adds tracks to private playlists."
+
+
+def test_the_manager_pages_are_served(app, data_dir):
+    code, html, _ = _request(app, "GET", "/playlists")
+    assert code == 200 and 'data-my="list"' in html
+    code, html, _ = _request(app, "GET", "/playlists/7")
+    assert code == 200 and 'data-my="7"' in html
+    assert _request(app, "GET", "/playlists/x")[0] == 404
+
+
+def test_the_manager_lists_and_reads_the_users_playlists(app, data_dir, monkeypatch):
+    monkeypatch.setattr(server.jobs, "list_playlists", lambda: [{"id": 5, "name": "Warm-up", "track_count": 2,
+                                                                 "is_public": False}])
+    code, body, _ = _request(app, "POST", "/api/my/playlists", token=app.token, body={})
+    assert code == 200 and 'href="/playlists/5"' in json.loads(body)["html"]
+    monkeypatch.setattr(server.jobs, "read_my_playlist", lambda pid: {"id": pid, "name": "Warm-up", "owner": True,
+                                                                      "private": True, "items": []})
+    code, body, _ = _request(app, "POST", "/api/my/playlist/7", token=app.token, body={})
+    assert code == 200 and 'data-playlist="7"' in json.loads(body)["html"]
+    assert _request(app, "POST", "/api/my/playlist/7/other", token=app.token, body={})[0] == 404
+    assert _request(app, "POST", "/api/my/other", token=app.token, body={})[0] == 404
+
+
+def test_saving_the_order(app, data_dir, monkeypatch):
+    seen = []
+    monkeypatch.setattr(server.jobs, "reorder_my_playlist", lambda pid, ids: seen.append((pid, ids)) or {
+        "id": pid, "name": "Warm-up", "warnings": [{"code": "order_unknown", "detail": ""}]})
+    code, body, _ = _request(app, "POST", "/api/my/playlist/7/order", token=app.token, body={"item_ids": [12, 11]},
+                             headers={"Accept-Language": "es-ES"})
+    assert code == 200 and seen == [(7, [12, 11])]
+    assert json.loads(body)["message"] == ("Orden de «Warm-up» guardado en Beatport. No se pudo comprobar el nuevo "
+                                           "orden; revísalo en beatport.com.")
+
+
+@pytest.mark.parametrize("ids", [None, [], ["1"], [True], 5])
+def test_saving_the_order_needs_item_ids(app, data_dir, monkeypatch, ids):
+    monkeypatch.setattr(server.jobs, "reorder_my_playlist", lambda *a: pytest.fail("must not reorder"))
+    assert _request(app, "POST", "/api/my/playlist/7/order", token=app.token, body={"item_ids": ids})[0] == 400
+
+
+def test_an_order_that_changed_on_beatport_is_a_conflict(app, data_dir, monkeypatch):
+    def changed(*a):
+        raise playlists.PlaylistError("playlist_changed", "changed", name="Warm-up")
+    monkeypatch.setattr(server.jobs, "reorder_my_playlist", changed)
+    code, body, _ = _request(app, "POST", "/api/my/playlist/7/order", token=app.token, body={"item_ids": [1]})
+    assert code == 409 and "changed on Beatport since you opened it" in json.loads(body)["error"]
+
+
+def test_the_manager_waits_while_busy(app, data_dir):
+    with state.lock():
+        assert _request(app, "POST", "/api/my/playlists", token=app.token, body={})[0] == 409
