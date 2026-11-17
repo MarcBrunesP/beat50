@@ -473,7 +473,7 @@ def my_list(playlists, lang):
         genres = escape(", ".join(p.get("genres") or []))
         tag = (f'<span class="private">{_icon("eye")}{i18n.t(lang, "public_tag")}</span>' if p["is_public"] else
                f'<span class="private">{_icon("lock")}{i18n.t(lang, "private_tag")}</span>')
-        return (f'<li><a class="track my-pl" href="/playlists/{p["id"]}"><span class="cover">{img}</span>'
+        return (f'<li><a class="track my-pl" href="/playlists/{int(p["id"])}"><span class="cover">{img}</span>'
                 f'<div class="t"><div class="n"><span class="name">{escape(p["name"])}</span></div>'
                 f'<div class="a">{escape(" · ".join(parts))}</div><div class="r">{genres}</div></div>{tag}</a></li>')
     return f'<ul class="my-pls">{"".join(item(p) for p in playlists)}</ul>'
@@ -502,9 +502,9 @@ def my_tracks(pl, lang):
         control = _handle(lang) if editable else gap
         t = item["track"]
         if t is None:
-            rows.append(_withdrawn_row(i, item["item_id"], control, lang))
+            rows.append(_withdrawn_row(i, int(item["item_id"]), control, lang))
             continue
-        attrs = (f' data-item="{item["item_id"]}" data-bpm="{t.get("bpm") or ""}"'
+        attrs = (f' data-item="{int(item["item_id"])}" data-bpm="{escape(str(t.get("bpm") or ""))}"'
                  f' data-key="{escape(t.get("key") or "")}"')
         rows.append(_row(i, t, lang, control=control, attrs=attrs))
     tracks = [x["track"] for x in pl["items"] if x["track"]]
@@ -512,7 +512,7 @@ def my_tracks(pl, lang):
                          i18n.t(lang, "minutes", n=_minutes(sum(t.get("length_ms") or 0 for t in tracks)))))
     tag = (f'<span class="private">{_icon("lock")}{i18n.t(lang, "private_tag")}</span>' if pl["private"] else
            f'<span class="private">{_icon("eye")}{i18n.t(lang, "public_tag")}</span>')
-    save = (f'<button class="main" data-action="save-order" data-playlist="{pl["id"]}" disabled>'
+    save = (f'<button class="main" data-action="save-order" data-playlist="{int(pl["id"])}" disabled>'
             f'{_icon("save")}{i18n.t(lang, "save_order")}</button>' if editable else "")
     tools = (f'<div class="filters"><button class="create" data-sort="bpm">{_icon("swap_vert")}{i18n.t(lang, "sort_bpm")}'
              f'</button><button class="create" data-sort="key">{_icon("swap_vert")}{i18n.t(lang, "sort_key")}</button>'

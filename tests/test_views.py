@@ -755,3 +755,14 @@ def test_my_tracks_in_any_other_playlist_can_only_be_listened_to(owner, private,
     html = views.my_tracks(_mine(owner, private), "en")
     assert "data-editable" not in html and "handle" not in html and "save-order" not in html
     assert "data-sort" not in html and says in html and 'class="play"' in html
+
+
+def test_the_manager_never_puts_what_beatport_sends_raw_into_attributes():
+    pl = _mine()
+    pl["items"][0]["track"]["bpm"] = '1" onmouseover="x'
+    assert 'onmouseover="x' not in views.my_tracks(pl, "en")
+    pl["items"][0]["item_id"] = '11" onclick="x'
+    with pytest.raises(ValueError):
+        views.my_tracks(pl, "en")
+    with pytest.raises(ValueError):
+        views.my_list([{"id": '5" onclick="x', "name": "x", "track_count": 0, "is_public": False}], "en")
