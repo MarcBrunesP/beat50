@@ -115,14 +115,14 @@ second one in `--star` and, between them when the slide is a step, a 26 px `--fa
   artists, "Picked for …" line with the sparkle icon and the optional "in <playlist>" tag · genre, label, BPM chip,
   key chip, date · 36 px star. Playing row: `--accent-soft` background and the name in `--accent-text`. Below
   1100 px the genre name is dropped from the row (it is already in the filter row).
-- **My playlists**: a sidebar row above the selections (`queue_music` icon), on while the manager is open. The list
+- **Beatport lists**: a sidebar row above the selections (`queue_music` icon), on while the manager is open. The list
   uses track rows with two lines like a track's (name, then "N tracks · N min · low–high BPM"), the genres on the right
   where a track has its label (dropped below 1100 px like a track's genre) and the private / public tag.
   A playlist's toolbar has back, its name with "N tracks · N min", the tag and **Save order** (primary); below it, in
   the filter row, **Sort by BPM**, **Sort by key** and **Undo changes** (secondary). Each row starts with a 32 px
   handle (`.handle`, the `drag` glyph in `--faint`, `--chip` tile on hover or focus, grab cursor); the row being
   dragged dims to 50 % on `--accent-soft`. The track row also shows the length chip after the key.
-- **Drafts**: a sidebar section under My playlists (`.drafts`, the playlists' rows: name left, track count or
+- **Draft lists**: a sidebar section under Beatport lists (`.drafts`, the playlists' rows: name left, track count or
   "Uploaded" right; with none, an 11 px `--faint` line saying how to start one). Track rows of a selection and of a
   playlist in the manager end with a 36 px icon-only button (`.to-draft`, `playlist_add` in `--faint`, `--chip` tile
   on hover or focus), before the star; a selection's filter row adds the secondary **To a draft** (`star` icon). The dialog

@@ -3,6 +3,13 @@
 What changed in each version of beat50 (called beatcrate before 3.0). The format follows [Keep a Changelog](https://keepachangelog.com/)
 and versions follow [Semantic Versioning](https://semver.org/). The version lives in `pyproject.toml`.
 
+## Unreleased
+
+### Changed
+
+- The sidebar's three sections have new names, the same in English and Spanish: **Beatport lists** (was My
+  playlists), **Draft lists** (was Drafts) and **beat50 lists** (was Selections).
+
 ## 3.5.0 — 2026-11-17
 
 ### Added

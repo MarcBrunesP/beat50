@@ -8,8 +8,8 @@ How beat50 works today. For using it, see [README.md](README.md).
 beat50 is a single-user Mac app. It reads the user's Beatport purchases and playlists, builds a taste
 profile, looks for new releases in a period, and picks 50 of them. The user browses each selection in the
 app's window (a local page served on 127.0.0.1), stars tracks and turns them into private Beatport
-playlists. **My playlists** shows the user's own playlists, plays their previews and puts their tracks in order.
-**Drafts** are playlists put together on the Mac first and uploaded to Beatport when ready.
+playlists. **Beatport lists** shows the user's own playlists, plays their previews and puts their tracks in order.
+**Draft lists** are playlists put together on the Mac first and uploaded to Beatport when ready.
 
 Everything runs on the user's Mac. There is no remote server, no account of ours and no background job:
 a selection is made when the user asks for it.
@@ -210,7 +210,7 @@ read from `crates/`, its tracks may be picked again.
 
 ## Managing playlists
 
-**My playlists** (`/playlists`, linked at the top of the sidebar) works on the user's own playlists as they are on
+**Beatport lists** (`/playlists`, linked at the top of the sidebar) works on the user's own playlists as they are on
 Beatport, with nothing kept locally: the page holds a place that app.js fills, after consent, with the HTML the
 server answers (`views.my_list`, `views.my_tracks`), so everything from Beatport is escaped on the server.
 

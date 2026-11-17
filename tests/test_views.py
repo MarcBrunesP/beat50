@@ -513,7 +513,7 @@ def test_the_editor_also_shows_the_progress_while_a_selection_runs():
 
 def test_the_sidebar_has_its_sections_and_the_toolbar_the_period():
     html = _page()
-    assert '<h2 class="side-h">Selections</h2><nav class="sels">' in html
+    assert '<h2 class="side-h">beat50 lists</h2><nav class="sels">' in html
     assert html.index('<nav class="sels">') < html.index('<section class="status">')
     assert '<header class="head"><div class="title"><h1>September 2026</h1><span class="detail">' in html
     assert html.index('<div class="period">') < html.index('data-action="generate"') < html.index('<div class="filters">')
@@ -722,7 +722,7 @@ def _mine(owner=True, private=True):
 def test_the_sidebar_links_to_my_playlists_and_marks_it_on_its_page():
     assert '<a class="sel" href="/playlists">' in _page()
     html = views.render_page(None, None, [], {}, "T", date(2026, 9, 30), lang="es", my="list")
-    assert '<a class="sel on" href="/playlists">' in html and "Mis playlists" in html
+    assert '<a class="sel on" href="/playlists">' in html and "Beatport lists" in html
     assert 'id="my" data-my="list"' in html and 'data-action="my-load"' in html
 
 
@@ -786,7 +786,7 @@ def test_every_track_of_a_selection_can_go_to_a_draft_and_so_can_its_stars():
 
 
 def test_the_sidebar_lists_the_drafts_or_says_how_to_start_one():
-    assert "None yet. Use the “Add to a draft” button" in _page() and "Borradores" in _page(lang="es")
+    assert "None yet. Use the “Add to a draft” button" in _page() and "<h2>Draft lists</h2>" in _page(lang="es")
     html = views.render_page(None, None, [], {}, "T", date(2026, 9, 30), drafts=[
         _draft(), dict(_draft({"playlist_id": 7, "name": "Set", "tracks": 2, "at": "2026-11-18T10:00:00+00:00"}),
                        id="ba9876543210", updated_at="2026-11-19T10:00:00+00:00")], my="list")

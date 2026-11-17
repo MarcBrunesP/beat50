@@ -57,19 +57,19 @@ it works; you can reopen them anytime with the **?** button beside the app's nam
    name, tracks added on beatport.com (shown with their title, and removable) and edits made there are
    kept. A playlist deleted on Beatport shows as such and can be removed from the list. In one of your
    playlists that beat50 did not create, it only adds tracks: the name and its tracks stay as they are.
-7. **My playlists** (at the top of the sidebar) lists every playlist of yours on Beatport, read from Beatport
+7. **Beatport lists** (at the top of the sidebar) lists every playlist of yours on Beatport, read from Beatport
    each time you open it. Open one to listen to it (the previews play one after another) and get it ready for a
    set: drag the tracks, move them with ↑ ↓ on their handle, or sort them by BPM or key (Camelot), then **Save
    order**. Nothing changes on Beatport until you save, and if the playlist changed on Beatport since you opened
    it, beat50 asks you to open it again instead of saving. Only private playlists can be reordered; public ones
    are only listened to.
-8. **Drafts** (in the sidebar, under My playlists) are playlists you put together on this Mac first. Click **Add to
-   a draft** on any track of a selection or of one of your playlists in My playlists (or **★ To a draft** for every
+8. **Draft lists** (in the sidebar, under Beatport lists) are playlists you put together on this Mac first. Click **Add to
+   a draft** on any track of a selection or of one of your playlists in Beatport lists (or **★ To a draft** for every
    starred track in view) and choose a draft or name a new one; a track already in it is not added again. Open the
    draft to listen to it, drag its tracks, sort them by BPM or key, remove some or rename it: everything is saved
    on this Mac as you go, and nothing reaches Beatport. **Upload to Beatport** creates a new, always private
    playlist with those tracks in that order. After that the draft is a record: it no longer changes and links to
-   the playlist in My playlists. Deleting a draft sends it to the Trash and leaves Beatport as it is.
+   the playlist in Beatport lists. Deleting a draft sends it to the Trash and leaves Beatport as it is.
 9. To delete a selection, click its bin (in the sidebar, on hover, or next to its title) and confirm. It goes to the Trash (Finder's
    **Put Back** restores it) with its stars and the record of its playlists; the playlists stay on
    Beatport, and its tracks may show up again in new selections.
