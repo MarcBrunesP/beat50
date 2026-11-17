@@ -3,6 +3,17 @@
 What changed in each version of beat50 (called beatcrate before 3.0). The format follows [Keep a Changelog](https://keepachangelog.com/)
 and versions follow [Semantic Versioning](https://semver.org/). The version lives in `pyproject.toml`.
 
+## Unreleased
+
+### Added
+
+- **Drafts** (in the sidebar, under My playlists): playlists you build on this Mac before they exist on Beatport.
+  Send any track of a selection (or all its ★ at once) or of one of your Beatport playlists to a draft with the
+  **Add to a draft** button, choosing which draft or naming a new one; a track is never added twice. In a draft you
+  play the previews, drag the tracks, sort them by BPM or key, remove them and rename it: every change is saved at
+  once, with nothing sent to Beatport. **Upload to Beatport** creates a new private playlist with the tracks in that
+  order; the draft then stays as a record, linked to the playlist in My playlists, and no longer changes.
+
 ## 3.4.1 — 2026-11-17
 
 ### Changed

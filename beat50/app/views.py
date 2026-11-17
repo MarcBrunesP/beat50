@@ -40,6 +40,7 @@ ICONS = {
     "star": '<path d="M12 2.5l2.9 6.1 6.7.8-4.9 4.6 1.3 6.6L12 17.4l-6 3.2 1.3-6.6L2.4 9.4l6.7-.8z"/>',
     "swap_vert": '<path d="M8 4v15M4 15l4 4 4-4M16 20V5M12 9l4-4 4 4"/>',
     "sync": '<path d="M20 12a8 8 0 0 1-14 5.3M4 12a8 8 0 0 1 14-5.3"/><path d="M18 3v4h-4M6 21v-4h4"/>',
+    "upload": '<path d="M12 16V5M7 10l5-5 5 5M5 19h14"/>',
     "trash": '<path d="M4 7h16M10 11v6M14 11v6"/><path d="M6 7l1 12.2a2 2 0 0 0 2 1.8h6a2 2 0 0 0 2-1.8L18 7"/>'
              '<path d="M9 7V4.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 .5.5V7"/>',
     "tune": '<path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/>',
@@ -173,9 +174,10 @@ def _help(lang):
             f'<button class="main" data-help-done hidden>{i18n.t(lang, "help_done")}</button></div></dialog>')
 
 
-def _row(i, t, lang, starred=False, in_playlists=(), control=None, attrs=""):
+def _row(i, t, lang, starred=False, in_playlists=(), control=None, attrs="", end=""):
     """One track. `control` (the playlist editor's remove / add, the manager's handle) goes first and replaces the
-    star; `attrs` are extra attributes of the row (the manager's item id, BPM and key)."""
+    star; `attrs` are extra attributes of the row (the manager's item id, BPM and key); `end` is a button of the
+    row's own at its end (add to a draft, remove from the draft)."""
     preview, cover = _url(t.get("sample_url")), _url(t.get("image"))
     artists = escape(", ".join(t.get("artists") or []))
     name = escape((t.get("name") or "").strip())
@@ -198,7 +200,7 @@ def _row(i, t, lang, starred=False, in_playlists=(), control=None, attrs=""):
     why = f'<div class="r">{picked}{tag}</div>' if reasons or tag else ""
     return (f'<li class="track" data-genre="{escape(t.get("genre") or "")}"{attrs}><span class="num">{i}</span>{control or ""}'
             f'<span class="cover">{img}{play}</span><div class="t"><div class="n"><span class="name">{name}</span>{mix}</div>'
-            f'<div class="a">{artists}</div>{why}</div><div class="m">{meta}</div>{star}</li>')
+            f'<div class="a">{artists}</div>{why}</div><div class="m">{meta}</div>{end}{star}</li>')
 
 
 def _genres(crate, lang):
@@ -455,6 +457,90 @@ def _editor(selection, crate, playlist, starred, lang, refresh):
             '<audio id="player" preload="none"></audio>')
 
 
+def _to_draft(track_id, lang):
+    """The button that sends a track to a draft; the JS opens the dialog to choose which."""
+    label = i18n.t(lang, "add_to_draft")
+    return (f'<button class="to-draft" data-draft-add="{int(track_id)}" aria-label="{label}" title="{label}">'
+            f'{_icon("playlist_add")}</button>')
+
+
+def _drafts(drafts, lang, current=None):
+    """The sidebar's drafts, newest first; with none yet, how to start one."""
+    def item(d):
+        on = " on" if current and d["id"] == current["id"] else ""
+        tag = i18n.t(lang, "draft_uploaded_tag") if d.get("uploaded") else len(d["tracks"])
+        return (f'<li><a class="pl{on}" href="/drafts/{escape(d["id"])}" data-draft="{escape(d["id"])}">'
+                f'<span>{escape(d["name"])}</span> <small>{tag}</small></a></li>')
+    none = "" if drafts else f'<p>{i18n.t(lang, "drafts_none")}</p>'
+    return (f'<section class="playlists drafts"><h2>{i18n.t(lang, "drafts")}</h2>'
+            f'<ul>{"".join(item(d) for d in drafts)}</ul>{none}</section>')
+
+
+def _draft_dialog(drafts, lang):
+    """Which draft the tracks go to: one of the drafts not uploaded yet (the last one changed comes chosen) or a new
+    one, by its name. The server leaves out the tracks already in it."""
+    still = [d for d in drafts if not d.get("uploaded")]
+    last = max(still, key=lambda d: d["updated_at"])["id"] if still else None
+    items = "".join(
+        f'<li><button data-draft-pick="{escape(d["id"])}" aria-pressed="{"true" if d["id"] == last else "false"}">'
+        f'<span class="pl-n">{escape(d["name"])}</span><small>{len(d["tracks"])}</small></button></li>' for d in still)
+    return (f'<dialog id="draft-dialog" aria-labelledby="draft-dialog-title">'
+            f'<h2 id="draft-dialog-title">{_icon("playlist_add")}{i18n.t(lang, "draft_dialog_title")}</h2>'
+            f'<ul class="pl-pick" id="draft-list">{items}</ul>'
+            f'<label class="pl-field"><span>{i18n.t(lang, "draft_new")}</span>'
+            f'<input id="draft-new-name" maxlength="100"></label>'
+            f'<p class="hint">{_icon("mac")}{i18n.t(lang, "draft_hint")}</p>'
+            f'<div class="buttons"><button data-draft-cancel>{i18n.t(lang, "consent_cancel")}</button>'
+            f'<button class="main" data-draft-ok>{i18n.t(lang, "draft_ok")}</button></div></dialog>')
+
+
+def draft_detail(draft, lang):
+    """"12 tracks · 58 min"; the minutes only when every track says how long it is (those of a selection do not)."""
+    tracks = draft["tracks"]
+    detail = i18n.t(lang, "tracks", n=len(tracks))
+    if tracks and all(t.get("length_ms") for t in tracks):
+        detail += " · " + i18n.t(lang, "minutes", n=_minutes(sum(t["length_ms"] for t in tracks)))
+    return detail
+
+
+def _draft(draft, lang):
+    """A draft: its tracks with preview, BPM and key, to drag, sort or remove, and its name; every change is saved
+    at once on this Mac. "Upload to Beatport" creates a new private playlist with them; once uploaded, the draft
+    is a record: nothing in it changes and it links to the playlist in the manager."""
+    up = draft.get("uploaded")
+    rows = "".join(
+        _row(i, t, lang, control='<span class="toggle-gap"></span>' if up else _handle(lang),
+             attrs=(f' data-item="{int(t["id"])}" data-bpm="{escape(str(t.get("bpm") or ""))}"'
+                    f' data-key="{escape(t.get("key") or "")}"' + ("" if up else ' draggable="true"')),
+             end="" if up else (f'<button class="to-draft" data-draft-remove aria-label="{i18n.t(lang, "draft_remove")}" '
+                                f'title="{i18n.t(lang, "draft_remove")}">{_icon("close")}</button>'))
+        for i, t in enumerate(draft["tracks"], 1))
+    name = escape(draft["name"])
+    delete = (f'<button class="delete" data-action="delete-draft" data-draft="{escape(draft["id"])}" data-name="{name}" '
+              f'aria-label="{i18n.t(lang, "delete_draft")}" title="{i18n.t(lang, "delete_draft")}">{_icon("trash")}</button>')
+    if up:
+        tag = f'<span class="private">{_icon("check_circle")}{i18n.t(lang, "draft_uploaded_tag")}</span>'
+        action = (f'<a class="create" href="/playlists/{int(up["playlist_id"])}">{_icon("queue_music")}'
+                  f'{i18n.t(lang, "draft_open_playlist")}</a>')
+        tools = ""
+        hint = i18n.t(lang, "draft_uploaded_note", name=escape(up["name"]), n=up["tracks"],
+                      when=i18n.moment(up["at"], lang))
+    else:
+        tag = f'<span class="private">{_icon("mac")}{i18n.t(lang, "draft_local_tag")}</span>'
+        action = (f'<button class="main" data-action="upload-draft" data-draft="{escape(draft["id"])}"'
+                  f'{"" if draft["tracks"] else " disabled"}>{_icon("upload")}{i18n.t(lang, "upload_draft")}</button>')
+        tools = (f'<div class="filters"><button class="create" data-sort="bpm">{_icon("swap_vert")}'
+                 f'{i18n.t(lang, "sort_bpm")}</button><button class="create" data-sort="key">{_icon("swap_vert")}'
+                 f'{i18n.t(lang, "sort_key")}</button></div>')
+        hint = i18n.t(lang, "draft_page_hint")
+    return (f'<header class="head editor"><label class="pl-name">{_icon("edit")}<input id="draft-name" value="{name}" '
+            f'maxlength="100" aria-label="{i18n.t(lang, "draft_name")}"{" readonly" if up else ""}></label>'
+            f'<span class="detail" id="draft-detail">{escape(draft_detail(draft, lang))}</span>{tag}{delete}{action}'
+            f'</header>{tools}<p class="notice">{_icon("info")}<span>{hint}</span></p>'
+            f'<ol class="tracks" id="order"{"" if up else " data-editable"} data-draft="{escape(draft["id"])}">{rows}</ol>'
+            '<audio id="player" preload="none"></audio>')
+
+
 def _minutes(ms):
     return round((ms or 0) / 60000)
 
@@ -508,7 +594,7 @@ def my_tracks(pl, lang):
             continue
         attrs = (f' data-item="{int(item["item_id"])}" data-bpm="{escape(str(t.get("bpm") or ""))}"'
                  f' data-key="{escape(t.get("key") or "")}"')
-        rows.append(_row(i, t, lang, control=control, attrs=attrs))
+        rows.append(_row(i, t, lang, control=control, attrs=attrs, end=_to_draft(t["id"], lang)))
     tracks = [x["track"] for x in pl["items"] if x["track"]]
     detail = " · ".join((i18n.t(lang, "tracks", n=len(pl["items"])),
                          i18n.t(lang, "minutes", n=_minutes(sum(t.get("length_ms") or 0 for t in tracks)))))
@@ -540,7 +626,7 @@ def _my(my, lang):
 
 
 def render_page(selection, crate, selections, state, token, today, marks=None, lang="en", playlist=None,
-                profile=None, my=None):
+                profile=None, my=None, drafts=(), draft=None):
     marks = marks or {"starred": [], "playlists": []}
     off = " disabled" if state.get("running") or state.get("login_pending") else ""
     links = "".join(
@@ -553,13 +639,19 @@ def render_page(selection, crate, selections, state, token, today, marks=None, l
     mine = (f'<nav class="sels mine"><a class="sel{" on" if my is not None else ""}" href="/playlists">'
             f'<span>{_icon("queue_music")}{i18n.t(lang, "my_playlists")}</span></a></nav>')
     side = (f'<aside class="side"><div class="brand">{BRAND_MARK}<span>beat50</span>{help_btn}</div>{mine}'
+            f'{_drafts(drafts, lang, draft)}'
             f'<h2 class="side-h">{i18n.t(lang, "selections")}</h2><nav class="sels">{links}</nav>'
             f'{_playlists(marks, lang, selection, playlist)}{_status(state, lang)}</aside>')
     marker = player = pl_dialog = ""
-    if my is not None:
+    if draft is not None:
+        page_title = f"beat50 · {draft['name']}"
+        inner = _draft(draft, lang)
+        player = _player()
+    elif my is not None:
         page_title = f'beat50 · {i18n.t(lang, "my_playlists")}'
         inner = _my(my, lang)
         player = _player()
+        pl_dialog = _draft_dialog(drafts, lang)
     elif playlist is not None:
         page_title = f"beat50 · {playlist['name']}"
         if playlist.get("gone"):
@@ -597,13 +689,16 @@ def render_page(selection, crate, selections, state, token, today, marks=None, l
         create = (f'<button class="create" data-action="playlist" data-suggested="{suggested} "'
                   f'{"" if starred else " disabled"}>{_icon("playlist_add")}'
                   f'{i18n.t(lang, "create_playlist", count=count)}</button>')
-        rows = "".join(_row(i, t, lang, t["id"] in starred, in_playlists.get(t["id"], ()))
-                       for i, t in enumerate(crate["tracks"], 1))
+        to_draft = (f'<button class="create" data-draft-stars{"" if starred else " disabled"}>{_icon("star")}'
+                    f'{i18n.t(lang, "stars_to_draft")}</button>')
+        rows = "".join(_row(i, t, lang, t["id"] in starred, in_playlists.get(t["id"], ()),
+                            end=_to_draft(t["id"], lang)) for i, t in enumerate(crate["tracks"], 1))
         inner = (_toolbar(i18n.title(selection, lang), detail, state, today, lang, selection)
-                 + f'<div class="filters">{_genres(crate, lang)}{create}</div>{notice}<ol class="tracks">{rows}</ol>'
+                 + f'<div class="filters">{_genres(crate, lang)}{to_draft}{create}</div>{notice}'
+                 f'<ol class="tracks">{rows}</ol>'
                  '<audio id="player" preload="none"></audio>')
         player = _player()
-        pl_dialog = _playlist_dialog(lang)
+        pl_dialog = _playlist_dialog(lang) + _draft_dialog(drafts, lang)
     main = f'<main class="list"{marker}>{inner}</main>{player}'
     # While a selection is made the whole window waits: the app underneath is inert and the card sits on top.
     inert = " inert" if state.get("running") else ""

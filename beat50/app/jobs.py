@@ -10,13 +10,14 @@ from datetime import datetime
 from .. import auth, config, discover, ingest, playlists, profile, rank, webkit
 from ..client import Client, TokenExpired
 from ..errors import Beat50Error
-from . import marks, state
+from . import drafts, marks, state
 
 STEPS = 3
 _thread = None
 _thread_lock = threading.Lock()
 _login_window = None
 _working = 0  # session checks and playlists running in request threads
+_my_last = None  # the last playlist the manager read, so its tracks can go to a draft without asking again
 
 
 def _client():
@@ -207,6 +208,57 @@ def read_my_playlist(playlist_id):
             _session("expired")
             raise
         _session("active")
+    global _my_last
+    _my_last = result
+    return result
+
+
+def _source_tracks(selection, playlist_id):
+    """The tracks a draft can take from: a selection's, or those of the playlist the manager has on screen."""
+    if selection is not None:
+        return json.loads((config.CRATES_DIR / f"{selection}.json").read_text())["tracks"]
+    if _my_last is None or _my_last["id"] != playlist_id:
+        raise Beat50Error("not_loaded", "Open that playlist again before adding its tracks to a draft.")
+    return [x["track"] for x in _my_last["items"] if x["track"]]
+
+
+def add_to_draft(track_ids, selection=None, playlist_id=None, draft_id=None, name=None):
+    """Adds tracks of a selection or of the playlist on screen to a draft; with a name, to a new one.
+
+    Only local: the tracks come from what beat50 already read. Returns {"draft", "created", "added", "already"}.
+    """
+    by_id = {t["id"]: t for t in _source_tracks(selection, playlist_id)}
+    if not track_ids or not set(track_ids) <= set(by_id):
+        raise Beat50Error("bad_request", "\"track_ids\" must be tracks of that selection or playlist.")
+    wanted = list(dict.fromkeys(track_ids))
+    created = draft_id is None
+    if created:
+        draft_id = drafts.create(name)["id"]
+    draft, added = drafts.add(draft_id, [by_id[t] for t in wanted])
+    return {"draft": draft, "created": created, "added": added, "already": len(wanted) - added}
+
+
+def upload_draft(draft_id):
+    """Creates the private Beatport playlist with the draft's tracks, in its order, and records it in the draft.
+
+    Once the playlist exists it is recorded, even if adding or counting its tracks failed, so it is not duplicated.
+    """
+    draft = drafts.read(draft_id)
+    if draft is None:
+        raise Beat50Error("not_found", "There is no such draft.")
+    if draft.get("uploaded"):
+        raise Beat50Error("draft_uploaded", f"“{draft['name']}” was already uploaded to Beatport: it no longer "
+                          "changes.", name=draft["name"])
+    if not draft["tracks"]:
+        raise Beat50Error("draft_empty", "The draft has no tracks yet.")
+    with _Working(), state.lock():
+        try:
+            result = playlists.create_playlist(_client(), draft["name"], [t["id"] for t in draft["tracks"]])
+        except (auth.SessionExpired, TokenExpired):
+            _session("expired")
+            raise
+        _session("active")
+    drafts.set_uploaded(draft_id, result["id"], result["name"], len(result["track_ids"]))
     return result
 
 

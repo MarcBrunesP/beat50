@@ -1,5 +1,5 @@
 // beat50/app/static/app.js — actions, consent, progress, genre filter, stars, playlist dialog and editor, playlist
-// manager, player.
+// manager, drafts, player.
 const token = document.querySelector('meta[name="bc-token"]').content;
 const TEXTS = JSON.parse(document.getElementById('texts').textContent);
 
@@ -40,11 +40,13 @@ const ROUTES = {
   'forget-playlist': (b) => ROUTES['save-playlist'](b) + '/forget',
   'delete-selection': (b) => '/api/selection/' + b.dataset.selection + '/delete',
   'save-order': (b) => '/api/my/playlist/' + b.dataset.playlist + '/order',
+  'upload-draft': (b) => '/api/draft/' + b.dataset.draft + '/upload',
+  'delete-draft': (b) => '/api/draft/' + b.dataset.draft + '/delete',
 };
 
 // Actions that read the Beatport session: the first time, the user has to accept.
 const SESSION_ACTIONS = new Set(['generate', 'check', 'login-start', 'playlist', 'save-playlist', 'my-load',
-                                 'save-order']);
+                                 'save-order', 'upload-draft']);
 const consent = document.getElementById('consent');
 let afterConsent = null;
 
@@ -75,10 +77,12 @@ consent.querySelector('[data-consent-ok]').addEventListener('click', async () =>
 });
 
 // While an action runs, every action button (and the playlist editor's controls) waits.
-const LOCKABLE = '[data-action], button.toggle, #pl-name, button.handle, [data-sort], [data-order-reset]';
+const LOCKABLE = '[data-action], button.toggle, #pl-name, button.handle, [data-sort], [data-order-reset], ' +
+                 '[data-draft-remove], #draft-name';
 
 // Actions that talk to Beatport show a centred overlay while they run; the message depends on the action.
-const LOADING_TEXT = {'playlist': 'creating', 'save-playlist': 'saving', 'check': 'checking', 'save-order': 'saving'};
+const LOADING_TEXT = {'playlist': 'creating', 'save-playlist': 'saving', 'check': 'checking', 'save-order': 'saving',
+                      'upload-draft': 'creating'};
 
 // `next`: where to go once it worked, when the server does not say (by default, reload the page).
 async function act(button, body, next) {
@@ -135,6 +139,7 @@ function updateCreate() {
   const n = document.querySelectorAll('.track:not([hidden]) button.star.on').length;
   document.getElementById('n-star').textContent = n;
   create.disabled = n === 0;
+  document.querySelector('[data-draft-stars]').disabled = n === 0;
   const base = document.body.dataset.selection.replace('-', '') + ' ';
   create.dataset.suggested = filter.size === 1 ? base + [...filter][0] : base;
 }
@@ -343,11 +348,13 @@ if (document.querySelector('main[data-refresh]')) refreshPlaylist();
 // them (after consent) and shows the HTML it answers. In a private playlist of the user's the tracks can be dragged,
 // moved with ↑ ↓ on their handle or sorted by BPM or key; "Save order" sends the whole order at once.
 const my = document.getElementById('my');
+const draftList = document.querySelector('#order[data-draft]');
 let baseline = [];
 
 const order = () => [...document.querySelectorAll('#order > li')].map((li) => Number(li.dataset.item));
 
 function updateOrder() {
+  if (draftList) return saveDraft();  // a draft has no "Save": every change is kept at once
   const changed = order().join() !== baseline.join();
   const save = document.querySelector('[data-action="save-order"]');
   if (save) save.disabled = !changed;
@@ -391,6 +398,152 @@ async function loadMy() {
 }
 
 if (my && document.body.dataset.consent === '1') loadMy();
+
+// Drafts: playlists kept on this Mac. Any track of a selection or of a playlist in the manager goes to one through
+// the dialog (an existing draft, the last one used by default, or a new one by its name). On a draft's page every
+// change (order, a track removed, the name) is saved at once; "Upload to Beatport" makes it a private playlist.
+const draftDialog = document.getElementById('draft-dialog');
+const draftName = document.getElementById('draft-name');
+const draftNew = document.getElementById('draft-new-name');
+let draftIds = [];
+
+function updateDraftOk() {
+  draftDialog.querySelector('[data-draft-ok]').disabled =
+    !tidy(draftNew.value) && !draftDialog.querySelector('[data-draft-pick][aria-pressed="true"]');
+}
+
+function pickDraft(id) {
+  draftDialog.querySelectorAll('[data-draft-pick]').forEach((b) => {
+    b.setAttribute('aria-pressed', String(b.dataset.draftPick === id));
+  });
+  updateDraftOk();
+}
+
+function openDraftDialog(ids) {
+  draftIds = ids;
+  draftNew.value = '';
+  updateDraftOk();
+  draftDialog.showModal();
+  if (!draftDialog.querySelector('[data-draft-pick]')) draftNew.focus();
+}
+
+// The draft's row in the dialog and in the sidebar, with its new count; both are made when the draft is new.
+function showDraft(d) {
+  let pick = draftDialog.querySelector('[data-draft-pick="' + d.id + '"]');
+  if (!pick) {  // built with textContent: the name is the user's
+    pick = document.createElement('button');
+    pick.dataset.draftPick = d.id;
+    const n = document.createElement('span');
+    n.className = 'pl-n';
+    n.textContent = d.name;
+    pick.append(n, document.createElement('small'));
+    const li = document.createElement('li');
+    li.append(pick);
+    document.getElementById('draft-list').prepend(li);
+    const a = document.createElement('a');
+    a.className = 'pl';
+    a.href = '/drafts/' + d.id;
+    a.dataset.draft = d.id;
+    const name = document.createElement('span');
+    name.textContent = d.name;
+    a.append(name, ' ', document.createElement('small'));
+    const item = document.createElement('li');
+    item.append(a);
+    document.querySelector('.drafts ul').prepend(item);
+    const none = document.querySelector('.drafts p');
+    if (none) none.remove();
+  }
+  pick.querySelector('small').textContent = d.n;
+  document.querySelector('.drafts a[data-draft="' + d.id + '"] small').textContent = d.n;
+  pickDraft(d.id);
+}
+
+async function addToDraft() {
+  const picked = draftDialog.querySelector('[data-draft-pick][aria-pressed="true"]');
+  const body = {track_ids: draftIds};
+  if (tidy(draftNew.value)) body.name = draftNew.value;
+  else body.draft = picked.dataset.draftPick;
+  if (my) body.playlist = Number(my.dataset.my);
+  else body.selection = document.body.dataset.selection;
+  draftDialog.close();
+  let r;
+  try {
+    r = await post('/api/drafts/add', body);
+  } catch (e) {
+    return closed();
+  }
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) return alert(data.error || text('js_error', {status: r.status}));
+  showDraft(data.draft);
+  toast(data.message);
+}
+
+if (draftDialog) {
+  draftDialog.addEventListener('click', (e) => {
+    const pick = e.target.closest('[data-draft-pick]');
+    if (pick) {
+      draftNew.value = '';
+      return pickDraft(pick.dataset.draftPick);
+    }
+    if (e.target.closest('[data-draft-cancel]')) return draftDialog.close();
+    if (e.target.closest('[data-draft-ok]')) addToDraft();
+  });
+  draftNew.addEventListener('input', () => {  // a name typed means a new draft: no existing one stays chosen
+    if (tidy(draftNew.value)) return pickDraft(null);
+    updateDraftOk();
+  });
+  draftNew.addEventListener('keydown', (e) => {
+    const ok = draftDialog.querySelector('[data-draft-ok]');
+    if (e.key === 'Enter' && !ok.disabled) ok.click();
+  });
+  document.addEventListener('click', (e) => {
+    const one = e.target.closest('[data-draft-add]');
+    if (one) return openDraftDialog([Number(one.dataset.draftAdd)]);
+    if (e.target.closest('[data-draft-stars]')) {
+      openDraftDialog([...document.querySelectorAll('.track:not([hidden]) button.star.on')]
+        .map((b) => Number(b.dataset.star)));
+    }
+  });
+}
+
+// Saves the draft as it is on screen; answers whether it worked. The count and the name follow in the sidebar.
+async function saveDraft() {
+  let r;
+  try {
+    r = await post('/api/draft/' + draftList.dataset.draft, {name: draftName.value, track_ids: order()});
+  } catch (e) {
+    closed();
+    return false;
+  }
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) {
+    alert(data.error || text('js_error', {status: r.status}));
+    return false;
+  }
+  document.getElementById('draft-detail').textContent = data.detail;
+  const link = document.querySelector('.drafts a[data-draft="' + draftList.dataset.draft + '"]');
+  link.querySelector('span').textContent = data.name;
+  link.querySelector('small').textContent = data.n;
+  document.querySelector('[data-action="upload-draft"]').disabled = data.n === 0;
+  return true;
+}
+
+if (draftList && draftList.hasAttribute('data-editable')) {
+  draftName.addEventListener('change', saveDraft);
+  draftList.addEventListener('click', (e) => {
+    const remove = e.target.closest('[data-draft-remove]');
+    if (!remove) return;
+    const li = remove.closest('li');
+    if (li.contains(bar)) {  // the player sits in the row it plays: stop it and keep it for the next one
+      player.pause();
+      bar.hidden = true;
+      document.querySelector('main').append(bar);
+      current = null;
+    }
+    li.remove();
+    moved();
+  });
+}
 
 // Camelot keys in wheel order (1A, 1B, 2A…); a track without BPM or key goes last.
 const camelot = (k) => {
@@ -556,6 +709,14 @@ function run(button) {
     return;
   }
   if (action === 'my-load') return loadMy();
+  if (action === 'upload-draft') {  // what is on screen is saved first, so the playlist gets this name and order
+    const sure = text('js_upload_draft', {name: tidy(draftName.value), n: order().length});
+    return saveDraft().then((ok) => { if (ok && confirm(sure)) act(button); });
+  }
+  if (action === 'delete-draft') {
+    if (confirm(text('js_delete_draft', {name: button.dataset.name}))) act(button);
+    return;
+  }
   if (action === 'save-order') return act(button, {item_ids: order()});
   if (action === 'save-playlist') {
     return act(button, {name: document.getElementById('pl-name').value, remove: marked('remove'),
@@ -587,7 +748,7 @@ if (player) {
   player.addEventListener('play', () => mark(true));
   player.addEventListener('pause', () => mark(false));
   player.addEventListener('ended', () => {  // in the manager the previews follow the playlist's order
-    if (!my || !current) return;
+    if (!document.getElementById('order') || !current) return;
     let li = current.closest('.track').nextElementSibling;
     while (li && !li.querySelector('button.play[data-src]')) li = li.nextElementSibling;
     if (li) play(li.querySelector('button.play[data-src]'));

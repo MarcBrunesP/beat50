@@ -122,6 +122,15 @@ second one in `--star` and, between them when the slide is a step, a 26 px `--fa
   the filter row, **Sort by BPM**, **Sort by key** and **Undo changes** (secondary). Each row starts with a 32 px
   handle (`.handle`, the `drag` glyph in `--faint`, `--chip` tile on hover or focus, grab cursor); the row being
   dragged dims to 50 % on `--accent-soft`. The track row also shows the length chip after the key.
+- **Drafts**: a sidebar section under My playlists (`.drafts`, the playlists' rows: name left, track count or
+  "Uploaded" right; with none, an 11 px `--faint` line saying how to start one). Track rows of a selection and of a
+  playlist in the manager end with a 36 px icon-only button (`.to-draft`, `playlist_add` in `--faint`, `--chip` tile
+  on hover or focus), before the star; a selection's filter row adds the secondary **To a draft** (`star` icon). The dialog
+  (`#draft-dialog`) shares the playlist dialog's styles: the open drafts as `.pl-pick` rows, a name field for a new
+  one, a `mac` hint, Cancel and Add. A draft's toolbar has its name input, "N tracks · N min", the "Only on this
+  Mac" tag, a bin and the primary **Upload to Beatport**; its rows are the manager's, ending with a `.to-draft`
+  button with the `close` glyph to remove the track. An uploaded draft shows the name read-only, an "Uploaded" tag
+  and a secondary link to the playlist, with no handles or remove buttons.
 - **Editor toggles**: 32 px circles; on = red (remove) or green (add) fill with white icon. A row marked to remove
   dims to 60 % and strikes the name; a row marked to add tints `--green-soft`.
 - **Picking card** (`#picking` › `#progress`): while a selection runs, an `--overlay` scrim over the whole window

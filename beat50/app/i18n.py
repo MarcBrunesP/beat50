@@ -130,6 +130,34 @@ TEXTS = {
         "warn_rename_failed": " The name could not be changed: {detail}",
         "warn_remove_failed": " Some tracks could not be removed: {detail}",
         "error_playlist_gone": "That playlist no longer exists on Beatport.",
+        "drafts": "Drafts",
+        "drafts_none": "None yet. Use the “Add to a draft” button on any track.",
+        "add_to_draft": "Add to a draft",
+        "stars_to_draft": "To a draft",
+        "draft_dialog_title": "Add to a draft",
+        "draft_new": "Or to a new draft, called",
+        "draft_hint": "A draft stays on this Mac until you upload it to Beatport.",
+        "draft_ok": "Add",
+        "draft_added": "{n} tracks added to the draft “{name}”.",
+        "draft_all_already": "The {n} tracks were already in the draft “{name}”: nothing was added.",
+        "draft_name": "Draft name",
+        "draft_local_tag": "Only on this Mac",
+        "draft_uploaded_tag": "Uploaded",
+        "draft_remove": "Remove from the draft",
+        "delete_draft": "Delete the draft",
+        "js_delete_draft": "Delete the draft “{name}”?\n\nIt goes to the Trash. If it was uploaded, the playlist stays "
+                           "on Beatport.",
+        "upload_draft": "Upload to Beatport",
+        "js_upload_draft": "Upload “{name}” to Beatport?\n\nA new private playlist is created with its {n} tracks in "
+                           "this order. After that the draft no longer changes.",
+        "draft_open_playlist": "Open in My playlists",
+        "draft_page_hint": "Drag the tracks (or press ↑ ↓ on their handle), sort them or remove them: every change is "
+                           "saved on this Mac. “Upload to Beatport” creates a new private playlist in this order.",
+        "draft_uploaded_note": "Uploaded to Beatport on {when} as “{name}” (private) with {n} tracks. This draft no "
+                               "longer changes.",
+        "error_draft_uploaded": "“{name}” was already uploaded to Beatport: it no longer changes.",
+        "error_draft_empty": "The draft has no tracks yet.",
+        "error_not_loaded": "Open that playlist again before adding its tracks to a draft.",
         "my_playlists": "My playlists",
         "my_detail": "Your playlists on Beatport. Open one to listen to it and put its tracks in order.",
         "my_load": "Load from Beatport",
@@ -193,7 +221,7 @@ TEXTS = {
         "error_not_found": "Not found.",
         "error_consent_required": "beat50 needs your permission to read your Beatport session.",
         "error_interrupted": "beat50 closed before it finished.",
-        "error_trash_failed": "The selection could not be moved to the Trash: {detail}",
+        "error_trash_failed": "It could not be moved to the Trash: {detail}",
         "consent_title": "Before reading your Beatport session",
         "consent_window": "beat50 opens Beatport in a window of its own, hidden except when you sign in, "
                           "and closes it when done.",
@@ -323,6 +351,34 @@ TEXTS = {
         "warn_rename_failed": " No se pudo cambiar el nombre: {detail}",
         "warn_remove_failed": " No se pudieron quitar algunos tracks: {detail}",
         "error_playlist_gone": "Esa playlist ya no existe en Beatport.",
+        "drafts": "Borradores",
+        "drafts_none": "Aún no hay ninguno. Usa el botón «Añadir a un borrador» de cualquier track.",
+        "add_to_draft": "Añadir a un borrador",
+        "stars_to_draft": "A un borrador",
+        "draft_dialog_title": "Añadir a un borrador",
+        "draft_new": "O a un borrador nuevo, llamado",
+        "draft_hint": "Un borrador se queda en este Mac hasta que lo subes a Beatport.",
+        "draft_ok": "Añadir",
+        "draft_added": "{n} tracks añadidos al borrador «{name}».",
+        "draft_all_already": "Los {n} tracks ya estaban en el borrador «{name}»: no se ha añadido nada.",
+        "draft_name": "Nombre del borrador",
+        "draft_local_tag": "Solo en este Mac",
+        "draft_uploaded_tag": "Subido",
+        "draft_remove": "Quitar del borrador",
+        "delete_draft": "Eliminar el borrador",
+        "js_delete_draft": "¿Eliminar el borrador «{name}»?\n\nVa a la Papelera. Si se subió, la playlist sigue en "
+                           "Beatport.",
+        "upload_draft": "Subir a Beatport",
+        "js_upload_draft": "¿Subir «{name}» a Beatport?\n\nSe crea una playlist privada nueva con sus {n} tracks en "
+                           "este orden. Después el borrador ya no cambia.",
+        "draft_open_playlist": "Abrir en Mis playlists",
+        "draft_page_hint": "Arrastra los tracks (o pulsa ↑ ↓ en su asa), ordénalos o quítalos: cada cambio se guarda "
+                           "en este Mac. «Subir a Beatport» crea una playlist privada nueva con este orden.",
+        "draft_uploaded_note": "Subido a Beatport el {when} como «{name}» (privada) con {n} tracks. Este borrador ya "
+                               "no cambia.",
+        "error_draft_uploaded": "«{name}» ya se subió a Beatport: ya no cambia.",
+        "error_draft_empty": "El borrador aún no tiene tracks.",
+        "error_not_loaded": "Abre de nuevo esa playlist antes de añadir sus tracks a un borrador.",
         "my_playlists": "Mis playlists",
         "my_detail": "Tus playlists de Beatport. Abre una para escucharla y ordenar sus tracks.",
         "my_load": "Cargar desde Beatport",
@@ -386,7 +442,7 @@ TEXTS = {
         "error_not_found": "No existe.",
         "error_consent_required": "Falta tu permiso para leer tu sesión de Beatport.",
         "error_interrupted": "beat50 se cerró antes de terminar.",
-        "error_trash_failed": "No se pudo mover la selección a la Papelera: {detail}",
+        "error_trash_failed": "No se pudo mover a la Papelera: {detail}",
         "consent_title": "Antes de leer tu sesión de Beatport",
         "consent_window": "beat50 abre Beatport en una ventana propia, oculta salvo al iniciar sesión, "
                           "y la cierra al terminar.",
@@ -408,7 +464,8 @@ TEXTS = {
 
 JS_KEYS = ("making", "phase_library", "phase_discover", "phase_rank", "js_closed", "js_error",
            "listen", "pause", "creating", "saving", "checking", "js_delete", "created", "adding", "pl_ok_new",
-           "pl_ok_into", "pl_listing", "pl_none", "pl_public", "pl_no_match", "my_loading")
+           "pl_ok_into", "pl_listing", "pl_none", "pl_public", "pl_no_match", "my_loading", "js_delete_draft",
+           "js_upload_draft")
 
 
 def pick(cookie_header, accept_language):

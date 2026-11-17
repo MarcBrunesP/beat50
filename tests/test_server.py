@@ -7,7 +7,7 @@ from datetime import date, timedelta
 import pytest
 
 from beat50 import auth, playlists
-from beat50.app import consent, jobs, marks, server, state
+from beat50.app import consent, drafts, jobs, marks, server, state
 from beat50.errors import Beat50Error
 
 
@@ -677,7 +677,7 @@ def test_a_trash_failure_is_translated(app, data_dir, monkeypatch):
     monkeypatch.setattr(server.trash, "move", refuse)
     code, body, _ = _request(app, "POST", "/api/selection/20261001_120000/delete", token=app.token, body={},
                              headers={"Accept-Language": "es"})
-    assert code == 400 and json.loads(body)["error"] == "No se pudo mover la selección a la Papelera: no"
+    assert code == 400 and json.loads(body)["error"] == "No se pudo mover a la Papelera: no"
 
 
 def test_genre_preferences_are_saved_without_consent(app):
@@ -809,3 +809,112 @@ def test_an_order_that_changed_on_beatport_is_a_conflict(app, data_dir, monkeypa
 def test_the_manager_waits_while_busy(app, data_dir):
     with state.lock():
         assert _request(app, "POST", "/api/my/playlists", token=app.token, body={})[0] == 409
+
+
+def _draft_from(data_dir, ids=(1, 2)):
+    _crate(data_dir, "2026-09", tracks=[{"id": i, "name": f"Song {i}", "artists": ["A"]} for i in (1, 2, 3)])
+    return jobs.add_to_draft(list(ids), selection="2026-09", name="Set")["draft"]
+
+
+def test_adding_tracks_of_a_selection_to_a_new_draft_and_then_to_it(app, data_dir):
+    consent.revoke()  # drafts are local: no permission needed until one is uploaded
+    _crate(data_dir, "2026-09", tracks=[{"id": i, "name": f"Song {i}", "artists": ["A"]} for i in (1, 2, 3)])
+    code, body, _ = _request(app, "POST", "/api/drafts/add", token=app.token,
+                             body={"selection": "2026-09", "name": "Set", "track_ids": [2, 1]})
+    r = json.loads(body)
+    assert code == 200 and r["created"] is True and r["draft"]["n"] == 2 and r["draft"]["name"] == "Set"
+    assert r["message"] == "2 tracks added to the draft “Set”."
+    code, body, _ = _request(app, "POST", "/api/drafts/add", token=app.token, headers={"Accept-Language": "es"},
+                             body={"selection": "2026-09", "draft": r["draft"]["id"], "track_ids": [1, 3]})
+    r = json.loads(body)
+    assert r["created"] is False and r["draft"]["n"] == 3
+    assert r["message"] == "1 tracks añadidos al borrador «Set». 1 ya estaban y no se han vuelto a añadir."
+    assert [t["id"] for t in drafts.read(r["draft"]["id"])["tracks"]] == [2, 1, 3]
+    _, body, _ = _request(app, "POST", "/api/drafts/add", token=app.token,
+                          body={"selection": "2026-09", "draft": r["draft"]["id"], "track_ids": [3]})
+    assert json.loads(body)["message"] == "The 1 tracks were already in the draft “Set”: nothing was added."
+
+
+@pytest.mark.parametrize("body", [
+    {"selection": "2026-09", "name": "Set", "track_ids": [9]}, {"selection": "2026-09", "name": "Set", "track_ids": []},
+    {"selection": "2026-09", "track_ids": [1]}, {"selection": "2026-09", "name": "Set", "draft": "x", "track_ids": [1]},
+    {"selection": "nope", "name": "Set", "track_ids": [1]}, {"name": "Set", "track_ids": [1]},
+    {"selection": "2026-09", "playlist": 7, "name": "Set", "track_ids": [1]},
+    {"selection": "2026-09", "name": "Set", "track_ids": ["1"]}])
+def test_adding_to_a_draft_needs_tracks_their_source_and_one_draft(app, data_dir, body):
+    _crate(data_dir, "2026-09", tracks=[{"id": 1}])
+    assert _request(app, "POST", "/api/drafts/add", token=app.token, body=body)[0] == 400
+    assert drafts.list_all() == []
+
+
+def test_adding_tracks_of_the_playlist_on_screen(app, data_dir, monkeypatch):
+    body = {"playlist": 7, "name": "Set", "track_ids": [101]}
+    monkeypatch.setattr(jobs, "_my_last", None)
+    code, answer, _ = _request(app, "POST", "/api/drafts/add", token=app.token, body=body)
+    assert code == 400 and "Open that playlist again" in json.loads(answer)["error"]
+    monkeypatch.setattr(jobs, "_my_last", {"id": 7, "items": [
+        {"item_id": 11, "track": {"id": 101, "name": "Let You Go", "length_ms": 184347}}, {"item_id": 12, "track": None}]})
+    code, answer, _ = _request(app, "POST", "/api/drafts/add", token=app.token, body=body)
+    assert code == 200
+    assert drafts.read(json.loads(answer)["draft"]["id"])["tracks"][0]["length_ms"] == 184347
+    assert _request(app, "POST", "/api/drafts/add", token=app.token, body=dict(body, playlist=8))[0] == 400
+
+
+def test_the_draft_page_and_saving_it_as_the_page_left_it(app, data_dir):
+    d = _draft_from(data_dir, (1, 2, 3))
+    code, html, _ = _request(app, "GET", f"/drafts/{d['id']}")
+    assert code == 200 and f'data-draft="{d["id"]}"' in html and 'data-action="upload-draft"' in html
+    assert _request(app, "GET", "/drafts/0123456789ab")[0] == 404 and _request(app, "GET", "/drafts/x")[0] == 404
+    code, body, _ = _request(app, "POST", f"/api/draft/{d['id']}", token=app.token,
+                             body={"name": "Saturday", "track_ids": [3, 1]})
+    assert code == 200 and json.loads(body) == {"ok": True, "name": "Saturday", "n": 2, "detail": "2 tracks"}
+    assert _request(app, "POST", f"/api/draft/{d['id']}", token=app.token, body={"name": "x"})[0] == 400
+    assert _request(app, "POST", "/api/draft/0123456789ab", token=app.token, body={})[0] == 404
+    assert _request(app, "POST", f"/api/draft/{d['id']}/other", token=app.token, body={})[0] == 404
+
+
+def test_uploading_a_draft_needs_consent_and_records_the_playlist(app, data_dir, monkeypatch):
+    d = _draft_from(data_dir, (2, 1))
+    asked = []
+    monkeypatch.setattr(jobs, "_client", lambda: object())
+    monkeypatch.setattr(jobs.playlists, "create_playlist", lambda c, name, ids: asked.append((name, ids)) or {
+        "id": 77, "name": name, "track_ids": ids, "requested": len(ids), "warnings": []})
+    consent.revoke()
+    assert _request(app, "POST", f"/api/draft/{d['id']}/upload", token=app.token, body={})[0] == 409 and asked == []
+    consent.grant()
+    code, body, _ = _request(app, "POST", f"/api/draft/{d['id']}/upload", token=app.token, body={})
+    assert code == 200 and asked == [("Set", [2, 1])]
+    assert json.loads(body)["message"] == "“Set” created on Beatport (private) with 2 tracks."
+    assert drafts.read(d["id"])["uploaded"]["playlist_id"] == 77
+    code, body, _ = _request(app, "POST", f"/api/draft/{d['id']}/upload", token=app.token, body={})
+    assert code == 400 and "already uploaded" in json.loads(body)["error"] and len(asked) == 1
+    assert _request(app, "POST", f"/api/draft/{d['id']}", token=app.token,
+                    body={"name": "Other", "track_ids": [1]})[0] == 400
+
+
+def test_uploading_waits_while_busy_and_an_empty_draft_is_refused(app, data_dir, monkeypatch):
+    d = _draft_from(data_dir)
+    monkeypatch.setattr(jobs.playlists, "create_playlist", lambda *a: pytest.fail("must not create"))
+    with state.lock():
+        assert _request(app, "POST", f"/api/draft/{d['id']}/upload", token=app.token, body={})[0] == 409
+    drafts.save(d["id"], "Set", [])
+    code, body, _ = _request(app, "POST", f"/api/draft/{d['id']}/upload", token=app.token, body={})
+    assert code == 400 and json.loads(body)["error"] == "The draft has no tracks yet."
+
+
+def test_an_upload_with_an_expired_session_leaves_the_draft_open(app, data_dir, monkeypatch):
+    d = _draft_from(data_dir)
+
+    def no_session():
+        raise auth.SessionExpired("session_expired", "No session")
+    monkeypatch.setattr(jobs, "_client", no_session)
+    assert _request(app, "POST", f"/api/draft/{d['id']}/upload", token=app.token, body={})[0] == 409
+    assert drafts.read(d["id"])["uploaded"] is None and state.read()["session"]["status"] == "expired"
+
+
+def test_deleting_a_draft_moves_it_to_the_trash(app, data_dir, monkeypatch):
+    d = _draft_from(data_dir)
+    moved = []
+    monkeypatch.setattr(server.trash, "move", lambda path: moved.append(path.name))
+    code, body, _ = _request(app, "POST", f"/api/draft/{d['id']}/delete", token=app.token, body={})
+    assert code == 200 and json.loads(body)["redirect"] == "/" and moved == [f"{d['id']}.json"]

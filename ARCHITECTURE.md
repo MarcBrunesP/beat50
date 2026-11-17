@@ -9,6 +9,7 @@ beat50 is a single-user Mac app. It reads the user's Beatport purchases and play
 profile, looks for new releases in a period, and picks 50 of them. The user browses each selection in the
 app's window (a local page served on 127.0.0.1), stars tracks and turns them into private Beatport
 playlists. **My playlists** shows the user's own playlists, plays their previews and puts their tracks in order.
+**Drafts** are playlists put together on the Mac first and uploaded to Beatport when ready.
 
 Everything runs on the user's Mac. There is no remote server, no account of ours and no background job:
 a selection is made when the user asks for it.
@@ -31,9 +32,10 @@ a selection is made when the user asks for it.
 | `app/server.py` | Local HTTP server: routes, security, lifecycle |
 | `app/views.py` | The page's HTML |
 | `app/i18n.py` | English and Spanish texts, dates and error messages |
-| `app/jobs.py` | Long-running work: selections, session check, sign-in, playlists (create, list, add, edit, read, reorder) |
+| `app/jobs.py` | Long-running work: selections, session check, sign-in, playlists (create, list, add, edit, read, reorder), drafts (add tracks, upload) |
 | `app/state.py` | `state.json` and the process lock |
 | `app/marks.py` | Stars and the playlists made or added to from each selection |
+| `app/drafts.py` | Drafts: playlists kept on the Mac until one is uploaded |
 | `app/consent.py` | The user's permission to read the Beatport session |
 | `app/trash.py` | Moves a deleted selection's files to the Mac's Trash |
 | `app/static/` | CSS and JavaScript of the page |
@@ -124,6 +126,7 @@ name before 3.0, so renaming it to beat50 did not lose any data or sign anyone o
 | `session.json` | Last token, mode 0600 |
 | `library.json`, `profile.json`, `candidates.json` | Last library, profile and candidates |
 | `crates/<code>.json` | One file per selection. Files named `YYYY-MM` come from an earlier version and are still shown |
+| `drafts/<id>.json` | One file per draft: `{"id" (12 hex), "name", "created_at", "updated_at", "tracks": [what the page shows of each], "uploaded": null or {"playlist_id", "name", "tracks", "at"}}` |
 | `marks/<code>.json` | `{"starred": [...], "playlists": [{id, name, track_ids, created_at or added_at, external?}]}` |
 | `state.json` | Running job, last selection result, session status, `genre_prefs` (`{"levels": {"<genre id>": level}, "only": id or null}`) |
 | `consent.json` | `{"session": true, "granted_at"}` once the user accepts the notice; deleted when withdrawn |
@@ -149,9 +152,12 @@ read from `crates/`, its tracks may be picked again.
   `/api/playlist/<code>/<id>` (`name`, `remove`, `add`),
   `/api/selection/<code>/delete`, `/api/genres` (`levels`, `only`: the Genres dialog's choices, saved whole on
   every change; local only, 409 while busy), `/api/my/playlists`, `/api/my/playlist/<id>` and
-  `/api/my/playlist/<id>/order` (`item_ids`), the playlist manager's.
-  Also `GET /crate/<code>/playlist/<id>`, the playlist editor, and `GET /playlists`, `/playlists/<id>`, the manager.
-- Consent: the routes that read the session (`generate`, `session/check`, `login/start`, `playlist/*`, `playlists`, `my/*`)
+  `/api/my/playlist/<id>/order` (`item_ids`), the playlist manager's; `/api/drafts/add` (`track_ids`, `selection` or
+  `playlist`, `draft` or `name`), `/api/draft/<id>` (`name`, `track_ids`), `/api/draft/<id>/upload` and
+  `/api/draft/<id>/delete`, the drafts'.
+  Also `GET /crate/<code>/playlist/<id>`, the playlist editor, `GET /playlists`, `/playlists/<id>`, the manager, and
+  `GET /drafts/<id>`, a draft.
+- Consent: the routes that read the session (`generate`, `session/check`, `login/start`, `playlist/*`, `playlists`, `my/*`, `draft/<id>/upload`)
   answer 409 `consent_required` until the user accepts the notice in the page, which explains the Beatport
   window, what is read, what beat50 never does and where the session is kept. The page asks before the
   first such action and then carries it out; **Withdraw permission** deletes `consent.json`, not the
@@ -222,6 +228,31 @@ server answers (`views.my_list`, `views.my_tracks`), so everything from Beatport
   on Beatport since the page read it). Then it sends the PATCH with every item and reads the order back; if it does
   not match, the message warns. If the order did not change, nothing is written.
 - Any other playlist (public, or not the user's) is shown without handles, sort buttons or Save.
+
+## Drafts
+
+A draft is a playlist that lives only in `drafts/<id>.json` until the user uploads it. Everything but the upload is
+local: no consent, no session, no request to Beatport.
+
+- **Adding tracks** (`POST /api/drafts/add`, `jobs.add_to_draft`): the page sends track ids and where they come from,
+  never the tracks themselves. The server takes them from the selection's file or, for a playlist in the manager,
+  from the last playlist it read for the page (`jobs._my_last`, in memory; any other playlist is refused with
+  `not_loaded`). With `draft` they go to that draft, with `name` to a new one. `drafts.add` keeps of each track what
+  the page shows (`TRACK_KEYS`) and leaves out the ones already in the draft. The dialog offers the drafts not
+  uploaded yet, the last one changed chosen.
+- **The draft's page** (`GET /drafts/<id>`) is rendered from the file, with the manager's rows: preview, BPM, key,
+  drag, ↑ ↓, sort by BPM or key, plus a remove button per track and the name. Each change posts the whole draft
+  (`POST /api/draft/<id>` `{name, track_ids}`): `drafts.save` accepts only the draft's own tracks, each once, in the
+  order sent; the ones left out are removed. Tracks from a selection carry no length, so the total minutes show
+  only when every track has one.
+- **Uploading** (`POST /api/draft/<id>/upload`, with consent, 409 while busy): `jobs.upload_draft` refuses an empty or
+  already uploaded draft, then calls `playlists.create_playlist` with the draft's name and track ids in order (the
+  same call a selection's stars use: private or nothing is added). Once the playlist exists it is recorded in the
+  draft (`uploaded`), even with warnings, so a retry cannot duplicate it. An uploaded draft is a record:
+  `drafts.add` and `drafts.save` refuse it (`draft_uploaded`), its page shows no controls and links to
+  `/playlists/<playlist id>`.
+- **Deleting** (`POST /api/draft/<id>/delete`) moves the file to the Trash; the playlist of an uploaded draft stays
+  on Beatport.
 
 ## Packaging
 

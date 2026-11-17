@@ -10,7 +10,7 @@ from pathlib import Path
 
 from .. import config, profile, webkit
 from ..errors import Beat50Error
-from . import consent, i18n, jobs, marks, state, trash, views
+from . import consent, drafts, i18n, jobs, marks, state, trash, views
 
 STATIC = Path(__file__).parent / "static"
 STATIC_FILES = {"app.css": "text/css; charset=utf-8", "app.js": "text/javascript; charset=utf-8"}
@@ -137,6 +137,10 @@ class Handler(BaseHTTPRequestHandler):
             return self._page(None, None, my="list")
         if path.startswith("/playlists/") and _digits(path[len("/playlists/"):]):
             return self._page(None, None, my=int(path[len("/playlists/"):]))
+        if path.startswith("/drafts/"):
+            draft = drafts.read(path[len("/drafts/"):])
+            if draft is not None:
+                return self._page(None, None, draft=draft)
         if path.startswith("/crate/"):
             selection, _, rest = path[len("/crate/"):].partition("/playlist/")
             crate = _crate(selection)
@@ -147,12 +151,12 @@ class Handler(BaseHTTPRequestHandler):
                 return self._page(selection, crate, playlist)
         return self._fail(404, "not_found")
 
-    def _page(self, selection, crate, playlist=None, my=None):
+    def _page(self, selection, crate, playlist=None, my=None, draft=None):
         st = dict(self._state(), consent=consent.granted())
         self.server.lang = self._lang()
         html = views.render_page(selection, crate, _selections(), st, self.server.token, date.today(),
                                  marks.read(selection) if selection else None, self.server.lang, playlist,
-                                 profile.read_profile(), my)
+                                 profile.read_profile(), my, drafts.list_all(), draft)
         self._send(200, html, "text/html; charset=utf-8")
 
     def _body(self):
@@ -210,6 +214,8 @@ class Handler(BaseHTTPRequestHandler):
             if jobs.busy() or state.lock_owner():
                 raise state.Busy("busy", "beat50 is already busy.")
             return self._json(200, {"playlists": jobs.list_playlists()})
+        if path == "/api/drafts/add" or path.startswith("/api/draft/"):  # local, except uploading one
+            return self._draft_action(path, body)
         if path.startswith("/api/my/"):  # the playlist manager: the user's own playlists on Beatport
             return self._my_action(path[len("/api/my/"):], body)
         if path.startswith("/api/star/"):
@@ -254,6 +260,44 @@ class Handler(BaseHTTPRequestHandler):
             _delete(selection)
             return self._json(200, {"ok": True})  # the page knows where to go: home if it was showing it
         return self._fail(404, "not_found")
+
+    def _draft_action(self, path, body):
+        """Adding tracks to a draft (a new one, with a name), saving it as the page left it, uploading it to
+        Beatport or deleting it. Only uploading reads the session."""
+        lang = self._lang()
+        if path == "/api/drafts/add":
+            selection, playlist_id, draft_id, name = (body.get(k) for k in ("selection", "playlist", "draft", "name"))
+            source_ok = ((isinstance(selection, str) and _crate(selection) is not None and playlist_id is None)
+                         or (selection is None and _ids([playlist_id])))
+            target_ok = ((isinstance(draft_id, str) and name is None) or (draft_id is None and isinstance(name, str)))
+            if not (source_ok and target_ok and _ids(body.get("track_ids"))):
+                raise Beat50Error("bad_request", "Missing the tracks, where they come from or the draft.")
+            r = jobs.add_to_draft(body["track_ids"], selection, playlist_id, draft_id, name)
+            if not r["added"]:
+                message = i18n.t(lang, "draft_all_already", name=r["draft"]["name"], n=r["already"])
+            else:
+                message = i18n.t(lang, "draft_added", name=r["draft"]["name"], n=r["added"])
+                if r["already"]:
+                    message += i18n.t(lang, "playlist_already", n=r["already"])
+            return self._json(200, {"ok": True, "message": message, "created": r["created"], "draft": {
+                "id": r["draft"]["id"], "name": r["draft"]["name"], "n": len(r["draft"]["tracks"])}})
+        draft_id, _, action = path[len("/api/draft/"):].partition("/")
+        draft = drafts.read(draft_id)
+        if draft is None or action not in ("", "upload", "delete"):
+            return self._fail(404, "not_found")
+        if action == "delete":  # the local record only: an uploaded draft's playlist stays on Beatport
+            trash.move(config.DRAFTS_DIR / f"{draft_id}.json")
+            return self._json(200, {"ok": True, "redirect": "/"})
+        if action == "upload":
+            consent.require()
+            if jobs.busy() or state.lock_owner():
+                raise state.Busy("busy", "beat50 is already busy.")
+            return self._json(200, {"ok": True, "message": _playlist_message(lang, jobs.upload_draft(draft_id))})
+        if not (isinstance(body.get("name"), str) and _ids(body.get("track_ids"))):
+            raise Beat50Error("bad_request", "Missing the draft's name or its tracks.")
+        saved = drafts.save(draft_id, body["name"], body["track_ids"])
+        return self._json(200, {"ok": True, "name": saved["name"], "n": len(saved["tracks"]),
+                                "detail": views.draft_detail(saved, lang)})
 
     def _my_action(self, rest, body):
         """Listing the user's playlists, reading one or saving its order; each answers with the HTML to show."""

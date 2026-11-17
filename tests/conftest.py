@@ -16,6 +16,7 @@ def data_dir(tmp_path, monkeypatch):
         "STATE_FILE": tmp_path / "state.json",
         "LOCK_FILE": tmp_path / ".lock",
         "MARKS_DIR": tmp_path / "marks",
+        "DRAFTS_DIR": tmp_path / "drafts",
         "CONSENT_FILE": tmp_path / "consent.json",
     }.items():
         monkeypatch.setattr(config, name, value)

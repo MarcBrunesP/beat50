@@ -767,3 +767,60 @@ def test_the_manager_never_puts_what_beatport_sends_raw_into_attributes():
         views.my_tracks(pl, "en")
     with pytest.raises(ValueError):
         views.my_list([{"id": '5" onclick="x', "name": "x", "track_count": 0, "is_public": False}], "en")
+
+
+def _draft(uploaded=None, tracks=2):
+    t = {"id": 101, "name": "Let You Go", "mix_name": "Original Mix", "artists": ["Son Of Sam"], "label": "HoneyPot",
+         "genre": "UK Garage", "bpm": 104, "key": "8A", "length": "3:04", "length_ms": 180000,
+         "sample_url": "https://geo-samples.beatport.com/x.mp3", "image": None}
+    return {"id": "0123456789ab", "name": "Set <b>", "created_at": "2026-11-18T10:00:00+00:00",
+            "updated_at": "2026-11-18T10:00:00+00:00", "uploaded": uploaded,
+            "tracks": [dict(t, id=101 + i) for i in range(tracks)]}
+
+
+def test_every_track_of_a_selection_can_go_to_a_draft_and_so_can_its_stars():
+    html = _page(marks={"starred": [TRACK["id"]], "playlists": []})
+    assert f'data-draft-add="{TRACK["id"]}"' in html and 'aria-label="Add to a draft"' in html
+    assert '<button class="create" data-draft-stars>' in html and 'id="draft-dialog"' in html
+    assert "data-draft-stars disabled" in _page()
+
+
+def test_the_sidebar_lists_the_drafts_or_says_how_to_start_one():
+    assert "None yet. Use the “Add to a draft” button" in _page() and "Borradores" in _page(lang="es")
+    html = views.render_page(None, None, [], {}, "T", date(2026, 9, 30), drafts=[
+        _draft(), dict(_draft({"playlist_id": 7, "name": "Set", "tracks": 2, "at": "2026-11-18T10:00:00+00:00"}),
+                       id="ba9876543210", updated_at="2026-11-19T10:00:00+00:00")], my="list")
+    assert '<a class="pl" href="/drafts/0123456789ab" data-draft="0123456789ab"><span>Set &lt;b&gt;</span> <small>2' in html
+    assert "<small>Uploaded</small>" in html and "None yet" not in html
+    # the dialog only offers the drafts still open, with the last one changed chosen
+    assert html.count("data-draft-pick=") == 1 and 'data-draft-pick="0123456789ab" aria-pressed="true"' in html
+
+
+def test_a_draft_page_orders_removes_and_uploads():
+    d = _draft()
+    html = views.render_page(None, None, [], {}, "T", date(2026, 9, 30), drafts=[d], draft=d)
+    assert 'id="order" data-editable data-draft="0123456789ab"' in html and html.count("data-draft-remove") == 2
+    assert 'data-item="101" data-bpm="104" data-key="8A" draggable="true"' in html and html.count('class="handle"') == 2
+    assert 'id="draft-name" value="Set &lt;b&gt;"' in html and ">2 tracks · 6 min<" in html
+    assert 'data-action="upload-draft" data-draft="0123456789ab">' in html and 'data-action="delete-draft"' in html
+    assert 'data-sort="bpm"' in html and "Only on this Mac" in html and "data-draft-add" not in html
+    assert '<a class="pl on" href="/drafts/0123456789ab"' in html and 'id="draft-dialog"' not in html
+    empty = _draft(tracks=0)
+    html = views.render_page(None, None, [], {}, "T", date(2026, 9, 30), drafts=[empty], draft=empty)
+    assert 'data-draft="0123456789ab" disabled>' in html and ">0 tracks<" in html
+
+
+def test_the_minutes_of_a_draft_show_only_when_every_track_has_its_length():
+    d = _draft()
+    d["tracks"][1]["length_ms"] = None
+    assert views.draft_detail(d, "en") == "2 tracks"
+
+
+def test_an_uploaded_draft_is_a_record_that_links_to_its_playlist():
+    d = _draft({"playlist_id": 77, "name": "Set", "tracks": 2, "at": "2026-11-18T10:00:00+00:00"})
+    html = views.render_page(None, None, [], {}, "T", date(2026, 9, 30), lang="es", drafts=[d], draft=d)
+    assert "data-editable" not in html and "data-draft-remove" not in html and "upload-draft" not in html
+    assert "handle" not in html and "data-sort" not in html and 'draggable' not in html
+    assert 'value="Set &lt;b&gt;" maxlength="100" aria-label="Nombre del borrador" readonly' in html
+    assert '<a class="create" href="/playlists/77">' in html and "como «Set» (privada) con 2 tracks" in html
+    assert 'data-action="delete-draft"' in html

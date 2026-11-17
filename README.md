@@ -63,7 +63,14 @@ it works; you can reopen them anytime with the **?** button beside the app's nam
    order**. Nothing changes on Beatport until you save, and if the playlist changed on Beatport since you opened
    it, beat50 asks you to open it again instead of saving. Only private playlists can be reordered; public ones
    are only listened to.
-8. To delete a selection, click its bin (in the sidebar, on hover, or next to its title) and confirm. It goes to the Trash (Finder's
+8. **Drafts** (in the sidebar, under My playlists) are playlists you put together on this Mac first. Click **Add to
+   a draft** on any track of a selection or of one of your playlists in My playlists (or **★ To a draft** for every
+   starred track in view) and choose a draft or name a new one; a track already in it is not added again. Open the
+   draft to listen to it, drag its tracks, sort them by BPM or key, remove some or rename it: everything is saved
+   on this Mac as you go, and nothing reaches Beatport. **Upload to Beatport** creates a new, always private
+   playlist with those tracks in that order. After that the draft is a record: it no longer changes and links to
+   the playlist in My playlists. Deleting a draft sends it to the Trash and leaves Beatport as it is.
+9. To delete a selection, click its bin (in the sidebar, on hover, or next to its title) and confirm. It goes to the Trash (Finder's
    **Put Back** restores it) with its stars and the record of its playlists; the playlists stay on
    Beatport, and its tracks may show up again in new selections.
 
@@ -90,7 +97,7 @@ asks first, because it would stop it.
 ## Data
 
 - `~/Library/Application Support/beatcrate/`: your library and profile, the selections (`crates/`), your
-  stars and playlists (`marks/`), the last token (`session.json`) and your permission (`consent.json`).
+  stars and playlists (`marks/`), your drafts (`drafts/`), the last token (`session.json`) and your permission (`consent.json`).
 - beat50's own website data, where Beatport keeps your session: `~/Library/WebKit/com.beatcrate.app`
   and `~/Library/HTTPStorages/com.beatcrate.app*`. It is not shared with Safari or other browsers.
 - The app log: `~/Library/Logs/beat50.log`.
